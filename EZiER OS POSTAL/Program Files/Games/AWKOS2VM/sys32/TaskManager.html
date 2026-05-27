@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWK OS 2 - Task Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 25px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow-x: auto;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #667eea;
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tbody tr:hover {
+            background: #f8f9ff;
+        }
+
+        .process-name {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-running {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-stopped {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .memory-bar {
+            width: 100px;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        .memory-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .cpu-bar {
+            width: 100px;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        .cpu-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #dc2626);
+            transition: width 0.3s ease;
+        }
+
+        .action-btn {
+            padding: 6px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .action-btn.end {
+            background: #dc2626;
+        }
+
+        .action-btn.end:hover {
+            background: #991b1b;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .system-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .info-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-card p {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            margin-top: 20px;
+            opacity: 0.8;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 AWK OS 2 Task Manager</h1>
+            <p>Monitor and manage running processes</p>
+        </div>
+
+        <div class="system-info">
+            <div class="info-card">
+                <h3>Total Processes</h3>
+                <p id="total-processes">24</p>
+            </div>
+            <div class="info-card">
+                <h3>Running Applications</h3>
+                <p id="running-apps">8</p>
+            </div>
+            <div class="info-card">
+                <h3>System Uptime</h3>
+                <p id="uptime">2:34:12</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="refreshTasks()">🔄 Refresh</button>
+            <button class="btn" onclick="sortTable('name')">📝 Sort by Name</button>
+            <button class="btn" onclick="sortTable('memory')">💾 Sort by Memory</button>
+            <button class="btn" onclick="goBack()">🏠 Back</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('processes')">Processes</button>
+            <button class="tab-btn" onclick="switchTab('performance')">Performance</button>
+            <button class="tab-btn" onclick="switchTab('windows')">Open Windows</button>
+            <button class="tab-btn" onclick="switchTab('startup')">Startup Apps</button>
+        </div>
+
+        <div id="processes-tab" class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Process Name</th>
+                        <th>PID</th>
+                        <th>Status</th>
+                        <th>Memory (MB)</th>
+                        <th>CPU (%)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="processes-list">
+                    <tr>
+                        <td class="process-name">AWK Browser</td>
+                        <td>2048</td>
+                        <td><span class="status-badge status-running">Running</span></td>
+                        <td>
+                            <div class="memory-bar"><div class="memory-bar-fill" style="width: 65%"></div></div>
+                            <span>325MB</span>
+                        </td>
+                        <td>
+                            <div class="cpu-bar"><div class="cpu-bar-fill" style="width: 45%"></div></div>
+                            <span>45%</span>
+                        </td>
+                        <td><button class="action-btn end" onclick="endProcess('AWK Browser')">End</button></td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Balatro Game Engine</td>
+                        <td>2156</td>
+                        <td><span class="status-badge status-running">Running</span></td>
+                        <td>
+                            <div class="memory-bar"><div class="memory-bar-fill" style="width: 80%"></div></div>
+                            <span>405MB</span>
+                        </td>
+                        <td>
+                            <div class="cpu-bar"><div class="cpu-bar-fill" style="width: 85%"></div></div>
+                            <span>85%</span>
+                        </td>
+                        <td><button class="action-btn end" onclick="endProcess('Balatro')">End</button></td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">System Idle Process</td>
+                        <td>0</td>
+                        <td><span class="status-badge status-running">Running</span></td>
+                        <td>
+                            <div class="memory-bar"><div class="memory-bar-fill" style="width: 5%"></div></div>
+                            <span>28MB</span>
+                        </td>
+                        <td>
+                            <div class="cpu-bar"><div class="cpu-bar-fill" style="width: 2%"></div></div>
+                            <span>2%</span>
+                        </td>
+                        <td><button class="action-btn" disabled>Protected</button></td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">AWK Performance Monitor</td>
+                        <td>2089</td>
+                        <td><span class="status-badge status-running">Running</span></td>
+                        <td>
+                            <div class="memory-bar"><div class="memory-bar-fill" style="width: 35%"></div></div>
+                            <span>178MB</span>
+                        </td>
+                        <td>
+                            <div class="cpu-bar"><div class="cpu-bar-fill" style="width: 12%"></div></div>
+                            <span>12%</span>
+                        </td>
+                        <td><button class="action-btn end" onclick="endProcess('Performance')">End</button></td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Desktop Compositor</td>
+                        <td>1024</td>
+                        <td><span class="status-badge status-running">Running</span></td>
+                        <td>
+                            <div class="memory-bar"><div class="memory-bar-fill" style="width: 28%"></div></div>
+                            <span>142MB</span>
+                        </td>
+                        <td>
+                            <div class="cpu-bar"><div class="cpu-bar-fill" style="width: 8%"></div></div>
+                            <span>8%</span>
+                        </td>
+                        <td><button class="action-btn" disabled>System</button></td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Audio Service</td>
+                        <td>1536</td>
+                        <td><span class="status-badge status-running">Running</span></td>
+                        <td>
+                            <div class="memory-bar"><div class="memory-bar-fill" style="width: 15%"></div></div>
+                            <span>76MB</span>
+                        </td>
+                        <td>
+                            <div class="cpu-bar"><div class="cpu-bar-fill" style="width: 5%"></div></div>
+                            <span>5%</span>
+                        </td>
+                        <td><button class="action-btn" disabled>System</button></td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Calculator App</td>
+                        <td>2245</td>
+                        <td><span class="status-badge status-stopped">Idle</span></td>
+                        <td>
+                            <div class="memory-bar"><div class="memory-bar-fill" style="width: 18%"></div></div>
+                            <span>89MB</span>
+                        </td>
+                        <td>
+                            <div class="cpu-bar"><div class="cpu-bar-fill" style="width: 0%"></div></div>
+                            <span>0%</span>
+                        </td>
+                        <td><button class="action-btn end" onclick="endProcess('Calc')">End</button></td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Network Manager</td>
+                        <td>512</td>
+                        <td><span class="status-badge status-running">Running</span></td>
+                        <td>
+                            <div class="memory-bar"><div class="memory-bar-fill" style="width: 12%"></div></div>
+                            <span>62MB</span>
+                        </td>
+                        <td>
+                            <div class="cpu-bar"><div class="cpu-bar-fill" style="width: 3%"></div></div>
+                            <span>3%</span>
+                        </td>
+                        <td><button class="action-btn" disabled>System</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="performance-tab" class="table-container" style="display:none;">
+            <h2 style="color:#667eea; margin-bottom:20px;">System Performance Metrics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Current</th>
+                        <th>Average</th>
+                        <th>Peak</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="process-name">CPU Usage</td>
+                        <td><div class="cpu-bar"><div class="cpu-bar-fill" style="width: 45%"></div></div> 45%</td>
+                        <td>38%</td>
+                        <td>92%</td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Memory Usage</td>
+                        <td><div class="memory-bar"><div class="memory-bar-fill" style="width: 52%"></div></div> 2.1GB / 4GB</td>
+                        <td>1.8GB</td>
+                        <td>3.5GB</td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Disk I/O</td>
+                        <td>156 MB/s</td>
+                        <td>124 MB/s</td>
+                        <td>445 MB/s</td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Network I/O</td>
+                        <td>2.3 Mbps</td>
+                        <td>1.8 Mbps</td>
+                        <td>25 Mbps</td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Page Faults</td>
+                        <td>45</td>
+                        <td>32</td>
+                        <td>156</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="windows-tab" class="table-container" style="display:none;">
+            <h2 style="color:#667eea; margin-bottom:20px;">Open Windows & IDs</h2>
+            <p style="color:#999; margin-bottom:15px;">Copy Window ID to use with AwkOSFrame API</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Window Title</th>
+                        <th>Window ID</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="windows-list">
+                    <tr>
+                        <td colspan="3" style="text-align:center; color:#999; padding:30px;">No windows open. Click an app icon to open a window.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="startup-tab" class="table-container" style="display:none;">
+            <h2 style="color:#667eea; margin-bottom:20px;">Startup Applications</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>App Name</th>
+                        <th>Status</th>
+                        <th>Startup Impact</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="process-name">Desktop Compositor</td>
+                        <td><span class="status-badge status-running">Enabled</span></td>
+                        <td>High</td>
+                        <td><button class="action-btn" onclick="toggleStartup(this)">Disable</button></td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Network Manager</td>
+                        <td><span class="status-badge status-running">Enabled</span></td>
+                        <td>Medium</td>
+                        <td><button class="action-btn" onclick="toggleStartup(this)">Disable</button></td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Audio Service</td>
+                        <td><span class="status-badge status-running">Enabled</span></td>
+                        <td>Low</td>
+                        <td><button class="action-btn" onclick="toggleStartup(this)">Disable</button></td>
+                    </tr>
+                    <tr>
+                        <td class="process-name">Performance Monitor</td>
+                        <td><span class="status-badge status-running">Enabled</span></td>
+                        <td>Low</td>
+                        <td><button class="action-btn" onclick="toggleStartup(this)">Disable</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p>AWK OS 2 - Task Manager v2.0 | Open Beta 🎮</p>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'processes';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Hide all tabs
+            document.getElementById('processes-tab').style.display = 'none';
+            document.getElementById('performance-tab').style.display = 'none';
+            document.getElementById('windows-tab').style.display = 'none';
+            document.getElementById('startup-tab').style.display = 'none';
+
+            // Show selected tab
+            document.getElementById(tab + '-tab').style.display = 'block';
+
+            // Update button states
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Refresh windows list when opening windows tab
+            if (tab === 'windows') {
+                updateWindowsList();
+            }
+        }
+
+        function updateWindowsList() {
+            const windowsList = document.getElementById('windows-list');
+            const windows = document.querySelectorAll('.window');
+            
+            if (windows.length === 0) {
+                windowsList.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:30px;">No windows open. Click an app icon to open a window.</td></tr>';
+                return;
+            }
+
+            windowsList.innerHTML = '';
+            windows.forEach(win => {
+                const titleBar = win.querySelector('.title-bar span');
+                const title = titleBar ? titleBar.textContent : 'Unknown';
+                const winId = win.id;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${title}</td>
+                    <td style="font-family: monospace; color:#667eea; font-weight:bold; cursor:pointer;" onclick="copyToClipboard('${winId}')">${winId}</td>
+                    <td>
+                        <button class="action-btn" onclick="copyToClipboard('${winId}'); alert('Window ID copied to clipboard: ${winId}')">📋 Copy ID</button>
+                    </td>
+                `;
+                windowsList.appendChild(row);
+            });
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                console.log('Copied: ' + text);
+            });
+        }
+
+        function endProcess(processName) {
+            alert(`⚠️ Process "${processName}" has been terminated`);
+        }
+
+        function toggleStartup(btn) {
+            if (btn.textContent === 'Disable') {
+                btn.textContent = 'Enable';
+                btn.style.background = '#ccc';
+                btn.style.color = '#666';
+            } else {
+                btn.textContent = 'Disable';
+                btn.style.background = '#667eea';
+                btn.style.color = 'white';
+            }
+        }
+
+        function refreshTasks() {
+            alert('📊 Task list refreshed');
+        }
+
+        function sortTable(column) {
+            alert(`📋 Table sorted by ${column}`);
+        }
+
+        function goBack() {
+            window.location.href = 'Desktop.html';
+        }
+
+        // Update uptime
+        let seconds = 0;
+        setInterval(() => {
+            seconds++;
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            document.getElementById('uptime').textContent = 
+                hrs.toString().padStart(2, '0') + ':' +
+                mins.toString().padStart(2, '0') + ':' +
+                secs.toString().padStart(2, '0');
+        }, 1000);
+    </script>
+</body>
+</html>

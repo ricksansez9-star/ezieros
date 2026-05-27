@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Instantly hands off execution to the UEFI page without delay -->
+    <meta http-equiv="refresh" content="0; url=uefi/uefi.html">
+    <title>EZiER OS LAUNCHER</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #000000;
+            color: #1a1a1a; /* Very dark gray text so it's invisible to users, but there for testing */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        a {
+            color: #1a1a1a;
+            text-decoration: none;
+            font-size: 12px;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fallback link in case auto-redirect is intercepted by browser policies -->
+    <a href="uefi/uefi.html">Loading EZiER Firmware...</a>
+
+</body>
+</html>

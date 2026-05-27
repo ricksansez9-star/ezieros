@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EZiER UEFI</title>
+    <link rel="stylesheet" href="BIOS.css">
+    <style>
+        /* Modern UEFI Look */
+        body {
+            background: radial-gradient(circle, #1a1a1c 0%, #0d0d0e 100%);
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #bios-container {
+            text-align: center;
+            padding: 2rem;
+            border: 1px solid #333;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+        }
+
+        .uefi-header {
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+        .key-hint {
+            background: #444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fff;
+        }
+
+        #bios-menu {
+            display: none; /* Hidden by default */
+            width: 600px;
+            background: #1e1e20;
+            border: 1px solid #444;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .bios-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #2a2a2d;
+            border: 1px solid #444;
+            color: #ddd;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.3s;
+        }
+
+        .bios-button:hover {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bios-container">
+        <div id="rotating-logo">
+            <img src="../sys64/icons/ezierosstarticon.png" width="120" height="120" alt="Logo">
+        </div>
+        <div id="boot-text">
+            <h2>EZiER UEFI Firmware v2.0</h2>
+            <p>Press <span class="key-hint">F1</span> for Setup</p>
+            <div id="countdown">Booting in <span id="countdown-timer">3</span>s...</div>
+        </div>
+    </div>
+
+    <div id="bios-menu">
+        <div class="uefi-header">EZiER UEFI Dashboard</div>
+        
+        <div class="bios-section">
+            <button class="bios-button" onclick="bootDesktop()">▶ Continue Boot</button>
+            <button class="bios-button" onclick="resetBIOS()">▶ Restore Defaults</button>
+            <button class="bios-button" onclick="bootDesktop()">▶ Save & Exit</button>
+        </div>
+
+        <div class="bios-footer" style="margin-top:20px; font-size: 0.8rem; color: #888;">
+            Press ESC to return
+        </div>
+    </div>
+
+    <script src="BIOS.js"></script>
+</body>
+</html>

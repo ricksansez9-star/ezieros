@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AWK Terminal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg:       #0c0e0f;
+    --bg2:      #111416;
+    --surface:  #161a1d;
+    --border:   #1f2428;
+    --green:    #39d353;
+    --cyan:     #58d4e8;
+    --yellow:   #e8c339;
+    --red:      #e85858;
+    --magenta:  #c678dd;
+    --white:    #dde1e4;
+    --muted:    #4a5568;
+    --prompt-u: #39d353;
+    --prompt-h: #58d4e8;
+    --prompt-p: #e8c339;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    color: var(--white);
+    font-size: 13px;
+    overflow: hidden;
+  }
+
+  #terminal-wrap {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg);
+  }
+
+  /* Title bar */
+  #term-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .tb-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    cursor: pointer; transition: filter 0.15s;
+  }
+  .tb-dot:hover { filter: brightness(1.4); }
+  .tb-dot.close  { background: #e85858; }
+  .tb-dot.min    { background: #e8c339; }
+  .tb-dot.max    { background: #39d353; }
+  #term-title {
+    flex: 1; text-align: center; font-size: 12px;
+    color: var(--muted); letter-spacing: 1px;
+  }
+  #term-tabs {
+    display: flex; gap: 4px;
+  }
+  .term-tab {
+    font-size: 11px; padding: 3px 10px; border-radius: 4px;
+    background: var(--bg2); color: var(--muted);
+    cursor: pointer; border: 1px solid var(--border); transition: 0.15s;
+  }
+  .term-tab.active { background: var(--bg); color: var(--white); border-color: #2d3540; }
+  .term-tab:hover:not(.active) { color: var(--white); }
+
+  /* Output area */
+  #output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 18px 6px;
+    line-height: 1.65;
+    scroll-behavior: smooth;
+  }
+  #output::-webkit-scrollbar { width: 6px; }
+  #output::-webkit-scrollbar-track { background: transparent; }
+  #output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .line { white-space: pre-wrap; word-break: break-all; min-height: 1em; }
+  .line.err  { color: var(--red); }
+  .line.info { color: var(--cyan); }
+  .line.ok   { color: var(--green); }
+  .line.warn { color: var(--yellow); }
+  .line.dim  { color: var(--muted); }
+  .line.bold { font-weight: 700; }
+  .line.header { color: var(--cyan); font-weight: 700; border-bottom: 1px solid var(--border); margin-bottom: 4px; padding-bottom: 2px; }
+
+  /* ANSI-like coloring via spans */
+  .c-g  { color: var(--green); }
+  .c-c  { color: var(--cyan); }
+  .c-y  { color: var(--yellow); }
+  .c-r  { color: var(--red); }
+  .c-m  { color: var(--magenta); }
+  .c-w  { color: var(--white); }
+  .c-d  { color: var(--muted); }
+  .c-b  { font-weight: 700; }
+
+  /* Prompt line */
+  #input-row {
+    display: flex; align-items: center;
+    padding: 6px 18px 14px;
+    gap: 0;
+    flex-shrink: 0;
+  }
+  #prompt-display {
+    white-space: nowrap; flex-shrink: 0;
+    font-size: 13px; letter-spacing: 0.3px;
+  }
+  #cmd-input {
+    flex: 1;
+    background: transparent; border: none; outline: none;
+    color: var(--white); font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; caret-color: var(--green);
+    padding: 0 4px;
+  }
+  #cmd-input::selection { background: #1e3a2a; }
+
+  /* Cursor blink */
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .cursor {
+    display: inline-block; width: 8px; height: 14px;
+    background: var(--green); vertical-align: middle;
+    animation: blink 1s step-end infinite;
+    margin-left: 1px;
+  }
+
+  /* Scan-line overlay */
+  #terminal-wrap::after {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.04) 2px,
+      rgba(0,0,0,0.04) 4px
+    );
+  }
+
+  /* Autocomplete dropdown */
+  #autocomplete {
+    position: absolute; display: none;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    z-index: 9999; max-height: 180px; overflow-y: auto; min-width: 160px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .ac-item {
+    padding: 4px 12px; cursor: pointer; color: var(--white); white-space: nowrap;
+  }
+  .ac-item:hover, .ac-item.selected { background: #1e3a2a; color: var(--green); }
+
+  /* Startup animation */
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+  .boot-line { animation: fadeIn 0.2s ease both; }
+</style>
+</head>
+<body>
+<div id="terminal-wrap" style="position:relative;">
+  <div id="term-titlebar">
+    <div class="tb-dot close" title="Close"></div>
+    <div class="tb-dot min"   title="Minimize"></div>
+    <div class="tb-dot max"   title="Maximize"></div>
+    <div id="term-title">AWK Terminal — bash</div>
+  </div>
+
+  <div id="output"></div>
+
+  <div id="input-row">
+    <span id="prompt-display"></span>
+    <input id="cmd-input" type="text" autocomplete="off" autocorrect="off" spellcheck="false" autofocus>
+  </div>
+
+  <div id="autocomplete"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// VIRTUAL FILESYSTEM
+// ═══════════════════════════════════════════════════════════════
+const FS = {
+  '/': { type: 'dir', children: ['home','etc','usr','var','tmp','bin','dev','proc'] },
+  '/home': { type: 'dir', children: ['user'] },
+  '/home/user': { type: 'dir', children: ['Desktop','Documents','Downloads','.bashrc','.profile','.hidden'] },
+  '/home/user/Desktop': { type: 'dir', children: ['readme.txt','script.sh'] },
+  '/home/user/Documents': { type: 'dir', children: ['notes.txt','todo.md','passwords.txt'] },
+  '/home/user/Downloads': { type: 'dir', children: ['archive.zip','photo.png'] },
+  '/home/user/.bashrc': { type: 'file', content: '# .bashrc\nexport PS1="\\u@\\h:\\w$ "\nexport PATH="$PATH:/usr/local/bin"\nalias ll="ls -la"\nalias gs="git status"\n# Load nvm\n[ -s "$NVM_DIR/nvm.sh" ] && \\. "$NVM_DIR/nvm.sh"' },
+  '/home/user/.profile': { type: 'file', content: '# .profile\n# User-specific environment setup\nexport EDITOR=nano\nexport LANG=en_US.UTF-8' },
+  '/home/user/.hidden': { type: 'dir', children: ['secret.txt'] },
+  '/home/user/.hidden/secret.txt': { type: 'file', content: 'You found the hidden file!\nAll your base are belong to us.' },
+  '/home/user/Desktop/readme.txt': { type: 'file', content: 'Welcome to AWK OS 2 Terminal!\n\nType "help" to see available commands.\nType "man <command>" for command manuals.\n\nHave fun exploring!' },
+  '/home/user/Desktop/script.sh': { type: 'file', content: '#!/bin/bash\n# Sample shell script\necho "Hello from AWK OS 2!"\nfor i in 1 2 3 4 5; do\n  echo "  Count: $i"\ndone\necho "Done."' },
+  '/home/user/Documents/notes.txt': { type: 'file', content: 'My Notes\n========\n\n- Learn bash scripting\n- Explore the virtual filesystem\n- Try the "man" command\n- Check out /etc/os-release\n\nReminder: AWK OS 2 is awesome.' },
+  '/home/user/Documents/todo.md': { type: 'file', content: '# TODO\n\n- [x] Install AWK OS 2\n- [x] Open terminal\n- [ ] Write a shell script\n- [ ] Read the /etc/motd file\n- [ ] Explore /proc/cpuinfo' },
+  '/home/user/Documents/passwords.txt': { type: 'file', content: 'hunter2\nguest\npassword123\nadmin\nqwerty\n\n(just kidding, these are fake)' },
+  '/home/user/Downloads/archive.zip': { type: 'file', content: '[binary data — zip archive, 4.2 MB]' },
+  '/home/user/Downloads/photo.png': { type: 'file', content: '[binary data — PNG image, 1920x1080]' },
+  '/etc': { type: 'dir', children: ['os-release','hostname','hosts','passwd','fstab','motd','cron.d'] },
+  '/etc/os-release': { type: 'file', content: 'NAME="AWK OS 2"\nVERSION="2.0.0"\nID=awkos\nID_LIKE=arch\nPRETTY_NAME="AWK OS 2 (x86_64)"\nHOME_URL="https://awkos.dev"\nSUPPORT_URL="https://awkos.dev/support"\nBUG_REPORT_URL="https://awkos.dev/bugs"\nBUILD_ID=20250401\nVERSION_CODENAME=phoenix' },
+  '/etc/hostname': { type: 'file', content: 'awkos' },
+  '/etc/hosts': { type: 'file', content: '127.0.0.1   localhost\n127.0.0.1   awkos\n::1         localhost\n255.255.255.255 broadcasthost' },
+  '/etc/passwd': { type: 'file', content: 'root:x:0:0:root:/root:/bin/bash\nuser:x:1000:1000:AWK User:/home/user:/bin/bash\nnobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin' },
+  '/etc/fstab': { type: 'file', content: '# /etc/fstab\n# <device>       <mount>   <type>  <options>       <dump> <pass>\n/dev/sda1        /         ext4    defaults,noatime  1      1\n/dev/sda2        /boot     vfat    umask=0077        1      2\ntmpfs            /tmp      tmpfs   defaults          0      0' },
+  '/etc/motd': { type: 'file', content: '\n  ╔═══════════════════════════════╗\n  ║      AWK OS 2  Terminal       ║\n  ║   "It just works... mostly"   ║\n  ╚═══════════════════════════════╝\n\n  Type "help" for available commands.\n' },
+  '/etc/cron.d': { type: 'dir', children: ['daily','weekly'] },
+  '/etc/cron.d/daily': { type: 'file', content: '0 0 * * * root /usr/local/bin/daily-backup.sh' },
+  '/etc/cron.d/weekly': { type: 'file', content: '0 0 * * 0 root /usr/local/bin/weekly-clean.sh' },
+  '/usr': { type: 'dir', children: ['bin','lib','local','share'] },
+  '/usr/bin': { type: 'dir', children: ['bash','python3','node','git','curl','wget','vim','nano','grep','awk','sed'] },
+  '/usr/lib': { type: 'dir', children: ['libc.so','libm.so','libpthread.so'] },
+  '/usr/local': { type: 'dir', children: ['bin','lib','share'] },
+  '/usr/local/bin': { type: 'dir', children: ['daily-backup.sh','weekly-clean.sh'] },
+  '/usr/local/lib': { type: 'dir', children: [] },
+  '/usr/share': { type: 'dir', children: ['man','doc','locale'] },
+  '/usr/bin/bash': { type: 'file', content: '[binary — GNU Bash 5.2.0]' },
+  '/usr/bin/python3': { type: 'file', content: '[binary — Python 3.11.0]' },
+  '/usr/bin/node': { type: 'file', content: '[binary — Node.js 20.0.0]' },
+  '/usr/bin/git': { type: 'file', content: '[binary — Git 2.40.0]' },
+  '/usr/bin/curl': { type: 'file', content: '[binary — curl 8.0.0]' },
+  '/usr/bin/grep': { type: 'file', content: '[binary — grep 3.8]' },
+  '/usr/bin/awk': { type: 'file', content: '[binary — gawk 5.2.0]' },
+  '/usr/bin/vim': { type: 'file', content: '[binary — Vim 9.0]' },
+  '/usr/bin/nano': { type: 'file', content: '[binary — nano 7.0]' },
+  '/var': { type: 'dir', children: ['log','cache','run','tmp'] },
+  '/var/log': { type: 'dir', children: ['syslog','auth.log','kern.log','dmesg'] },
+  '/var/log/syslog': { type: 'file', content: 'Apr  1 00:00:01 awkos kernel: Linux version 6.5.0-awkos\nApr  1 00:00:02 awkos systemd[1]: Starting AWK OS 2...\nApr  1 00:00:03 awkos systemd[1]: Reached target multi-user.target\nApr  1 00:00:04 awkos sshd: Server listening on 0.0.0.0 port 22\nApr  1 00:00:05 awkos awkos-session: User "user" logged in' },
+  '/var/log/auth.log': { type: 'file', content: 'Apr  1 00:00:05 awkos login: pam_unix: session opened for user user\nApr  1 00:00:06 awkos sudo: user : TTY=pts/0 ; USER=root ; COMMAND=/bin/bash' },
+  '/var/log/kern.log': { type: 'file', content: 'Apr  1 00:00:01 awkos kernel: [    0.000000] Linux version 6.5.0-awkos (gcc 12.3)\nApr  1 00:00:01 awkos kernel: [    0.000000] Command line: BOOT_IMAGE=/vmlinuz-6.5.0 root=/dev/sda1\nApr  1 00:00:01 awkos kernel: [    0.004000] BIOS-provided physical RAM map\nApr  1 00:00:01 awkos kernel: [    0.123000] PCI: Using ACPI for IRQ routing' },
+  '/var/log/dmesg': { type: 'file', content: '[    0.000000] Linux version 6.5.0-awkos\n[    0.004000] ACPI: RSDP 0x00000000000F05B0 000024 (v02 BOCHS )\n[    0.100000] Memory: 8192MB/8192MB available\n[    0.200000] clocksource: tsc-early\n[    0.300000] NET: Registered PF_INET protocol family' },
+  '/var/cache': { type: 'dir', children: ['apt','pacman'] },
+  '/var/cache/apt': { type: 'dir', children: [] },
+  '/var/cache/pacman': { type: 'dir', children: [] },
+  '/var/run': { type: 'dir', children: ['sshd.pid','user'] },
+  '/var/run/sshd.pid': { type: 'file', content: '1234' },
+  '/var/run/user': { type: 'dir', children: ['1000'] },
+  '/var/run/user/1000': { type: 'dir', children: [] },
+  '/var/tmp': { type: 'dir', children: [] },
+  '/tmp': { type: 'dir', children: ['session-1337'] },
+  '/tmp/session-1337': { type: 'file', content: 'session_id=1337\nuser=user\nlogin_time=2025-04-01T00:00:00Z' },
+  '/bin': { type: 'dir', children: ['sh','ls','cp','mv','rm','mkdir','cat','echo','pwd','chmod','chown'] },
+  '/bin/sh': { type: 'file', content: '[binary — POSIX shell]' },
+  '/dev': { type: 'dir', children: ['null','zero','random','urandom','sda','sda1','sda2','pts','tty'] },
+  '/dev/null': { type: 'file', content: '' },
+  '/dev/zero': { type: 'file', content: '[device: endless zeros]' },
+  '/dev/random': { type: 'file', content: '[device: random bytes]' },
+  '/dev/urandom': { type: 'file', content: '[device: non-blocking random bytes]' },
+  '/dev/sda': { type: 'file', content: '[block device: 256GB disk]' },
+  '/dev/sda1': { type: 'file', content: '[block device: 240GB root partition]' },
+  '/dev/sda2': { type: 'file', content: '[block device: 512MB boot partition]' },
+  '/dev/pts': { type: 'dir', children: ['0'] },
+  '/dev/tty': { type: 'file', content: '[character device: terminal]' },
+  '/proc': { type: 'dir', children: ['cpuinfo','meminfo','version','uptime','loadavg','1','2','self'] },
+  '/proc/cpuinfo': { type: 'file', content: 'processor\t: 0\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 142\nmodel name\t: Intel(R) Core(TM) i7-10750H @ 2.60GHz\nstepping\t: 10\ncpu MHz\t\t: 2600.000\ncache size\t: 12288 KB\ncpu cores\t: 6\nbogomips\t: 5199.99\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep' },
+  '/proc/meminfo': { type: 'file', content: 'MemTotal:        8192000 kB\nMemFree:         2048512 kB\nMemAvailable:    4096256 kB\nBuffers:          256128 kB\nCached:          1024256 kB\nSwapCached:            0 kB\nSwapTotal:       2097152 kB\nSwapFree:        2097152 kB\nDirty:               256 kB\nWriteback:             0 kB' },
+  '/proc/version': { type: 'file', content: 'Linux version 6.5.0-awkos (awkos@build) (gcc version 12.3.0) #1 SMP PREEMPT_DYNAMIC' },
+  '/proc/uptime': { type: 'file', content: '3600.42 14234.01' },
+  '/proc/loadavg': { type: 'file', content: '0.12 0.08 0.05 2/234 5678' },
+  '/proc/1': { type: 'dir', children: ['cmdline','status'] },
+  '/proc/1/cmdline': { type: 'file', content: '/sbin/init' },
+  '/proc/1/status': { type: 'file', content: 'Name:\tinit\nPid:\t1\nPPid:\t0\nUID:\t0\nGID:\t0\nState:\tS (sleeping)' },
+  '/proc/2': { type: 'dir', children: ['cmdline','status'] },
+  '/proc/2/cmdline': { type: 'file', content: '[kthreadd]' },
+  '/proc/2/status': { type: 'file', content: 'Name:\tkthreadd\nPid:\t2\nPPid:\t0\nUID:\t0\nGID:\t0\nState:\tS (sleeping)' },
+  '/proc/self': { type: 'dir', children: ['cmdline','status'] },
+  '/proc/self/cmdline': { type: 'file', content: 'bash' },
+  '/proc/self/status': { type: 'file', content: 'Name:\tbash\nPid:\t5678\nPPid:\t1\nUID:\t1000\nGID:\t1000\nState:\tS (sleeping)' },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SHELL STATE
+// ═══════════════════════════════════════════════════════════════
+let cwd = '/home/user';
+let user = 'user';
+let hostname = 'awkos';
+let history = [];
+let histIdx = -1;
+let env = {
+  HOME: '/home/user',
+  USER: 'user',
+  SHELL: '/bin/bash',
+  PATH: '/usr/local/bin:/usr/bin:/bin',
+  TERM: 'xterm-256color',
+  LANG: 'en_US.UTF-8',
+  EDITOR: 'nano',
+  PS1: '\\u@\\h:\\w\\$',
+};
+let aliases = {
+  'll': 'ls -la',
+  'la': 'ls -a',
+  'l':  'ls -l',
+  'gs': 'git status',
+  'cls': 'clear',
+  'q': 'exit',
+};
+
+// fake process list
+const PROCS = [
+  { pid:1,    ppid:0,    user:'root',  stat:'S', vsz:4096,  rss:512,  cmd:'/sbin/init' },
+  { pid:2,    ppid:0,    user:'root',  stat:'S', vsz:0,     rss:0,    cmd:'[kthreadd]' },
+  { pid:150,  ppid:1,    user:'root',  stat:'S', vsz:8192,  rss:1024, cmd:'/usr/sbin/sshd' },
+  { pid:512,  ppid:1,    user:'root',  stat:'S', vsz:6144,  rss:768,  cmd:'/usr/sbin/cron' },
+  { pid:1024, ppid:1,    user:'user',  stat:'S', vsz:16384, rss:2048, cmd:'/bin/bash' },
+  { pid:2048, ppid:1,    user:'root',  stat:'S', vsz:32768, rss:4096, cmd:'/usr/bin/Xorg :0' },
+  { pid:5678, ppid:1024, user:'user',  stat:'R', vsz:8192,  rss:1024, cmd:'bash' },
+  { pid:5679, ppid:5678, user:'user',  stat:'S', vsz:4096,  rss:512,  cmd:'awk-terminal' },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// FS HELPERS
+// ═══════════════════════════════════════════════════════════════
+function resolvePath(p) {
+  if (!p || p === '~') return env.HOME;
+  if (p.startsWith('~/')) p = env.HOME + p.slice(1);
+  if (!p.startsWith('/')) p = cwd + '/' + p;
+  const parts = p.split('/').filter(Boolean);
+  const resolved = [];
+  for (const part of parts) {
+    if (part === '.') continue;
+    else if (part === '..') resolved.pop();
+    else resolved.push(part);
+  }
+  return '/' + resolved.join('/');
+}
+
+function getNode(path) { return FS[path] || null; }
+
+function getChildren(path) {
+  const node = getNode(path);
+  if (!node || node.type !== 'dir') return null;
+  return node.children || [];
+}
+
+function isDir(path) { const n = getNode(path); return n && n.type === 'dir'; }
+function isFile(path) { const n = getNode(path); return n && n.type === 'file'; }
+function exists(path) { return !!getNode(path); }
+
+function basename(p) { return p.split('/').filter(Boolean).pop() || '/'; }
+function dirpart(p) {
+  const parts = p.split('/').filter(Boolean);
+  parts.pop();
+  return '/' + parts.join('/');
+}
+
+function formatSize(content) {
+  const bytes = content ? content.length : 0;
+  if (bytes < 1024) return bytes + 'B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + 'K';
+  return (bytes/(1024*1024)).toFixed(1) + 'M';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OUTPUT HELPERS
+// ═══════════════════════════════════════════════════════════════
+const out = document.getElementById('output');
+
+function println(text = '', cls = '', html = false) {
+  const div = document.createElement('div');
+  div.className = 'line' + (cls ? ' ' + cls : '');
+  if (html) div.innerHTML = text;
+  else div.textContent = text;
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+  return div;
+}
+
+function printHTML(html) { println(html, '', true); }
+
+function printPrompt(cmd) {
+  const ps = buildPromptText();
+  printHTML(`<span class="c-g c-b">${escH(user)}</span><span class="c-d">@</span><span class="c-c">${escH(hostname)}</span><span class="c-d">:</span><span class="c-y">${escH(cwdDisplay())}</span><span class="c-d">$</span> <span class="c-w">${escH(cmd)}</span>`);
+}
+
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function cwdDisplay() {
+  if (cwd === env.HOME) return '~';
+  if (cwd.startsWith(env.HOME + '/')) return '~' + cwd.slice(env.HOME.length);
+  return cwd;
+}
+
+function buildPromptText() {
+  return `${user}@${hostname}:${cwdDisplay()}$ `;
+}
+
+function updatePromptDisplay() {
+  const el = document.getElementById('prompt-display');
+  el.innerHTML = `<span class="c-g c-b">${escH(user)}</span><span class="c-d">@</span><span class="c-c">${escH(hostname)}</span><span class="c-d">:</span><span class="c-y">${escH(cwdDisplay())}</span><span class="c-d">$</span>&nbsp;`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMMAND DEFINITIONS
+// ═══════════════════════════════════════════════════════════════
+const COMMANDS = {
+
+  // ── Navigation ──
+  pwd: (args) => {
+    println(cwd);
+  },
+
+  cd: (args) => {
+    const target = resolvePath(args[0] || env.HOME);
+    if (!exists(target)) { println(`cd: no such file or directory: ${args[0]}`, 'err'); return; }
+    if (!isDir(target)) { println(`cd: not a directory: ${args[0]}`, 'err'); return; }
+    cwd = target;
+    updatePromptDisplay();
+  },
+
+  ls: (args) => {
+    // parse flags
+    let showHidden = false, longFmt = false, path = cwd;
+    const cleanArgs = [];
+    for (const a of args) {
+      if (a.startsWith('-')) {
+        if (a.includes('a') || a.includes('A')) showHidden = true;
+        if (a.includes('l')) longFmt = true;
+      } else cleanArgs.push(a);
+    }
+    if (cleanArgs.length) path = resolvePath(cleanArgs[0]);
+
+    if (!exists(path)) { println(`ls: cannot access '${cleanArgs[0]}': No such file or directory`, 'err'); return; }
+    if (isFile(path)) { println(basename(path)); return; }
+
+    const children = getChildren(path);
+    let entries = children.map(name => {
+      const fullPath = path === '/' ? '/' + name : path + '/' + name;
+      const node = getNode(fullPath);
+      return { name, fullPath, node };
+    });
+
+    if (!showHidden) entries = entries.filter(e => !e.name.startsWith('.'));
+
+    if (longFmt) {
+      println(`total ${entries.length * 4}`);
+      for (const e of entries) {
+        const isD = e.node && e.node.type === 'dir';
+        const perm = isD ? 'drwxr-xr-x' : '-rw-r--r--';
+        const size = isD ? '4096' : String(e.node?.content?.length || 0).padStart(6);
+        const date = 'Apr  1 00:00';
+        const nameColored = isD
+          ? `<span class="c-c c-b">${escH(e.name)}</span>`
+          : `<span class="c-w">${escH(e.name)}</span>`;
+        printHTML(`<span class="c-d">${perm}  1 ${user.padEnd(8)} ${user.padEnd(8)} ${size.padStart(6)} ${date} </span>${nameColored}`);
+      }
+    } else {
+      const cols = Math.floor(Math.max(1, (window.innerWidth - 40) / 130));
+      let row = '';
+      entries.forEach((e, i) => {
+        const isD = e.node && e.node.type === 'dir';
+        const color = isD ? 'c-c c-b' : 'c-w';
+        row += `<span class="${color}" style="display:inline-block;min-width:20ch;margin-right:8px;">${escH(e.name)}</span>`;
+        if ((i + 1) % cols === 0) { printHTML(row); row = ''; }
+      });
+      if (row) printHTML(row);
+    }
+  },
+
+  // ── File ops ──
+  cat: (args) => {
+    if (!args.length) { println('cat: missing operand', 'err'); return; }
+    for (const a of args) {
+      const p = resolvePath(a);
+      if (!exists(p)) { println(`cat: ${a}: No such file or directory`, 'err'); continue; }
+      if (isDir(p)) { println(`cat: ${a}: Is a directory`, 'err'); continue; }
+      const content = getNode(p).content || '';
+      for (const line of content.split('\n')) println(line);
+    }
+  },
+
+  head: (args) => {
+    let n = 10; const files = [];
+    for (let i=0;i<args.length;i++) {
+      if (args[i] === '-n' && args[i+1]) { n = parseInt(args[++i])||10; }
+      else if (args[i].startsWith('-') && /^\-\d+$/.test(args[i])) { n = parseInt(args[i].slice(1)); }
+      else files.push(args[i]);
+    }
+    if (!files.length) { println('head: missing file', 'err'); return; }
+    for (const f of files) {
+      const p = resolvePath(f);
+      if (!exists(p)) { println(`head: ${f}: No such file or directory`, 'err'); continue; }
+      if (isDir(p)) { println(`head: error reading '${f}': Is a directory`, 'err'); continue; }
+      const lines = (getNode(p).content || '').split('\n').slice(0, n);
+      lines.forEach(l => println(l));
+    }
+  },
+
+  tail: (args) => {
+    let n = 10; const files = [];
+    for (let i=0;i<args.length;i++) {
+      if (args[i] === '-n' && args[i+1]) { n = parseInt(args[++i])||10; }
+      else if (args[i].startsWith('-') && /^\-\d+$/.test(args[i])) { n = parseInt(args[i].slice(1)); }
+      else files.push(args[i]);
+    }
+    if (!files.length) { println('tail: missing file', 'err'); return; }
+    for (const f of files) {
+      const p = resolvePath(f);
+      if (!exists(p)) { println(`tail: ${f}: No such file or directory`, 'err'); continue; }
+      if (isDir(p)) { println(`tail: error reading '${f}': Is a directory`, 'err'); continue; }
+      const lines = (getNode(p).content || '').split('\n');
+      lines.slice(-n).forEach(l => println(l));
+    }
+  },
+
+  wc: (args) => {
+    const files = args.filter(a => !a.startsWith('-'));
+    const opts = args.filter(a => a.startsWith('-'));
+    const doLines = !opts.length || opts.some(o => o.includes('l'));
+    const doWords = !opts.length || opts.some(o => o.includes('w'));
+    const doBytes = !opts.length || opts.some(o => o.includes('c'));
+    if (!files.length) { println('wc: missing file', 'err'); return; }
+    for (const f of files) {
+      const p = resolvePath(f);
+      if (!exists(p)) { println(`wc: ${f}: No such file or directory`, 'err'); continue; }
+      const c = getNode(p).content || '';
+      const lc = c.split('\n').length;
+      const wc = c.trim().split(/\s+/).filter(Boolean).length;
+      const bc = c.length;
+      let out = '';
+      if (doLines) out += String(lc).padStart(7);
+      if (doWords) out += String(wc).padStart(7);
+      if (doBytes) out += String(bc).padStart(7);
+      println(`${out} ${f}`);
+    }
+  },
+
+  grep: (args) => {
+    let pattern = '', files = [], ignoreCase = false, lineNum = false, invert = false, count = false;
+    const flags = [];
+    let i = 0;
+    while (i < args.length) {
+      if (args[i] === '-i') { ignoreCase = true; i++; }
+      else if (args[i] === '-n') { lineNum = true; i++; }
+      else if (args[i] === '-v') { invert = true; i++; }
+      else if (args[i] === '-c') { count = true; i++; }
+      else if (args[i] === '-e' && args[i+1]) { pattern = args[++i]; i++; }
+      else if (!pattern) { pattern = args[i++]; }
+      else files.push(args[i++]);
+    }
+    if (!pattern) { println('grep: missing pattern', 'err'); return; }
+    const searchIn = files.length ? files : [''];
+    for (const f of searchIn) {
+      if (!f && !files.length) { println('grep: missing file operand', 'err'); return; }
+      const p = resolvePath(f);
+      if (!exists(p)) { println(`grep: ${f}: No such file or directory`, 'err'); continue; }
+      if (isDir(p)) { println(`grep: ${f}: Is a directory`); continue; }
+      const lines = (getNode(p).content || '').split('\n');
+      const regex = new RegExp(pattern, ignoreCase ? 'gi' : 'g');
+      let matches = 0;
+      lines.forEach((line, idx) => {
+        const matched = regex.test(line);
+        regex.lastIndex = 0;
+        if (matched !== invert) {
+          matches++;
+          if (!count) {
+            const prefix = files.length > 1 ? `<span class="c-m">${escH(f)}:</span>` : '';
+            const numPrefix = lineNum ? `<span class="c-y">${idx+1}:</span>` : '';
+            const hi = line.replace(regex, m => `<span class="c-r c-b">${escH(m)}</span>`);
+            regex.lastIndex = 0;
+            printHTML(`${prefix}${numPrefix}${hi}`);
+          }
+        }
+      });
+      if (count) println(String(matches));
+    }
+  },
+
+  find: (args) => {
+    let startPath = '.', nameFilter = null, typeFilter = null;
+    for (let i=0;i<args.length;i++) {
+      if (args[i] === '-name' && args[i+1]) { nameFilter = args[++i]; }
+      else if (args[i] === '-type' && args[i+1]) { typeFilter = args[++i]; }
+      else if (!args[i].startsWith('-')) { startPath = args[i]; }
+    }
+    const base = resolvePath(startPath);
+    if (!exists(base)) { println(`find: '${startPath}': No such file or directory`, 'err'); return; }
+
+    function walk(path) {
+      const node = getNode(path);
+      if (!node) return;
+      const name = basename(path);
+      const matchName = !nameFilter || matchGlob(name, nameFilter);
+      const matchType = !typeFilter || (typeFilter === 'd' ? node.type === 'dir' : node.type === 'file');
+      if (matchName && matchType) println(path);
+      if (node.type === 'dir' && node.children) {
+        for (const child of node.children) {
+          walk(path === '/' ? '/' + child : path + '/' + child);
+        }
+      }
+    }
+    walk(base);
+  },
+
+  mkdir: (args) => {
+    if (!args.length) { println('mkdir: missing operand', 'err'); return; }
+    const parents = args.includes('-p');
+    const dirs = args.filter(a => !a.startsWith('-'));
+    for (const d of dirs) {
+      const p = resolvePath(d);
+      if (exists(p)) { if (!parents) println(`mkdir: cannot create directory '${d}': File exists`, 'err'); continue; }
+      const parent = dirpart(p);
+      if (!exists(parent)) { println(`mkdir: cannot create directory '${d}': No such file or directory`, 'err'); continue; }
+      FS[p] = { type: 'dir', children: [] };
+      const parentNode = getNode(parent);
+      if (parentNode && parentNode.children) parentNode.children.push(basename(p));
+      println('', 'ok');
+    }
+  },
+
+  touch: (args) => {
+    if (!args.length) { println('touch: missing file operand', 'err'); return; }
+    for (const f of args) {
+      const p = resolvePath(f);
+      if (!exists(p)) {
+        const parent = dirpart(p);
+        if (!exists(parent)) { println(`touch: cannot touch '${f}': No such file or directory`, 'err'); continue; }
+        FS[p] = { type: 'file', content: '' };
+        const parentNode = getNode(parent);
+        if (parentNode && parentNode.children) parentNode.children.push(basename(p));
+      }
+    }
+  },
+
+  rm: (args) => {
+    const recursive = args.some(a => a.includes('r') || a.includes('R'));
+    const force = args.some(a => a.includes('f'));
+    const files = args.filter(a => !a.startsWith('-'));
+    if (!files.length) { println('rm: missing operand', 'err'); return; }
+    for (const f of files) {
+      const p = resolvePath(f);
+      if (!exists(p)) { if (!force) println(`rm: cannot remove '${f}': No such file or directory`, 'err'); continue; }
+      if (isDir(p) && !recursive) { println(`rm: cannot remove '${f}': Is a directory`, 'err'); continue; }
+      // Remove from parent
+      const parent = dirpart(p);
+      const parentNode = getNode(parent);
+      if (parentNode && parentNode.children) {
+        parentNode.children = parentNode.children.filter(c => c !== basename(p));
+      }
+      delete FS[p];
+    }
+  },
+
+  cp: (args) => {
+    const files = args.filter(a => !a.startsWith('-'));
+    if (files.length < 2) { println('cp: missing destination file operand', 'err'); return; }
+    const dest = resolvePath(files[files.length - 1]);
+    const srcs = files.slice(0, -1);
+    for (const s of srcs) {
+      const sp = resolvePath(s);
+      if (!exists(sp)) { println(`cp: cannot stat '${s}': No such file or directory`, 'err'); continue; }
+      if (isDir(sp)) { println(`cp: -r not specified; omitting directory '${s}'`, 'err'); continue; }
+      let dp = dest;
+      if (isDir(dest)) dp = dest + '/' + basename(sp);
+      const parentOfDp = dirpart(dp);
+      if (!exists(parentOfDp)) { println(`cp: cannot create regular file '${dp}': No such file or directory`, 'err'); continue; }
+      FS[dp] = { type: 'file', content: getNode(sp).content };
+      const parentNode = getNode(parentOfDp);
+      if (parentNode && parentNode.children && !parentNode.children.includes(basename(dp))) {
+        parentNode.children.push(basename(dp));
+      }
+    }
+  },
+
+  mv: (args) => {
+    const files = args.filter(a => !a.startsWith('-'));
+    if (files.length < 2) { println('mv: missing destination file operand', 'err'); return; }
+    const dest = resolvePath(files[files.length - 1]);
+    const srcs = files.slice(0, -1);
+    for (const s of srcs) {
+      const sp = resolvePath(s);
+      if (!exists(sp)) { println(`mv: cannot stat '${s}': No such file or directory`, 'err'); continue; }
+      let dp = dest;
+      if (isDir(dest)) dp = dest + '/' + basename(sp);
+      const parentOfDp = dirpart(dp);
+      if (!exists(parentOfDp)) { println(`mv: cannot move '${s}' to '${dp}': No such file or directory`, 'err'); continue; }
+      FS[dp] = FS[sp];
+      delete FS[sp];
+      const oldParent = getNode(dirpart(sp));
+      if (oldParent && oldParent.children) oldParent.children = oldParent.children.filter(c => c !== basename(sp));
+      const newParent = getNode(parentOfDp);
+      if (newParent && newParent.children && !newParent.children.includes(basename(dp))) newParent.children.push(basename(dp));
+    }
+  },
+
+  // ── Write to file ──
+  write: (args) => {
+    if (args.length < 2) { println('write: usage: write <file> <content...>', 'err'); return; }
+    const p = resolvePath(args[0]);
+    const content = args.slice(1).join(' ');
+    if (!exists(p)) {
+      const parent = dirpart(p);
+      if (!exists(parent)) { println(`write: cannot create '${args[0]}': No such file or directory`, 'err'); return; }
+      const parentNode = getNode(parent);
+      if (parentNode && parentNode.children) parentNode.children.push(basename(p));
+    }
+    FS[p] = { type: 'file', content };
+    println(`'${args[0]}' written.`, 'ok');
+  },
+
+  // ── System info ──
+  echo: (args) => {
+    let s = args.join(' ');
+    // very basic var expansion
+    s = s.replace(/\$([A-Z_]+)/g, (_, k) => env[k] || '');
+    println(s);
+  },
+
+  printf: (args) => {
+    if (!args.length) return;
+    let fmt = args[0].replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+    let i = 1;
+    fmt = fmt.replace(/%s/g, () => args[i++] || '');
+    fmt = fmt.replace(/%d/g, () => parseInt(args[i++]) || 0);
+    for (const line of fmt.split('\n')) println(line);
+  },
+
+  env: (args) => {
+    for (const [k, v] of Object.entries(env)) {
+      printHTML(`<span class="c-c">${escH(k)}</span><span class="c-d">=</span><span class="c-w">${escH(v)}</span>`);
+    }
+  },
+
+  export: (args) => {
+    for (const a of args) {
+      const [k, v] = a.split('=');
+      if (v !== undefined) env[k] = v;
+    }
+  },
+
+  unset: (args) => {
+    for (const a of args) delete env[a];
+  },
+
+  which: (args) => {
+    if (!args.length) { println('which: missing argument', 'err'); return; }
+    for (const cmd of args) {
+      if (COMMANDS[cmd] || aliases[cmd]) println(`/usr/bin/${cmd}`);
+      else println(`which: no ${cmd} in (${env.PATH})`, 'err');
+    }
+  },
+
+  type: (args) => {
+    if (!args.length) { println('type: missing argument', 'err'); return; }
+    for (const cmd of args) {
+      if (aliases[cmd]) println(`${cmd} is aliased to '${aliases[cmd]}'`);
+      else if (COMMANDS[cmd]) println(`${cmd} is a shell builtin`);
+      else println(`${cmd}: not found`);
+    }
+  },
+
+  uname: (args) => {
+    const all = args.includes('-a');
+    if (all || args.includes('-s')) process.stdout = 'Linux';
+    if (all) println('Linux awkos 6.5.0-awkos #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux');
+    else if (args.includes('-r')) println('6.5.0-awkos');
+    else if (args.includes('-m')) println('x86_64');
+    else if (args.includes('-n')) println(hostname);
+    else println('Linux');
+  },
+
+  hostname: (args) => {
+    if (args.length) { hostname = args[0]; updatePromptDisplay(); }
+    else println(hostname);
+  },
+
+  whoami: (args) => { println(user); },
+
+  id: (args) => {
+    println(`uid=1000(${user}) gid=1000(${user}) groups=1000(${user}),4(adm),27(sudo),1000(${user})`);
+  },
+
+  uptime: (args) => {
+    const now = new Date();
+    const h = now.getHours(), m = now.getMinutes();
+    println(` ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00 up 1:00:00,  1 user,  load average: 0.12, 0.08, 0.05`);
+  },
+
+  date: (args) => {
+    const fmt = args.find(a => a.startsWith('+'));
+    if (fmt) {
+      const d = new Date();
+      let out = fmt.slice(1);
+      out = out.replace('%Y', d.getFullYear());
+      out = out.replace('%m', String(d.getMonth()+1).padStart(2,'0'));
+      out = out.replace('%d', String(d.getDate()).padStart(2,'0'));
+      out = out.replace('%H', String(d.getHours()).padStart(2,'0'));
+      out = out.replace('%M', String(d.getMinutes()).padStart(2,'0'));
+      out = out.replace('%S', String(d.getSeconds()).padStart(2,'0'));
+      println(out);
+    } else {
+      println(new Date().toString());
+    }
+  },
+
+  cal: (args) => {
+    const d = new Date();
+    const month = d.getMonth(), year = d.getFullYear();
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    println(`    ${months[month]} ${year}`, 'info');
+    println('Su Mo Tu We Th Fr Sa');
+    const first = new Date(year, month, 1).getDay();
+    const days = new Date(year, month+1, 0).getDate();
+    let row = '   '.repeat(first);
+    for (let i=1;i<=days;i++) {
+      const today = i === d.getDate();
+      row += (today ? `\x1b[7m${String(i).padStart(2)}\x1b[0m` : String(i).padStart(2)) + ' ';
+      if ((i + first) % 7 === 0) { println(row.trimEnd()); row = ''; }
+    }
+    if (row.trim()) println(row.trimEnd());
+  },
+
+  df: (args) => {
+    println('Filesystem      1K-blocks      Used Available Use% Mounted on', 'header');
+    println('/dev/sda1       247772160  42949672 204822488  18% /');
+    println('tmpfs             4096000         0   4096000   0% /dev/shm');
+    println('tmpfs              819200      1024    818176   1% /run');
+    println('/dev/sda2          523264     57856    465408  11% /boot');
+  },
+
+  du: (args) => {
+    const p = resolvePath(args.filter(a=>!a.startsWith('-'))[0] || '.');
+    if (!exists(p)) { println(`du: cannot access '${args[0]}': No such file or directory`, 'err'); return; }
+    println(`4\t${p}`);
+  },
+
+  free: (args) => {
+    const h = args.includes('-h');
+    println('               total        used        free      shared  buff/cache   available', 'header');
+    if (h) {
+      println('Mem:           7.8Gi       3.8Gi       2.0Gi        50Mi       2.0Gi       4.0Gi');
+      println('Swap:          2.0Gi           0       2.0Gi');
+    } else {
+      println('Mem:         8192000     3932160     2048000      51200     2211840     4096000');
+      println('Swap:        2097152           0     2097152');
+    }
+  },
+
+  ps: (args) => {
+    const aux = args.some(a => a.includes('a') || a === 'aux');
+    println('  PID  PPID USER     STAT   VSZ   RSS COMMAND', 'header');
+    for (const p of PROCS) {
+      if (!aux && p.user !== user) continue;
+      println(`${String(p.pid).padStart(5)} ${String(p.ppid).padStart(5)} ${p.user.padEnd(8)} ${p.stat.padEnd(4)} ${String(p.vsz).padStart(6)} ${String(p.rss).padStart(6)} ${p.cmd}`);
+    }
+  },
+
+  kill: (args) => {
+    const pids = args.filter(a => !a.startsWith('-'));
+    for (const pid of pids) {
+      const p = PROCS.find(pr => String(pr.pid) === pid);
+      if (!p) { println(`kill: (${pid}): No such process`, 'err'); }
+      else if (p.user !== user && user !== 'root') { println(`kill: (${pid}): Operation not permitted`, 'err'); }
+      else { println(`[1] Killed    ${p.cmd}`, 'warn'); }
+    }
+  },
+
+  top: (args) => {
+    println('top - interactive process view (static snapshot)', 'header');
+    println(`Tasks: ${PROCS.length} total, 1 running, ${PROCS.length-1} sleeping`);
+    println('%Cpu(s): 2.3 us, 0.8 sy, 0.0 ni, 96.5 id');
+    println('MiB Mem: 8000.0 total, 2000.0 free, 3800.0 used, 2200.0 buff');
+    println('');
+    println('  PID USER     PR  NI VIRT   RES  SHR  S  %CPU %MEM  TIME+  COMMAND', 'header');
+    for (const p of PROCS) {
+      println(`${String(p.pid).padStart(5)} ${p.user.padEnd(8)}  20   0 ${String(p.vsz).padStart(6)} ${String(p.rss).padStart(5)}  512  ${p.stat}   0.0  0.0  0:00.01 ${p.cmd}`);
+    }
+    println('[top exits — use ps for live data]', 'dim');
+  },
+
+  // ── Text tools ──
+  sort: (args) => {
+    const files = args.filter(a=>!a.startsWith('-'));
+    const reverse = args.includes('-r');
+    const numeric = args.includes('-n');
+    const unique = args.includes('-u');
+    if (!files.length) { println('sort: missing file', 'err'); return; }
+    for (const f of files) {
+      const p = resolvePath(f);
+      if (!exists(p)) { println(`sort: ${f}: No such file or directory`, 'err'); continue; }
+      let lines = (getNode(p).content||'').split('\n');
+      if (unique) lines = [...new Set(lines)];
+      lines.sort(numeric ? (a,b) => parseFloat(a)-parseFloat(b) : (a,b) => a.localeCompare(b));
+      if (reverse) lines.reverse();
+      lines.forEach(l => println(l));
+    }
+  },
+
+  uniq: (args) => {
+    const files = args.filter(a=>!a.startsWith('-'));
+    const count = args.includes('-c');
+    if (!files.length) { println('uniq: missing file', 'err'); return; }
+    const p = resolvePath(files[0]);
+    if (!exists(p)) { println(`uniq: ${files[0]}: No such file or directory`, 'err'); return; }
+    const lines = (getNode(p).content||'').split('\n');
+    let prev = null, cnt = 0;
+    for (let i=0;i<lines.length;i++) {
+      if (lines[i] === prev) { cnt++; }
+      else {
+        if (prev !== null) println(count ? `${String(cnt).padStart(6)} ${prev}` : prev);
+        prev = lines[i]; cnt = 1;
+      }
+    }
+    if (prev !== null) println(count ? `${String(cnt).padStart(6)} ${prev}` : prev);
+  },
+
+  tr: (args) => {
+    println('[tr works on stdin — pipe not supported in this terminal]', 'dim');
+  },
+
+  cut: (args) => {
+    println('[cut — pipe input not supported; try grep or awk commands]', 'dim');
+  },
+
+  // ── Misc ──
+  clear: (args) => {
+    out.innerHTML = '';
+  },
+
+  reset: (args) => {
+    out.innerHTML = '';
+  },
+
+  history: (args) => {
+    history.forEach((cmd, i) => {
+      printHTML(`<span class="c-d">${String(i+1).padStart(5)}</span>  <span class="c-w">${escH(cmd)}</span>`);
+    });
+  },
+
+  alias: (args) => {
+    if (!args.length) {
+      for (const [k,v] of Object.entries(aliases)) {
+        printHTML(`<span class="c-y">alias</span> <span class="c-c">${escH(k)}</span>=<span class="c-g">'${escH(v)}'</span>`);
+      }
+      return;
+    }
+    for (const a of args) {
+      const eq = a.indexOf('=');
+      if (eq < 0) { println(aliases[a] ? `alias ${a}='${aliases[a]}'` : `alias: ${a}: not found`, aliases[a] ? '' : 'err'); }
+      else { aliases[a.slice(0,eq)] = a.slice(eq+1).replace(/^['"]|['"]$/g,''); }
+    }
+  },
+
+  unalias: (args) => {
+    for (const a of args) {
+      if (aliases[a]) delete aliases[a];
+      else println(`unalias: ${a}: not found`, 'err');
+    }
+  },
+
+  sleep: (args) => {
+    const sec = parseFloat(args[0]) || 1;
+    println(`[sleeping ${sec}s...]`, 'dim');
+  },
+
+  true: () => {},
+  false: () => { println('', 'err'); },
+
+  exit: (args) => {
+    println('Goodbye! Close the window to exit.', 'dim');
+  },
+
+  logout: (args) => { COMMANDS.exit(args); },
+
+  // ── Fun commands ──
+  cowsay: (args) => {
+    const msg = args.join(' ') || 'Moo!';
+    const border = '-'.repeat(msg.length + 2);
+    println(` ${border}`);
+    println(`< ${msg} >`);
+    println(` ${border}`);
+    println('        \\   ^__^');
+    println('         \\  (oo)\\_______');
+    println('            (__)\\       )\\/\\');
+    println('                ||----w |');
+    println('                ||     ||');
+  },
+
+  fortune: (args) => {
+    const quotes = [
+      'There is no place like /home.',
+      'rm -rf / would make space, but at what cost?',
+      '99 little bugs in the code, 99 little bugs... Take one down, patch it around... 127 little bugs in the code.',
+      'The best code is no code at all.',
+      'It works on my machine.',
+      'Have you tried turning it off and on again?',
+      'sudo make me a sandwich.',
+      'Talk is cheap. Show me the code. — Linus Torvalds',
+      'Unix is user-friendly. It\'s just very choosy about who its friends are.',
+      'I\'d rather write programs to write programs than write programs. — Dick Sites',
+    ];
+    println(quotes[Math.floor(Math.random() * quotes.length)], 'info');
+  },
+
+  yes: (args) => {
+    println('[yes: would loop forever — press Ctrl+C to stop — simulated: 5 lines]', 'dim');
+    for (let i=0;i<5;i++) println(args[0] || 'y');
+  },
+
+  seq: (args) => {
+    let first=1, inc=1, last=1;
+    if (args.length===1) { last=parseInt(args[0]); }
+    else if (args.length===2) { first=parseInt(args[0]); last=parseInt(args[1]); }
+    else if (args.length===3) { first=parseInt(args[0]); inc=parseInt(args[1]); last=parseInt(args[2]); }
+    for (let i=first; inc>0?i<=last:i>=last; i+=inc) println(String(i));
+  },
+
+  bc: (args) => {
+    println('[bc: basic calculator — type math expressions]', 'info');
+    println('  Hint: use the built-in "calc" command: calc 2+2*5', 'dim');
+  },
+
+  calc: (args) => {
+    if (!args.length) { println('calc: usage: calc <expression>', 'err'); return; }
+    const expr = args.join(' ').replace(/[^0-9+\-*/.() ]/g,'');
+    try {
+      const result = Function('"use strict"; return (' + expr + ')')();
+      println(`= ${result}`, 'ok');
+    } catch(e) {
+      println(`calc: invalid expression: ${args.join(' ')}`, 'err');
+    }
+  },
+
+  base64: (args) => {
+    const decode = args.includes('-d') || args.includes('--decode');
+    const str = args.filter(a=>!a.startsWith('-'))[0] || '';
+    try {
+      if (decode) println(atob(str));
+      else println(btoa(str));
+    } catch(e) { println('base64: invalid input', 'err'); }
+  },
+
+  md5sum: (args) => {
+    if (!args.length) { println('md5sum: missing file', 'err'); return; }
+    for (const f of args) {
+      const p = resolvePath(f);
+      if (!exists(p)) { println(`md5sum: ${f}: No such file or directory`, 'err'); continue; }
+      // Fake but consistent-looking hash
+      let h = 0;
+      for (const c of (getNode(p).content||'')) h = (Math.imul(31,h)+c.charCodeAt(0))|0;
+      const hex = Math.abs(h).toString(16).padStart(8,'0').repeat(4).slice(0,32);
+      println(`${hex}  ${f}`);
+    }
+  },
+
+  diff: (args) => {
+    const files = args.filter(a=>!a.startsWith('-'));
+    if (files.length < 2) { println('diff: missing file arguments', 'err'); return; }
+    const [a, b] = files.map(f => {
+      const p = resolvePath(f);
+      if (!exists(p)) return null;
+      return (getNode(p).content||'').split('\n');
+    });
+    if (!a) { println(`diff: ${files[0]}: No such file or directory`, 'err'); return; }
+    if (!b) { println(`diff: ${files[1]}: No such file or directory`, 'err'); return; }
+    let diffs = 0;
+    const maxLen = Math.max(a.length, b.length);
+    for (let i=0;i<maxLen;i++) {
+      if (a[i] !== b[i]) {
+        diffs++;
+        if (a[i] !== undefined) println(`< ${a[i]}`, 'err');
+        if (b[i] !== undefined) println(`> ${b[i]}`, 'ok');
+      }
+    }
+    if (diffs === 0) println('Files are identical', 'ok');
+  },
+
+  // ── Network-ish ──
+  ping: (args) => {
+    const host = args[0] || 'localhost';
+    println(`PING ${host}: 56 data bytes`);
+    for (let i=1;i<=4;i++) {
+      const ms = (Math.random()*20+5).toFixed(3);
+      println(`64 bytes from ${host}: icmp_seq=${i} ttl=64 time=${ms} ms`);
+    }
+    println(`--- ${host} ping statistics ---`);
+    println('4 packets transmitted, 4 received, 0% packet loss');
+  },
+
+  curl: (args) => {
+    const url = args.filter(a=>!a.startsWith('-'))[0];
+    if (!url) { println('curl: no URL specified', 'err'); return; }
+    println(`[curl: simulated — cannot make real HTTP requests from terminal]`, 'dim');
+    println(`  % Total    % Received  % Xferd  Average Speed   Time`);
+    println(`100  1024  100  1024    0     0    512      0  0:00:02`);
+    println(`<html><body>Hello from ${url}</body></html>`);
+  },
+
+  wget: (args) => {
+    COMMANDS.curl(args);
+  },
+
+  netstat: (args) => {
+    println('Active Internet connections', 'header');
+    println('Proto  Local Address           Foreign Address         State');
+    println('tcp    0.0.0.0:22              0.0.0.0:*               LISTEN');
+    println('tcp    127.0.0.1:631           0.0.0.0:*               LISTEN');
+    println('tcp    192.168.1.100:52341     151.101.1.140:443       ESTABLISHED');
+  },
+
+  // ── User / perm ──
+  chmod: (args) => {
+    if (args.length < 2) { println('chmod: missing operand', 'err'); return; }
+    println(`chmod: permissions of '${args[1]}' changed to ${args[0]}`, 'ok');
+  },
+
+  chown: (args) => {
+    if (args.length < 2) { println('chown: missing operand', 'err'); return; }
+    println(`chown: changed ownership of '${args[1]}'`, 'ok');
+  },
+
+  sudo: (args) => {
+    if (!args.length) { println('usage: sudo <command>', 'err'); return; }
+    if (args[0] === 'su' || (args[0] === '-' && args[1] === 'root') || (args[0] === '-u' && args[1] === 'root')) {
+      user = 'root'; cwd = '/root'; env.HOME = '/root'; env.USER = 'root';
+      FS['/root'] = FS['/root'] || { type: 'dir', children: ['.bashrc'] };
+      FS['/root/.bashrc'] = { type: 'file', content: '# root .bashrc\nexport PS1="\\u@\\h:\\w# "' };
+      updatePromptDisplay();
+      println('[sudo] switching to root — be careful!', 'warn');
+      return;
+    }
+    const origUser = user;
+    user = 'root';
+    const origCwd = cwd;
+    try { runCommand(args.join(' ')); }
+    finally { user = origUser; }
+  },
+
+  su: (args) => {
+    const target = args[0] || 'root';
+    if (target === '-') { user = 'root'; cwd = '/root'; env.HOME='/root'; env.USER='root'; updatePromptDisplay(); println('Switched to root.', 'warn'); }
+    else { user = target; env.USER=target; updatePromptDisplay(); println(`Switched to ${target}.`); }
+  },
+
+  // ── Git (simulated) ──
+  git: (args) => {
+    const sub = args[0];
+    if (!sub) { println('usage: git <command> [args]', 'err'); return; }
+    const subs = {
+      status: () => {
+        println('On branch main', 'c-g');
+        println('Your branch is up to date with \'origin/main\'.');
+        println('');
+        println('nothing to commit, working tree clean', 'ok');
+      },
+      log: () => {
+        const commits = [
+          ['a3f8c21', 'Add AWK terminal with Unix commands', '2025-04-01'],
+          ['b72e4d9', 'Implement virtual filesystem', '2025-03-28'],
+          ['c991ab0', 'Login screen and account setup', '2025-03-20'],
+          ['d5510ef', 'Initial AWK OS 2 release', '2025-03-01'],
+        ];
+        for (const [hash, msg, date] of commits) {
+          printHTML(`<span class="c-y">commit ${hash}</span>`);
+          printHTML(`<span class="c-d">Author: ${user} &lt;${user}@awkos.dev&gt;</span>`);
+          printHTML(`<span class="c-d">Date:   ${date}</span>`);
+          println('');
+          println(`    ${msg}`);
+          println('');
+        }
+      },
+      init: () => println('Initialized empty Git repository in .git/', 'ok'),
+      clone: () => println(`Cloning into '${(args[1]||'repo').split('/').pop()}'...`, 'ok'),
+      pull: () => println('Already up to date.', 'ok'),
+      push: () => println('Everything up-to-date.', 'ok'),
+      add: () => println('', 'ok'),
+      commit: () => {
+        const m = args.includes('-m') ? args[args.indexOf('-m')+1] : 'WIP';
+        println(`[main a1b2c3d] ${m}`, 'ok');
+        println(' 1 file changed, 1 insertion(+)');
+      },
+      branch: () => println('* main', 'ok'),
+      checkout: () => println(`Switched to branch '${args[1]||'main'}'`, 'ok'),
+      diff: () => println('(no changes)', 'dim'),
+      stash: () => println('Saved working directory and index state WIP on main', 'ok'),
+    };
+    if (subs[sub]) subs[sub]();
+    else println(`git: '${sub}' is not a git command. See 'git help'.`, 'err');
+  },
+
+  // ── Package manager ──
+  pacman: (args) => {
+    if (args[0] === '-Syu' || args[0] === '-Su') {
+      println(':: Synchronizing package databases...', 'info');
+      println(' core           134.0 KiB  4.00 MiB/s 00:00');
+      println(' extra         8.00 MiB  8.00 MiB/s 00:01');
+      println(':: Starting full system upgrade...', 'info');
+      println(' there is nothing to do', 'ok');
+    } else if (args[0] === '-S') {
+      println(`resolving dependencies...`, 'info');
+      println(`Packages (1) ${args[1]}`);
+      println(`Total Download Size: 0.50 MiB`, 'ok');
+      println(`:: Proceed with installation? [Y/n] Y`);
+      println(`(1/1) installing ${args[1]}`, 'ok');
+    } else if (args[0] === '-Q') {
+      println('bash 5.2.0-1', 'ok');
+      println('git 2.40.0-1', 'ok');
+      println('vim 9.0.0-1', 'ok');
+      println('node 20.0.0-1', 'ok');
+      println('python 3.11.0-1', 'ok');
+    } else {
+      println('usage: pacman {-S -R -U -Q} [options] [packages]', 'err');
+    }
+  },
+
+  apt: (args) => {
+    println('[apt: this is an Arch-based system. Use pacman instead.]', 'warn');
+  },
+
+  // ── Man pages (inline) ──
+  man: (args) => {
+    const cmd = args[0];
+    if (!cmd) { println('What manual page do you want?', 'err'); return; }
+    const manPages = {
+      ls: 'ls — list directory contents\n\nUSAGE\n  ls [OPTIONS] [PATH]\n\nOPTIONS\n  -l    long format\n  -a    show hidden files\n  -la   long + hidden\n\nEXAMPLES\n  ls\n  ls -la\n  ls /etc',
+      cd: 'cd — change directory\n\nUSAGE\n  cd [PATH]\n\n  No argument: go to HOME\n  cd ~: go to HOME\n  cd ..: go up one level\n  cd /: go to root',
+      grep: 'grep — search for pattern in file\n\nUSAGE\n  grep [OPTIONS] PATTERN FILE\n\nOPTIONS\n  -i    ignore case\n  -n    show line numbers\n  -v    invert match\n  -c    count matches\n\nEXAMPLES\n  grep "error" /var/log/syslog\n  grep -in "user" /etc/passwd\n  grep -v "#" /etc/fstab',
+      find: 'find — search for files\n\nUSAGE\n  find [PATH] [OPTIONS]\n\nOPTIONS\n  -name PATTERN  match filename\n  -type f        files only\n  -type d        directories only\n\nEXAMPLES\n  find / -name "*.txt"\n  find /home -type d',
+      cat: 'cat — concatenate and print files\n\nUSAGE\n  cat [FILE...]\n\nEXAMPLES\n  cat /etc/hosts\n  cat file1.txt file2.txt',
+      mkdir: 'mkdir — make directories\n\nUSAGE\n  mkdir [OPTIONS] DIR\n\nOPTIONS\n  -p    create parents as needed\n\nEXAMPLES\n  mkdir mydir\n  mkdir -p a/b/c',
+      rm: 'rm — remove files\n\nUSAGE\n  rm [OPTIONS] FILE\n\nOPTIONS\n  -r    recursive (for dirs)\n  -f    force (ignore errors)\n  -rf   nuclear option\n\nWARNING: rm is permanent!',
+      git: 'git — version control\n\nSUBCOMMANDS\n  init, clone, add, commit, push, pull,\n  status, log, branch, checkout, diff, stash\n\nEXAMPLES\n  git status\n  git log\n  git commit -m "message"',
+      calc: 'calc — evaluate math expressions\n\nUSAGE\n  calc EXPRESSION\n\nEXAMPLES\n  calc 2+2\n  calc 10*5-3\n  calc (100/4)+7',
+      write: 'write — write content to a file\n\nUSAGE\n  write FILENAME CONTENT...\n\nEXAMPLES\n  write myfile.txt Hello World\n  write notes.txt This is a note',
+    };
+    if (manPages[cmd]) {
+      println(`MAN: ${cmd}`, 'header');
+      for (const line of manPages[cmd].split('\n')) println(line);
+    } else if (COMMANDS[cmd]) {
+      println(`${cmd}: no formal manual page — it is a shell builtin.`, 'warn');
+      println(`  Type '${cmd} --help' or try 'help' for a list of commands.`);
+    } else {
+      println(`man: no manual entry for ${cmd}`, 'err');
+    }
+  },
+
+  help: (args) => {
+    println('AWK OS 2 Terminal — Built-in Commands', 'header');
+    println('');
+    const groups = [
+      ['Navigation', ['pwd', 'cd', 'ls']],
+      ['File Operations', ['cat', 'head', 'tail', 'wc', 'touch', 'mkdir', 'rm', 'cp', 'mv', 'write']],
+      ['Text Search', ['grep', 'find', 'sort', 'uniq', 'diff']],
+      ['System Info', ['uname', 'whoami', 'id', 'uptime', 'date', 'cal', 'df', 'du', 'free']],
+      ['Processes', ['ps', 'top', 'kill']],
+      ['Environment', ['echo', 'printf', 'env', 'export', 'unset', 'which', 'type', 'alias', 'unalias']],
+      ['Network', ['ping', 'curl', 'wget', 'netstat']],
+      ['Utilities', ['calc', 'base64', 'md5sum', 'seq', 'sleep', 'bc', 'fortune', 'cowsay', 'yes']],
+      ['Package Mgr', ['pacman']],
+      ['VCS', ['git']],
+      ['Shell', ['history', 'clear', 'exit', 'man', 'help']],
+    ];
+    for (const [group, cmds] of groups) {
+      printHTML(`<span class="c-y c-b">${group}</span>: <span class="c-c">${cmds.join('  ')}</span>`);
+    }
+    println('');
+    println('Tips:', 'info');
+    println('  • Tab: autocomplete    • ↑/↓: command history');
+    println('  • Ctrl+L: clear        • man <cmd>: manual page');
+    println('  • write <file> <text>: create/overwrite a file');
+    println('  • calc 2+2: quick math');
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// COMMAND RUNNER
+// ═══════════════════════════════════════════════════════════════
+function matchGlob(name, pattern) {
+  const re = new RegExp('^' + pattern.replace(/\./g, '\\.').replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
+  return re.test(name);
+}
+
+function tokenize(input) {
+  // Simple tokenizer: handle quotes
+  const tokens = [];
+  let cur = '', inQ = false, qChar = '';
+  for (let i=0;i<input.length;i++) {
+    const c = input[i];
+    if (inQ) {
+      if (c === qChar) inQ = false;
+      else cur += c;
+    } else if (c === '"' || c === "'") { inQ = true; qChar = c; }
+    else if (c === ' ' || c === '\t') { if (cur) { tokens.push(cur); cur=''; } }
+    else cur += c;
+  }
+  if (cur) tokens.push(cur);
+  return tokens;
+}
+
+function runCommand(input) {
+  input = input.trim();
+  if (!input) return;
+
+  // Handle alias expansion
+  const tokens = tokenize(input);
+  if (!tokens.length) return;
+  let cmd = tokens[0];
+  const args = tokens.slice(1);
+
+  if (aliases[cmd]) {
+    const expanded = tokenize(aliases[cmd]);
+    cmd = expanded[0];
+    args.unshift(...expanded.slice(1));
+  }
+
+  if (COMMANDS[cmd]) {
+    try { COMMANDS[cmd](args); }
+    catch(e) { println(`${cmd}: internal error — ${e.message}`, 'err'); }
+  } else {
+    // Try to run if it's a file path
+    const p = resolvePath(cmd);
+    if (exists(p) && isFile(p)) {
+      println(`[executing ${cmd}...]`, 'dim');
+      const content = getNode(p).content || '';
+      for (const line of content.split('\n')) {
+        if (line.startsWith('#') || !line.trim()) continue;
+        println(`+ ${line}`, 'dim');
+      }
+      println(`[${cmd}: exited 0]`, 'ok');
+    } else {
+      println(`${cmd}: command not found`, 'err');
+      println(`  Type 'help' for available commands.`, 'dim');
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INPUT / AUTOCOMPLETE
+// ═══════════════════════════════════════════════════════════════
+const input = document.getElementById('cmd-input');
+const acBox = document.getElementById('autocomplete');
+let acItems = [], acIdx = -1;
+
+function getCompletions(partial) {
+  const tokens = tokenize(partial);
+  const completingCmd = tokens.length <= 1 && !partial.endsWith(' ');
+
+  if (completingCmd) {
+    // Complete command names
+    const prefix = tokens[0] || '';
+    return [...Object.keys(COMMANDS), ...Object.keys(aliases)]
+      .filter(c => c.startsWith(prefix)).sort();
+  } else {
+    // Complete paths
+    const lastToken = partial.endsWith(' ') ? '' : tokens[tokens.length - 1];
+    const pathPrefix = lastToken;
+    const dir = pathPrefix.includes('/')
+      ? resolvePath(pathPrefix.endsWith('/') ? pathPrefix : pathPrefix.split('/').slice(0,-1).join('/') || '/')
+      : cwd;
+    const namePrefix = pathPrefix.includes('/')
+      ? (pathPrefix.endsWith('/') ? '' : pathPrefix.split('/').pop())
+      : pathPrefix;
+
+    const children = getChildren(dir) || [];
+    return children
+      .filter(c => c.startsWith(namePrefix))
+      .map(c => {
+        const full = (pathPrefix.includes('/') ? (pathPrefix.endsWith('/') ? pathPrefix : pathPrefix.split('/').slice(0,-1).join('/')+'/') : '') + c;
+        const fp = resolvePath(full);
+        return isDir(fp) ? c + '/' : c;
+      });
+  }
+}
+
+function hideAC() {
+  acBox.style.display = 'none';
+  acItems = []; acIdx = -1;
+}
+
+function showAC(completions, partial) {
+  if (!completions.length) { hideAC(); return; }
+  acBox.innerHTML = '';
+  acItems = completions;
+  acIdx = -1;
+  completions.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'ac-item';
+    div.textContent = c;
+    div.onmouseover = () => { acIdx = i; highlightAC(); };
+    div.onclick = () => { applyCompletion(c, partial); hideAC(); };
+    acBox.appendChild(div);
+  });
+  const rect = input.getBoundingClientRect();
+  acBox.style.display = 'block';
+  acBox.style.left = rect.left + 'px';
+  acBox.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+}
+
+function highlightAC() {
+  document.querySelectorAll('.ac-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === acIdx);
+  });
+}
+
+function applyCompletion(completion, partial) {
+  const tokens = tokenize(input.value);
+  const endsWithSpace = input.value.endsWith(' ');
+  const completingCmd = tokens.length <= 1 && !endsWithSpace;
+
+  if (completingCmd) {
+    input.value = completion + ' ';
+  } else {
+    const lastToken = endsWithSpace ? '' : tokens[tokens.length - 1];
+    const base = input.value.slice(0, input.value.length - lastToken.length);
+    input.value = base + completion;
+  }
+}
+
+input.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const completions = getCompletions(input.value);
+    if (acItems.length && acBox.style.display !== 'none') {
+      acIdx = (acIdx + 1) % acItems.length;
+      highlightAC();
+      applyCompletion(acItems[acIdx], input.value);
+    } else {
+      if (completions.length === 1) {
+        applyCompletion(completions[0], input.value);
+        hideAC();
+      } else {
+        showAC(completions, input.value);
+      }
+    }
+    return;
+  }
+
+  if (e.key === 'Enter') {
+    const cmd = input.value;
+    hideAC();
+    if (cmd.trim()) {
+      printPrompt(cmd);
+      if (history[history.length-1] !== cmd) history.push(cmd);
+      histIdx = history.length;
+      runCommand(cmd);
+    }
+    input.value = '';
+    return;
+  }
+
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (acItems.length && acBox.style.display !== 'none') {
+      acIdx = (acIdx - 1 + acItems.length) % acItems.length;
+      highlightAC();
+      applyCompletion(acItems[acIdx], input.value);
+    } else {
+      if (histIdx > 0) { histIdx--; input.value = history[histIdx]; }
+    }
+    return;
+  }
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (acItems.length && acBox.style.display !== 'none') {
+      acIdx = (acIdx + 1) % acItems.length;
+      highlightAC();
+      applyCompletion(acItems[acIdx], input.value);
+    } else {
+      if (histIdx < history.length - 1) { histIdx++; input.value = history[histIdx]; }
+      else { histIdx = history.length; input.value = ''; }
+    }
+    return;
+  }
+
+  if (e.key === 'Escape') { hideAC(); return; }
+
+  if (e.ctrlKey) {
+    if (e.key === 'l' || e.key === 'L') { e.preventDefault(); COMMANDS.clear([]); return; }
+    if (e.key === 'c') { println('^C', 'err'); input.value = ''; hideAC(); return; }
+    if (e.key === 'a') { e.preventDefault(); input.setSelectionRange(0,0); return; }
+    if (e.key === 'e') { e.preventDefault(); input.setSelectionRange(input.value.length, input.value.length); return; }
+    if (e.key === 'u') { e.preventDefault(); input.value = ''; hideAC(); return; }
+    if (e.key === 'k') { e.preventDefault(); input.value = input.value.slice(0, input.selectionStart); return; }
+    if (e.key === 'w') {
+      e.preventDefault();
+      const v = input.value.slice(0, input.selectionStart);
+      const newV = v.replace(/\S+\s*$/, '');
+      input.value = newV + input.value.slice(input.selectionStart);
+      input.setSelectionRange(newV.length, newV.length);
+      return;
+    }
+  }
+
+  // Hide AC on other keys
+  setTimeout(() => {
+    if (acBox.style.display !== 'none') hideAC();
+  }, 0);
+});
+
+document.addEventListener('click', e => {
+  if (!acBox.contains(e.target)) hideAC();
+});
+
+// Keep focus
+document.addEventListener('click', () => input.focus());
+
+// ═══════════════════════════════════════════════════════════════
+// BOOT SEQUENCE
+// ═══════════════════════════════════════════════════════════════
+function boot() {
+  updatePromptDisplay();
+  const bootLines = [
+    { text: 'AWK OS 2 — Terminal Emulator v2.0', cls: 'info bold' },
+    { text: '──────────────────────────────────', cls: 'dim' },
+    { text: 'Kernel: Linux 6.5.0-awkos  Arch: x86_64', cls: 'dim' },
+    { text: `Session: ${user}@${hostname}  Shell: bash 5.2.0`, cls: 'dim' },
+    { text: '', cls: '' },
+    { text: 'Type "help" for available commands.', cls: 'ok' },
+    { text: 'Type "man <command>" for detailed usage.', cls: 'ok' },
+    { text: '', cls: '' },
+  ];
+  let delay = 0;
+  for (const l of bootLines) {
+    setTimeout(() => {
+      const el = println(l.text, l.cls);
+      el.classList.add('boot-line');
+      el.style.animationDelay = '0ms';
+    }, delay);
+    delay += 40;
+  }
+  setTimeout(() => {
+    // cat the motd
+    const motd = FS['/etc/motd']?.content || '';
+    motd.split('\n').forEach(l => println(l, 'dim'));
+    input.focus();
+  }, delay);
+}
+
+boot();
+</script>
+</body>
+</html>

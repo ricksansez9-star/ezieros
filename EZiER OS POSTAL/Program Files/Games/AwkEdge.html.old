@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0; background:#f4f4f4; font-family: sans-serif;">
+    <div style="background:#fff; padding:10px; display:flex; gap:10px; border-bottom:1px solid #ccc;">
+        <input id="query" type="text" placeholder="Search the web..." style="flex:1; padding:5px; border-radius:5px; border:1px solid #ccc;">
+        <button onclick="performSearch()">Search</button>
+    </div>
+    <iframe id="view" src="https://www.bing.com" style="width:100%; height:calc(100vh - 50px); border:none;"></iframe>
+
+    <script>
+        function performSearch() {
+            var query = document.getElementById('query').value;
+            if (query) {
+                // Constructs a Bing search URL using the input query
+                document.getElementById('view').src = "https://www.bing.com/search?q=" + encodeURIComponent(query);
+            }
+        }
+
+        // Optional: Allows pressing "Enter" inside the box to trigger the search
+        document.getElementById('query').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    </script>
+</body>
+</html>

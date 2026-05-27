@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNU GRUB v0.97</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --green: #33ff33;
+            --dim: #1c6b1c;
+            --amber: #ffb000;
+            --bg: #000;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            width: 100vw; height: 100vh;
+            background: #0d0d0d;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 12px;
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+        }
+
+        /* ── Action Top Bar ── */
+        #add-os-btn {
+            background: transparent; border: 1px solid var(--green); color: var(--green);
+            font-family: inherit; font-size: 12px; padding: 6px 16px; cursor: pointer;
+            letter-spacing: 0.1em; text-shadow: 0 0 5px rgba(51,255,51,0.5);
+        }
+        #add-os-btn:hover { background: var(--green); color: var(--bg); }
+        #file-picker { display: none; }
+
+        /* ── Monitor Frame ── */
+        .monitor {
+            width: 800px; max-width: 98vw;
+            height: 500px; max-height: 90vh;
+            background: var(--bg);
+            border: 4px solid #1a1a1a;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.9), 0 0 30px rgba(51,255,51,0.05);
+            padding: 20px; outline: none; position: relative;
+        }
+        
+        /* Scanline Overlay for Authenticity */
+        .monitor::after {
+            content: ''; position: absolute; inset: 0;
+            background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+            pointer-events: none;
+        }
+
+        /* ── GRUB Interface Layout ── */
+        .screen { width: 100%; height: 100%; color: var(--green); font-size: 14px; line-height: 1.4; }
+        .header { color: #00ffcc; text-align: center; margin-bottom: 10px; }
+        
+        .menu-box {
+            border: 1px solid var(--green);
+            height: 220px; overflow-y: auto;
+            margin-bottom: 15px; padding: 4px 0;
+            scrollbar-width: none;
+        }
+        .menu-box::-webkit-scrollbar { display: none; }
+
+        .entry { padding: 2px 12px; color: var(--green); cursor: default; user-select: none; }
+        .entry.selected { background: var(--green); color: var(--bg); font-weight: bold; }
+
+        .footer { color: var(--dim); font-size: 13px; }
+        .countdown { color: var(--amber); margin-top: 10px; }
+
+        /* ── Real-time Boot Console Logs ── */
+        #console-log {
+            display: none; width: 100%; height: 100%;
+            background: #000; color: #fff; font-size: 13px;
+            white-space: pre-wrap; overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<button id="add-os-btn" onclick="document.getElementById('file-picker').click()">[ + INJECT TARGET OS ]</button>
+<input type="file" id="file-picker" accept=".html,.htm" onchange="addOS(event)">
+
+<div class="monitor" id="monitor" tabindex="0">
+    <!-- Main Menu State -->
+    <div class="screen" id="grub-ui">
+        <div class="header">GNU GRUB version 0.97</div>
+        <p style="color: var(--dim); margin-bottom: 4px;">Use the ↑ and ↓ keys to select which operating system to boot.</p>
+        
+        <div class="menu-box" id="entry-box"></div>
+        
+        <div class="footer">
+            <p>Press ENTER to boot the selected OS.</p>
+            <p>Temporary disk images injected via UI will load within sandboxed memory environment.</p>
+            <div class="countdown" id="countdown">Booting choice automatically in 5 seconds...</div>
+        </div>
+    </div>
+
+    <!-- Active Boot Console State -->
+    <div id="console-log"></div>
+</div>
+
+<script>
+// Hardcoded Default OS Matrix
+const osEntries = [
+    { label: 'EZiER OS:POSTAL', path: '../sys32/EZIEROS.html' },
+];
+
+let selectedIdx = 0;
+let countdownSecs = 5;
+let timerId = null;
+let grubActive = true;
+
+const entryBox = document.getElementById('entry-box');
+const countdownEl = document.getElementById('countdown');
+const monitor = document.getElementById('monitor');
+
+function renderMenu() {
+    entryBox.innerHTML = '';
+    osEntries.forEach((os, idx) => {
+        const div = document.createElement('div');
+        div.className = `entry ${idx === selectedIdx ? 'selected' : ''}`;
+        div.textContent = `${idx === selectedIdx ? ' * ' : '   '}${os.label}`;
+        
+        div.onclick = () => {
+            selectedIdx = idx;
+            resetTimer();
+            renderMenu();
+        };
+        div.ondblclick = bootSelected;
+        entryBox.appendChild(div);
+    });
+}
+
+function startTimer() {
+    timerId = setInterval(() => {
+        countdownSecs--;
+        if (countdownSecs <= 0) {
+            clearInterval(timerId);
+            bootSelected();
+        } else {
+            countdownEl.textContent = `Booting choice automatically in ${countdownSecs} seconds...`;
+        }
+    }, 1000);
+}
+
+function resetTimer() {
+    clearInterval(timerId);
+    countdownEl.textContent = 'Automatic boot sequence paused. Controlled manually.';
+}
+
+function addOS(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const label = file.name.replace(/\.(html|htm)$/i, '').replace(/[_-]/g, ' ');
+    const path = URL.createObjectURL(file);
+
+    osEntries.push({ label: `Injected: ${label}`, path });
+    selectedIdx = osEntries.length - 1; // Auto focus newly added OS
+    
+    renderMenu();
+    resetTimer();
+    monitor.focus();
+}
+
+async function bootSelected() {
+    if (!grubActive) return;
+    grubActive = false;
+    clearInterval(timerId);
+
+    const target = osEntries[selectedIdx];
+    
+    // Hide standard GRUB interface, uncover raw console
+    document.getElementById('grub-ui').style.display = 'none';
+    const consoleLog = document.getElementById('console-log');
+    consoleLog.style.display = 'block';
+
+    const appendLog = (msg) => { consoleLog.textContent += msg + '\n'; };
+
+    // Real-time Linux execution sequences
+    appendLog(`  Booting \u0027${target.label}\u0027`);
+    await new Promise(r => setTimeout(r, 200));
+    appendLog('root (hd0,0)');
+    appendLog(' Filesystem type is ext2fs, partition type 0x83');
+    await new Promise(r => setTimeout(r, 400));
+    
+    appendLog('kernel /boot/vmlinuz-pro-postal root=/dev/sda1 ro quiet');
+    appendLog('   [Linux-bzImage, setup=0x3400, size=0x42ac10]');
+    await new Promise(r => setTimeout(r, 300));
+    
+    appendLog('initrd /boot/initrd.img');
+    appendLog('   [Linux-initrd @ 0x377cf000, 0x82b41 bytes]');
+    await new Promise(r => setTimeout(r, 200));
+    
+    appendLog('Executing handoff... Opening graphic environment.');
+    await new Promise(r => setTimeout(r, 300));
+
+    // Instant switch to target OS path
+    window.location.href = target.path;
+}
+
+// Global Keyboard Navigation Controls
+monitor.addEventListener('keydown', e => {
+    if (!grubActive) return;
+    
+    if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        resetTimer();
+        selectedIdx = (selectedIdx - 1 + osEntries.length) % osEntries.length;
+        renderMenu();
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        resetTimer();
+        selectedIdx = (selectedIdx + 1) % osEntries.length;
+        renderMenu();
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        bootSelected();
+    }
+});
+
+// Initialization
+monitor.focus();
+renderMenu();
+startTimer();
+</script>
+</body>
+</html>
