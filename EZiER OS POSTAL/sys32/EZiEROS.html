@@ -243,18 +243,52 @@ body, html {
         /* ── TASKBAR ── */
         #taskbar {
             position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-            height: 54px; width: auto; min-width: 300px;
+            height: var(--taskbar-height, 54px); width: auto; min-width: 300px;
             background: var(--taskbar-bg); backdrop-filter: var(--glass);
             border-radius: 14px; border: 1px solid rgba(255,255,255,0.1);
             display: flex; align-items: center; padding: 0 10px; gap: 10px; z-index: 1000000;
-            transition: width 0.3s ease, border-radius 0.3s ease, bottom 0.3s ease;
+            transition: width 0.3s ease, border-radius 0.3s ease, bottom 0.3s ease, height 0.3s ease;
         }
         #taskbar.floating {
             width: 95%; max-width: 1200px; bottom: 20px; border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
+        /* Taskbar Position: Full Width */
+        #taskbar.full-width {
+            width: 100%; left: 0; transform: none;
+            border-radius: 0; min-width: unset; bottom: 0;
+            max-width: unset;
+        }
+        /* Taskbar Position: Top */
+        #taskbar.top-position {
+            top: 0; bottom: unset; transform: translateX(-50%);
+            border-radius: 0 0 14px 14px;
+        }
+        #taskbar.top-position.full-width {
+            left: 0; transform: none; border-radius: 0;
+        }
+        /* Taskbar Position: Left */
+        #taskbar.left-position {
+            left: 0; bottom: unset; transform: none;
+            flex-direction: column; width: var(--taskbar-height, 54px); height: 100%;
+            border-radius: 0 14px 14px 0;
+            padding: 10px 0;
+        }
+        #taskbar.left-position.full-width {
+            border-radius: 0;
+        }
+        /* Taskbar Position: Right */
+        #taskbar.right-position {
+            right: 0; left: unset; bottom: unset; transform: none;
+            flex-direction: column; width: var(--taskbar-height, 54px); height: 100%;
+            border-radius: 14px 0 0 14px;
+            padding: 10px 0;
+        }
+        #taskbar.right-position.full-width {
+            border-radius: 0;
+        }
         .start-icon {
-            width: 38px; height: 38px; cursor: pointer; transition: 0.2s;
+            width: var(--icon-size, 38px); height: var(--icon-size, 38px); cursor: pointer; transition: 0.2s;
             border-radius: 50%; padding: 4px;
             background: rgba(255,255,255,0.05); object-fit: contain;
         }
@@ -263,6 +297,15 @@ body, html {
         #tray-clock {
             color: white; font-size: 13px; font-weight: 600;
             padding: 0 10px; font-family: 'Segoe UI', sans-serif; cursor: pointer;
+            writing-mode: horizontal-tb;
+        }
+        #taskbar.left-position #tray-right,
+        #taskbar.right-position #tray-right {
+            margin-left: 0; margin-top: auto; flex-direction: column;
+        }
+        #taskbar.left-position #tray-clock,
+        #taskbar.right-position #tray-clock {
+            padding: 10px 0; transform: rotate(90deg);
         }
         #tray-user {
             width: 30px; height: 30px; border-radius: 50%;
@@ -305,9 +348,30 @@ body, html {
             backdrop-filter: var(--glass);
         }
         #start-menu.open { bottom: 80px; }
+        /* Position: Top */
+        #taskbar.top-position ~ #start-menu {
+            bottom: auto; top: -850px;
+        }
+        #taskbar.top-position ~ #start-menu.open { top: 80px; }
+        /* Position: Left */
+        #taskbar.left-position ~ #start-menu {
+            bottom: 50%; left: -850px; transform: translateY(50%);
+        }
+        #taskbar.left-position ~ #start-menu.open { left: 80px; }
+        /* Position: Right */
+        #taskbar.right-position ~ #start-menu {
+            bottom: 50%; right: -850px; left: auto; transform: translateY(50%);
+        }
+        #taskbar.right-position ~ #start-menu.open { right: 80px; }
         /* Compact Mode */
         #start-menu.compact { width: 320px; height: 420px; left: 20px; transform: none; }
         #start-menu.compact .app-grid { grid-template-columns: repeat(3, 1fr); }
+        
+        #pinned-area { display: flex; align-items: center; gap: 10px; flex: 1; }
+        #taskbar.left-position #pinned-area,
+        #taskbar.right-position #pinned-area {
+            flex-direction: column; flex: 1;
+        }
 
         .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; overflow-y: auto; max-height: 380px; }
         .app-item {
@@ -738,11 +802,37 @@ body, html {
                     <input type="color" id="accent-color-input">
                 </div>
                 <div class="input-group" style="margin-top:14px;">
+                    <label>TASKBAR POSITION</label>
+                    <select id="taskbar-position-input" style="width:100%;padding:8px;border:1px solid #ced4da;border-radius:5px;font-size:14px;">
+                        <option value="bottom">Bottom (Floating)</option>
+                        <option value="top">Top</option>
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
                     <label style="display:flex;align-items:center;gap:10px;">
-                        <input type="checkbox" id="floating-taskbar-input"> Floating Taskbar
+                        <input type="checkbox" id="floating-taskbar-input"> Floating Taskbar (when not full-width)
                     </label>
                 </div>
-                <div class="input-group">
+                <div class="input-group" style="margin-top:14px;">
+                    <label style="display:flex;align-items:center;gap:10px;">
+                        <input type="checkbox" id="full-width-taskbar-input"> Full-Width Taskbar
+                    </label>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
+                    <label>TASKBAR HEIGHT (px)</label>
+                    <input type="range" id="taskbar-height-input" min="40" max="80" step="2"
+                        oninput="document.getElementById('taskbar-height-value').innerText=this.value+'px'">
+                    <div id="taskbar-height-value" style="font-size:12px;color:#666;margin-top:4px;">54px</div>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
+                    <label>ICON SIZE (px)</label>
+                    <input type="range" id="icon-size-input" min="30" max="60" step="2"
+                        oninput="document.getElementById('icon-size-value').innerText=this.value+'px'">
+                    <div id="icon-size-value" style="font-size:12px;color:#666;margin-top:4px;">38px</div>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
                     <label style="display:flex;align-items:center;gap:10px;">
                         <input type="checkbox" id="compact-start-input"> Compact Start Menu
                     </label>
@@ -758,6 +848,12 @@ body, html {
                     <input type="range" id="glass-blur-input" min="0" max="30" step="1"
                         oninput="document.getElementById('glass-blur-value').innerText=this.value+'px'">
                     <div id="glass-blur-value" style="font-size:12px;color:#666;margin-top:4px;">20px</div>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
+                    <label>BORDER RADIUS (px)</label>
+                    <input type="range" id="border-radius-input" min="0" max="30" step="1"
+                        oninput="document.getElementById('border-radius-value').innerText=this.value+'px'">
+                    <div id="border-radius-value" style="font-size:12px;color:#666;margin-top:4px;">14px</div>
                 </div>
                 <div class="input-group" style="margin-top:14px;">
                     <label style="display:flex;align-items:center;gap:10px;">
@@ -912,9 +1008,294 @@ body, html {
 
     <script>
     // ═══════════════════════════════════════════════════════
-    // STATE
+    // EZIER OS API - Apps can interact with the system
     // ═══════════════════════════════════════════════════════
-    let zCounter = 2000;
+    const EZiEROS_API = {
+        // VERSION INFO
+        version: '1.0.0',
+        
+        // ─── SYSTEM INFORMATION ───
+        getSystemInfo: () => {
+            return {
+                osName: 'EZIER OS: POSTAL',
+                version: CURRENT_VERSION || 'UNKNOWN',
+                platform: navigator.platform,
+                userAgent: navigator.userAgent,
+                hardwareConcurrency: navigator.hardwareConcurrency || 'Unknown',
+                deviceMemory: navigator.deviceMemory ? `${navigator.deviceMemory}GB` : 'Unknown',
+                screen: { width: window.screen.width, height: window.screen.height }
+            };
+        },
+        
+        // ─── USER INFORMATION ───
+        getCurrentUser: () => {
+            const user = currentUser || getAccount();
+            if (!user) return null;
+            return {
+                name: user.name,
+                username: user.username,
+                avatar: user.avatar ? (user.avatar.startsWith('data:') ? '[Base64 Image]' : user.avatar) : null
+            };
+        },
+        
+        setUserAvatar: (urlOrData) => {
+            const user = currentUser || getAccount();
+            if (!user) return { success: false, error: 'No user logged in' };
+            user.avatar = urlOrData;
+            saveAccount(user);
+            updateTrayUser(user);
+            return { success: true, message: 'Avatar updated' };
+        },
+        
+        // ─── NOTIFICATIONS ───
+        showNotification: (title, message, type = 'info') => {
+            const notif = document.createElement('div');
+            notif.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 999999;
+                background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#1793d1'};
+                color: white; padding: 20px; border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                font-family: 'Segoe UI', sans-serif;
+                animation: slideIn 0.3s ease forwards;
+                max-width: 350px;
+            `;
+            notif.innerHTML = `<strong>${title}</strong><br><small>${message}</small>`;
+            document.body.appendChild(notif);
+            setTimeout(() => {
+                notif.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+            return { success: true };
+        },
+        
+        showAlert: (message) => {
+            alert(message);
+            return { success: true };
+        },
+        
+        showConfirm: (message) => {
+            return { success: true, result: confirm(message) };
+        },
+        
+        // ─── WINDOW MANAGEMENT ───
+        launchApp: (appId) => {
+            const app = [...BUILT_IN_APPS, ...getCustomApps()].find(a => a.id === appId);
+            if (!app) return { success: false, error: 'App not found' };
+            if (app.isSys) openSysWin(app.sysId);
+            else tryLaunchApp(app);
+            return { success: true };
+        },
+        
+        closeWindow: (winId) => {
+            const win = document.getElementById(winId);
+            if (!win) return { success: false, error: 'Window not found' };
+            closeWin(winId);
+            return { success: true };
+        },
+        
+        bringWindowToFront: (winId) => {
+            const win = document.getElementById(winId);
+            if (!win) return { success: false, error: 'Window not found' };
+            focusWin(win);
+            return { success: true };
+        },
+        
+        minimizeWindow: (winId) => {
+            const win = document.getElementById(winId);
+            if (!win) return { success: false, error: 'Window not found' };
+            win.style.display = 'none';
+            return { success: true };
+        },
+        
+        restoreWindow: (winId) => {
+            const win = document.getElementById(winId);
+            if (!win) return { success: false, error: 'Window not found' };
+            win.style.display = 'flex';
+            focusWin(win);
+            return { success: true };
+        },
+        
+        // ─── APP MANAGEMENT ───
+        getInstalledApps: () => {
+            return [...BUILT_IN_APPS, ...getCustomApps()].map(app => ({
+                id: app.id,
+                name: app.name,
+                icon: app.icon,
+                custom: !!app.custom
+            }));
+        },
+        
+        installApp: (name, url, icon) => {
+            const app = {
+                id: 'user-' + Date.now(),
+                name,
+                icon: icon || 'https://img.icons8.com/color/48/opened-folder.png',
+                file: url,
+                custom: true
+            };
+            const apps = getCustomApps();
+            apps.push(app);
+            saveCustomApps(apps);
+            renderOS();
+            return { success: true, appId: app.id };
+        },
+        
+        removeApp: (appId) => {
+            const apps = getCustomApps().filter(a => a.id !== appId);
+            saveCustomApps(apps);
+            renderOS();
+            return { success: true };
+        },
+        
+        // ─── SETTINGS ───
+        getSetting: (key) => {
+            const settings = {
+                accentColor: localStorage.getItem('awk_accent_color') || '#1793d1',
+                taskbarOpacity: parseFloat(localStorage.getItem('awk_taskbar_opacity') || '0.85'),
+                glassBlur: parseInt(localStorage.getItem('awk_glass_blur') || '20'),
+                taskbarPosition: localStorage.getItem('awk_taskbar_position') || 'bottom',
+                floatingTaskbar: localStorage.getItem('awk_floating_taskbar') === '1',
+                fullWidthTaskbar: localStorage.getItem('awk_full_width_taskbar') === '1',
+                compactStart: localStorage.getItem('awk_compact_start') === '1',
+                reduceMotion: localStorage.getItem('awk_reduce_motion') === '1'
+            };
+            return settings[key] !== undefined ? settings[key] : null;
+        },
+        
+        getSettings: () => {
+            return {
+                accentColor: localStorage.getItem('awk_accent_color') || '#1793d1',
+                taskbarOpacity: parseFloat(localStorage.getItem('awk_taskbar_opacity') || '0.85'),
+                glassBlur: parseInt(localStorage.getItem('awk_glass_blur') || '20'),
+                taskbarHeight: parseInt(localStorage.getItem('awk_taskbar_height') || '54'),
+                iconSize: parseInt(localStorage.getItem('awk_icon_size') || '38'),
+                borderRadius: parseInt(localStorage.getItem('awk_border_radius') || '14'),
+                taskbarPosition: localStorage.getItem('awk_taskbar_position') || 'bottom',
+                floatingTaskbar: localStorage.getItem('awk_floating_taskbar') === '1',
+                fullWidthTaskbar: localStorage.getItem('awk_full_width_taskbar') === '1',
+                compactStart: localStorage.getItem('awk_compact_start') === '1',
+                reduceMotion: localStorage.getItem('awk_reduce_motion') === '1',
+                windowWidth: parseInt(localStorage.getItem('awk_window_width') || '900'),
+                windowHeight: parseInt(localStorage.getItem('awk_window_height') || '600')
+            };
+        },
+        
+        // ─── STORAGE ───
+        setAppStorage: (appId, key, value) => {
+            const storageKey = `app_${appId}_${key}`;
+            localStorage.setItem(storageKey, JSON.stringify(value));
+            return { success: true };
+        },
+        
+        getAppStorage: (appId, key) => {
+            const storageKey = `app_${appId}_${key}`;
+            const val = localStorage.getItem(storageKey);
+            return val ? JSON.parse(val) : null;
+        },
+        
+        clearAppStorage: (appId, key) => {
+            const storageKey = `app_${appId}_${key}`;
+            localStorage.removeItem(storageKey);
+            return { success: true };
+        },
+        
+        // ─── TASKBAR CONTROL ───
+        setTaskbarPosition: (position) => {
+            const valid = ['bottom', 'top', 'left', 'right'];
+            if (!valid.includes(position)) return { success: false, error: 'Invalid position' };
+            localStorage.setItem('awk_taskbar_position', position);
+            const taskbar = document.getElementById('taskbar');
+            taskbar.classList.remove('top-position', 'left-position', 'right-position');
+            if (position === 'top') taskbar.classList.add('top-position');
+            else if (position === 'left') taskbar.classList.add('left-position');
+            else if (position === 'right') taskbar.classList.add('right-position');
+            return { success: true };
+        },
+        
+        setAccentColor: (color) => {
+            document.documentElement.style.setProperty('--accent', color);
+            localStorage.setItem('awk_accent_color', color);
+            return { success: true };
+        },
+        
+        // ─── CLOCK ───
+        getCurrentTime: () => {
+            const now = new Date();
+            return {
+                hours: now.getHours(),
+                minutes: now.getMinutes(),
+                seconds: now.getSeconds(),
+                milliseconds: now.getMilliseconds(),
+                date: now.toLocaleDateString(),
+                iso: now.toISOString()
+            };
+        },
+        
+        // ─── DESKTOP INFO ───
+        getRunningApps: () => {
+            return Array.from(document.querySelectorAll('.window')).map(win => ({
+                id: win.id,
+                title: win.querySelector('.title-bar span')?.innerText || 'Unknown',
+                visible: window.getComputedStyle(win).display !== 'none'
+            }));
+        },
+        
+        getOpenWindows: () => {
+            return EZiEROS_API.getRunningApps();
+        },
+        
+        // ─── CONTEXT ───
+        getAPI: (version) => {
+            if (version && version !== EZiEROS_API.version) {
+                return { error: `API version ${version} not available. Current: ${EZiEROS_API.version}` };
+            }
+            return {
+                version: EZiEROS_API.version,
+                methods: [
+                    'getSystemInfo', 'getCurrentUser', 'setUserAvatar',
+                    'showNotification', 'showAlert', 'showConfirm',
+                    'launchApp', 'closeWindow', 'bringWindowToFront', 'minimizeWindow', 'restoreWindow',
+                    'getInstalledApps', 'installApp', 'removeApp',
+                    'getSetting', 'getSettings', 'setAppStorage', 'getAppStorage', 'clearAppStorage',
+                    'setTaskbarPosition', 'setAccentColor',
+                    'getCurrentTime', 'getRunningApps', 'getOpenWindows', 'getAPI'
+                ]
+            };
+        }
+    };
+    
+    // Expose to window and provide cross-iframe communication
+    window.EZiEROS = EZiEROS_API;
+    
+    // Cross-frame API communication via postMessage
+    window.addEventListener('message', (event) => {
+        // Security: only allow messages from same origin (iframe children)
+        if (event.source === window) return;
+        
+        const { action, params } = event.data;
+        if (!action) return;
+        
+        let result = null;
+        let error = null;
+        
+        try {
+            if (typeof EZiEROS_API[action] === 'function') {
+                result = EZiEROS_API[action](...(params || []));
+            } else {
+                error = `Unknown action: ${action}`;
+            }
+        } catch (e) {
+            error = e.message;
+        }
+        
+        // Send response back to iframe
+        event.source.postMessage({ 
+            callId: event.data.callId,
+            result, 
+            error 
+        }, event.origin);
+    });
+    </script>
     let currentUser = null;
     let setupStep = 0;
     let setupData = {};
@@ -1433,12 +1814,32 @@ body, html {
         const fileInput = document.getElementById('wallpaper-file');
         
         const isFloating = document.getElementById('floating-taskbar-input')?.checked;
+        const fullWidth = document.getElementById('full-width-taskbar-input')?.checked;
+        const taskbarPos = document.getElementById('taskbar-position-input')?.value || 'bottom';
         const isCompact = document.getElementById('compact-start-input')?.checked;
 
         // Apply Layouts
-        document.getElementById('taskbar').classList.toggle('floating', isFloating);
+        const taskbar = document.getElementById('taskbar');
+        
+        // Remove position classes
+        taskbar.classList.remove('top-position', 'left-position', 'right-position');
+        
+        // Apply new position
+        if (taskbarPos === 'top') {
+            taskbar.classList.add('top-position');
+        } else if (taskbarPos === 'left') {
+            taskbar.classList.add('left-position');
+        } else if (taskbarPos === 'right') {
+            taskbar.classList.add('right-position');
+        }
+        
+        taskbar.classList.toggle('floating', isFloating && !fullWidth);
+        taskbar.classList.toggle('full-width', fullWidth);
         document.getElementById('start-menu').classList.toggle('compact', isCompact);
+        
         localStorage.setItem('awk_floating_taskbar', isFloating ? '1' : '0');
+        localStorage.setItem('awk_full_width_taskbar', fullWidth ? '1' : '0');
+        localStorage.setItem('awk_taskbar_position', taskbarPos);
         localStorage.setItem('awk_compact_start', isCompact ? '1' : '0');
 
         // Handle Wallpaper
@@ -1467,26 +1868,64 @@ body, html {
         const accent = document.getElementById('accent-color-input')?.value || '#1793d1';
         const opacity = Math.min(1, Math.max(0.2, parseFloat(document.getElementById('taskbar-opacity-input')?.value || '0.85')));
         const blur = Math.min(30, Math.max(0, parseInt(document.getElementById('glass-blur-input')?.value || '20')));
+        const taskbarHeight = Math.min(80, Math.max(40, parseInt(document.getElementById('taskbar-height-input')?.value || '54')));
+        const iconSize = Math.min(60, Math.max(30, parseInt(document.getElementById('icon-size-input')?.value || '38')));
+        const borderRadius = Math.min(30, Math.max(0, parseInt(document.getElementById('border-radius-input')?.value || '14')));
+        const taskbarPos = document.getElementById('taskbar-position-input')?.value || 'bottom';
         const reduceMotion = !!document.getElementById('reduce-motion-input')?.checked;
+        const fullWidth = !!document.getElementById('full-width-taskbar-input')?.checked;
+        const isFloating = !!document.getElementById('floating-taskbar-input')?.checked;
+        const isCompact = !!document.getElementById('compact-start-input')?.checked;
         
         document.documentElement.style.setProperty('--accent', accent);
         document.documentElement.style.setProperty('--taskbar-bg', `rgba(15,15,15,${opacity})`);
         document.documentElement.style.setProperty('--glass', `blur(${blur}px) saturate(150%)`);
+        document.documentElement.style.setProperty('--taskbar-height', `${taskbarHeight}px`);
+        document.documentElement.style.setProperty('--icon-size', `${iconSize}px`);
         document.documentElement.style.setProperty('--window-width', `${ww}px`);
         document.documentElement.style.setProperty('--window-height', `${wh}px`);
         document.body.classList.toggle('reduce-motion', reduceMotion);
         
+        const taskbar = document.getElementById('taskbar');
+        
+        // Remove all position classes
+        taskbar.classList.remove('top-position', 'left-position', 'right-position');
+        
+        // Apply position
+        if (taskbarPos === 'top') {
+            taskbar.classList.add('top-position');
+        } else if (taskbarPos === 'left') {
+            taskbar.classList.add('left-position');
+        } else if (taskbarPos === 'right') {
+            taskbar.classList.add('right-position');
+        }
+        
+        // Apply full width
+        taskbar.classList.toggle('full-width', fullWidth);
+        
+        // Apply floating (only if not full-width)
+        taskbar.classList.toggle('floating', isFloating && !fullWidth);
+        
+        // Apply border radius
+        if (borderRadius === 0) {
+            taskbar.style.borderRadius = '0';
+        } else {
+            taskbar.style.borderRadius = `${borderRadius}px`;
+        }
+        
+        document.getElementById('start-menu').classList.toggle('compact', isCompact);
+        
+        // Save settings
         localStorage.setItem('awk_accent_color', accent);
         localStorage.setItem('awk_taskbar_opacity', String(opacity));
         localStorage.setItem('awk_glass_blur', String(blur));
+        localStorage.setItem('awk_taskbar_height', String(taskbarHeight));
+        localStorage.setItem('awk_icon_size', String(iconSize));
+        localStorage.setItem('awk_border_radius', String(borderRadius));
+        localStorage.setItem('awk_taskbar_position', taskbarPos);
         localStorage.setItem('awk_reduce_motion', reduceMotion ? '1' : '0');
-        
-        // Also ensure layouts are applied from current checkboxes
-        const isFloating = document.getElementById('floating-taskbar-input')?.checked;
-        const isCompact = document.getElementById('compact-start-input')?.checked;
-        document.getElementById('taskbar').classList.toggle('floating', isFloating);
-        document.getElementById('start-menu').classList.toggle('compact', isCompact);
         localStorage.setItem('awk_floating_taskbar', isFloating ? '1' : '0');
+        localStorage.setItem('awk_full_width_taskbar', fullWidth ? '1' : '0');
         localStorage.setItem('awk_compact_start', isCompact ? '1' : '0');
     }
 
@@ -1500,27 +1939,54 @@ body, html {
     }
 
     function initSettingsUI() {
-        const savedWall = localStorage.getItem('awk_wallpaper');
+        const savedWall = localStorage.getItem('ezier_wallpaper');
         if (savedWall) document.body.style.backgroundImage = `url('${savedWall}')`;
         
         const accent = localStorage.getItem('awk_accent_color') || '#1793d1';
         const opacity = parseFloat(localStorage.getItem('awk_taskbar_opacity') || '0.85');
         const blur = parseInt(localStorage.getItem('awk_glass_blur') || '20');
+        const taskbarHeight = parseInt(localStorage.getItem('awk_taskbar_height') || '54');
+        const iconSize = parseInt(localStorage.getItem('awk_icon_size') || '38');
+        const borderRadius = parseInt(localStorage.getItem('awk_border_radius') || '14');
+        const taskbarPos = localStorage.getItem('awk_taskbar_position') || 'bottom';
         const reduceMotion = (localStorage.getItem('awk_reduce_motion') || '0') === '1';
         const ww = parseInt(localStorage.getItem('awk_window_width') || '900');
         const wh = parseInt(localStorage.getItem('awk_window_height') || '600');
         
         const isFloating = localStorage.getItem('awk_floating_taskbar') === '1';
         const isCompact = localStorage.getItem('awk_compact_start') === '1';
+        const fullWidth = localStorage.getItem('awk_full_width_taskbar') === '1';
 
         document.documentElement.style.setProperty('--accent', accent);
         document.documentElement.style.setProperty('--taskbar-bg', `rgba(15,15,15,${opacity})`);
         document.documentElement.style.setProperty('--glass', `blur(${blur}px) saturate(150%)`);
+        document.documentElement.style.setProperty('--taskbar-height', `${taskbarHeight}px`);
+        document.documentElement.style.setProperty('--icon-size', `${iconSize}px`);
         document.documentElement.style.setProperty('--window-width', `${ww}px`);
         document.documentElement.style.setProperty('--window-height', `${wh}px`);
         document.body.classList.toggle('reduce-motion', reduceMotion);
         
-        document.getElementById('taskbar').classList.toggle('floating', isFloating);
+        const taskbar = document.getElementById('taskbar');
+        
+        // Apply position classes
+        if (taskbarPos === 'top') {
+            taskbar.classList.add('top-position');
+        } else if (taskbarPos === 'left') {
+            taskbar.classList.add('left-position');
+        } else if (taskbarPos === 'right') {
+            taskbar.classList.add('right-position');
+        }
+        
+        // Apply full width and floating
+        if (fullWidth) taskbar.classList.add('full-width');
+        if (isFloating && !fullWidth) taskbar.classList.add('floating');
+        
+        // Apply border radius
+        if (borderRadius > 0) {
+            taskbar.style.borderRadius = `${borderRadius}px`;
+        }
+        
+        document.getElementById('taskbar').classList.toggle('floating', isFloating && !fullWidth);
         document.getElementById('start-menu').classList.toggle('compact', isCompact);
 
         const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = String(val); };
@@ -1528,12 +1994,17 @@ body, html {
         
         if (savedWall && !savedWall.startsWith('data:')) set('wallpaper-input', savedWall);
         set('accent-color-input', accent);
+        set('taskbar-position-input', taskbarPos);
         set('taskbar-opacity-input', String(opacity)); setTxt('taskbar-opacity-value', Number(opacity).toFixed(2));
+        set('taskbar-height-input', String(taskbarHeight)); setTxt('taskbar-height-value', `${taskbarHeight}px`);
+        set('icon-size-input', String(iconSize)); setTxt('icon-size-value', `${iconSize}px`);
         set('glass-blur-input', String(blur)); setTxt('glass-blur-value', `${blur}px`);
+        set('border-radius-input', String(borderRadius)); setTxt('border-radius-value', `${borderRadius}px`);
         
         const rm = document.getElementById('reduce-motion-input'); if (rm) rm.checked = reduceMotion;
         const fl = document.getElementById('floating-taskbar-input'); if (fl) fl.checked = isFloating;
         const cp = document.getElementById('compact-start-input'); if (cp) cp.checked = isCompact;
+        const fw = document.getElementById('full-width-taskbar-input'); if (fw) fw.checked = fullWidth;
         
         set('window-width-input', String(ww)); setTxt('window-width-value', `${ww}px`);
         set('window-height-input', String(wh)); setTxt('window-height-value', `${wh}px`);
