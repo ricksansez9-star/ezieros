@@ -1,6 +1,6 @@
 // --- CONFIGURATION ---
 const OS_TYPE = "POSTAL"; // Or "PrOSTAL"
-const CURRENT_VERSION = "0.1.3"; // This should be updated with each release 
+const CURRENT_VERSION = "0.1.4"; // This should be updated with each release 
 
 // FIX: If OS_TYPE is POSTAL, fetch the postal version file. 
 // If it's PrOSTAL, fetch the prostal version file.
