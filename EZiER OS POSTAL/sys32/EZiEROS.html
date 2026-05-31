@@ -301,6 +301,39 @@ body, html {
         #start-menu.compact .app-grid { grid-template-columns: repeat(3, 1fr); }
 
         .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; overflow-y: auto; max-height: 380px; }
+        #desktop-icons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-start;
+            width: 100%;
+            max-width: calc(100% - 40px);
+            margin-top: 32px;
+        }
+        .desktop-icon {
+            width: 84px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            text-align: center;
+            color: rgba(255,255,255,0.95);
+        }
+        .desktop-icon img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.03);
+        }
+        .desktop-icon span {
+            font-size: 12px;
+            line-height: 1.2;
+            word-wrap: break-word;
+            max-width: 100%;
+            color: rgba(255,255,255,0.95);
+        }
         .app-item {
             position: relative;
             display: flex; flex-direction: column; align-items: center; cursor: pointer;
@@ -748,7 +781,7 @@ body, html {
         </div>
 
     <div id="taskbar">
-        <img src="../sys64/icons/ezierosstarticon.png" class="start-icon" onclick="toggleStart()" onerror="this.src='https://kde.org/stuff/clipart/logo/kde-logo-gray-transparent-3000x3000.png'">
+        <img src="../sys64/icons/ezierosstarticon.png" class="start-icon" onclick="toggleStart()" onerror="this.src='../sys64/icons/MISSING_ICON.png'">
         <div id="pinned-area"></div>
         <div id="running-area" style="display:flex;align-items:center;gap:6px;"></div>
         <div id="tray-right">
@@ -1317,7 +1350,7 @@ body, html {
         apps.push({
             id: 'user-' + Date.now(),
             name,
-            icon: icon || 'https://img.icons8.com/color/48/opened-folder.png',
+            icon: icon || '../sys64/icons/MISSING_ICON.png',
             file: fileUrl,
             custom: true
         });
@@ -1357,7 +1390,7 @@ body, html {
                 const row = document.createElement('div');
                 row.className = 'custom-app-row';
                 row.innerHTML = `
-                    <img src="${app.icon}" onerror="this.src='https://img.icons8.com/color/48/opened-folder.png'">
+                    <img src="${app.icon}" onerror="this.src='../sys64/icons/MISSING_ICON.png'">
                     <span>${app.name}</span>
                     <button class="capp-remove" onclick="removeCustomApp('${app.id}')">Remove</button>
                 `;
@@ -1521,7 +1554,7 @@ body, html {
             icon.style.height = '34px';
             icon.style.marginRight = '6px';
             icon.onclick = () => app.isSys ? openSysWin(app.sysId) : tryLaunchApp(app);
-            icon.onerror = () => { icon.src = 'https://img.icons8.com/color/48/opened-folder.png'; };
+            icon.onerror = () => { icon.src = '../sys64/icons/MISSING_ICON.png'; };
             area.appendChild(icon);
         });
     }
@@ -1543,7 +1576,7 @@ body, html {
             const isPinned = getPinnedApps().includes(app.id);
             const html = `
                 <button class="pin-btn" onclick="togglePinned('${app.id}', event)" title="${isPinned ? 'Unpin' : 'Pin'} from taskbar">${isPinned ? '📌' : '📍'}</button>
-                <img src="${app.icon}" onerror="this.src='https://img.icons8.com/color/48/opened-folder.png'">
+                <img src="${app.icon}" onerror="this.src='../sys64/icons/MISSING_ICON.png'">
                 <span>${app.name}</span>`;
 
             const item = document.createElement('div');
@@ -1687,7 +1720,7 @@ body, html {
             const btn = document.createElement('button');
             btn.className = 'taskbar-btn';
             btn.title = app ? app.name : appId;
-            btn.innerHTML = `<img src="${app ? app.icon : 'https://img.icons8.com/color/48/opened-folder.png'}" onerror="this.src='https://img.icons8.com/color/48/opened-folder.png'">`;
+            btn.innerHTML = `<img src="${app ? app.icon : '../sys64/icons/MISSING_ICON.png'}" onerror="this.src='../sys64/icons/MISSING_ICON.png'">`;
             btn.onclick = () => {
                 // toggle first matching window
                 const allWins = Array.from(document.querySelectorAll('.window'));

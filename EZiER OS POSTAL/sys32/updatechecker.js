@@ -1,6 +1,6 @@
 // --- CONFIGURATION ---
 const OS_TYPE = "POSTAL-DEV"; // Clear, exact identifier
-const CURRENT_VERSION = "0.1.4-dev.4"; // Standard SemVer tag matching your new naming scheme
+const CURRENT_VERSION = "0.1.4-dev.5"; // Standard SemVer tag matching your new naming scheme
 
 // If OS_TYPE includes "DEV", grab the dev file; otherwise grab the stable one
 const VERSION_URL = OS_TYPE.includes("DEV") 
