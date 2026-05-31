@@ -1,12 +1,11 @@
 // --- CONFIGURATION ---
-const OS_TYPE = "POSTAL"; // Or "PrOSTAL"
-const CURRENT_VERSION = "0.1.3"; // This should be updated with each release 
+const OS_TYPE = "POSTAL"; // Clear, exact identifier
+const CURRENT_VERSION = "0.1.4"; // Standard SemVer tag matching your new naming scheme
 
-// FIX: If OS_TYPE is POSTAL, fetch the postal version file. 
-// If it's PrOSTAL, fetch the prostal version file.
-const VERSION_URL = OS_TYPE === "POSTAL" 
-    ? "https://raw.githubusercontent.com/ricksansez9-star/ezierosdownloadpage/refs/heads/main/osfiles/postalversion.json"
-    : "https://raw.githubusercontent.com/ricksansez9-star/ezierosdownloadpage/refs/heads/main/osfiles/prostalversion.json";
+// If OS_TYPE includes "DEV", grab the dev file; otherwise grab the stable one
+const VERSION_URL = OS_TYPE.includes("DEV") 
+    ? "https://raw.githubusercontent.com/ricksansez9-star/ezierosdownloadpage/refs/heads/main/osfiles/postaldevversion.json"
+    : "https://raw.githubusercontent.com/ricksansez9-star/ezierosdownloadpage/refs/heads/main/osfiles/postalversion.json";
 
 async function checkForUpdates() {
     // 1. Check if user permanently muted updates
@@ -49,4 +48,4 @@ function triggerUpdateUI(newVersion) {
 }
 
 // Run on boot
-window.onload = checkForUpdates;           
+window.onload = checkForUpdates;

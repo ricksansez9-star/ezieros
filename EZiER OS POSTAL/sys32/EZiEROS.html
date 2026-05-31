@@ -225,20 +225,7 @@ body, html {
         }
         #desktop-welcome h1 { font-size: 4rem; margin: 0; font-weight: 300; }
         #desktop-welcome p { font-size: 1.2rem; opacity: 0.8; }
-        #desktop-icons {
-            display: flex; flex-direction: row; flex-wrap: wrap; gap: 30px; z-index: 20;
-            max-width: 100%; padding: 10px; align-content: flex-start;
-        }
-        .desktop-icon {
-            display: flex; flex-direction: column; align-items: center; cursor: pointer;
-            width: 80px; gap: 8px; transition: 0.2s;
-        }
-        .desktop-icon:hover img { transform: scale(1.1); }
-        .desktop-icon img {
-            width: 60px; height: 60px; object-fit: cover; border-radius: 10px;
-            transition: 0.2s; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
-        }
-        .desktop-icon span { font-size: 12px; font-weight: 600; text-align: center; max-width: 80px; word-wrap: break-word; }
+        /* Desktop icon support removed; apps are available via the Start menu only. */
 
         /* ── TASKBAR ── */
         #taskbar {
@@ -252,6 +239,10 @@ body, html {
         #taskbar.floating {
             width: 95%; max-width: 1200px; bottom: 20px; border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        #taskbar.top {
+            top: 10px;
+            bottom: auto;
         }
         .start-icon {
             width: 38px; height: 38px; cursor: pointer; transition: 0.2s;
@@ -310,13 +301,126 @@ body, html {
         #start-menu.compact .app-grid { grid-template-columns: repeat(3, 1fr); }
 
         .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; overflow-y: auto; max-height: 380px; }
+        #desktop-icons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-start;
+            width: 100%;
+            max-width: calc(100% - 40px);
+            margin-top: 32px;
+        }
+        .desktop-icon {
+            width: 84px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            text-align: center;
+            color: rgba(255,255,255,0.95);
+        }
+        .desktop-icon img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.03);
+        }
+        .desktop-icon span {
+            font-size: 12px;
+            line-height: 1.2;
+            word-wrap: break-word;
+            max-width: 100%;
+            color: rgba(255,255,255,0.95);
+        }
         .app-item {
+            position: relative;
             display: flex; flex-direction: column; align-items: center; cursor: pointer;
             padding: 12px; border-radius: 12px; transition: 0.2s;
         }
         .app-item:hover { background: rgba(255,255,255,0.1); }
         .app-item img { width: 48px; height: 48px; object-fit: cover; border-radius: 10px; }
         .app-item span { font-size: 11px; color: #ccc; margin-top: 8px; font-weight: 600; text-align: center; }
+        .pin-btn {
+            position: absolute; top: 8px; right: 8px;
+            width: 24px; height: 24px; border-radius: 50%;
+            border: none; background: rgba(0,0,0,0.5); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; cursor: pointer; opacity: 0.85;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .pin-btn:hover { opacity: 1; transform: scale(1.05); }
+        #app-search::placeholder { color: rgba(255,255,255,0.7); }
+        body.theme-light #app-search {
+            color: #111;
+            background: rgba(255,255,255,0.92);
+            border-color: rgba(148,163,184,0.4);
+        }
+        body.theme-light #app-search::placeholder { color: #64748b; }
+        body.theme-dark #app-search {
+            color: #f8fafc;
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+        }
+        body.theme-dark #app-search::placeholder { color: rgba(248,250,252,0.7); }
+        body.theme-light {
+            background-color: #edf2f7;
+            color: #1f2937;
+        }
+        body.theme-light .window {
+            background: #fdfdfd;
+            color: #111;
+            border-color: #d1d5db;
+        }
+        body.theme-light .title-bar {
+            background: #e2e8f0;
+            color: #111;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        }
+        body.theme-light .win-btn { color: #111; }
+        body.theme-light .win-btn:hover { color: #0f172a; }
+        body.theme-light #taskbar,
+        body.theme-light #user-menu,
+        body.theme-light #start-menu {
+            background: rgba(255,255,255,0.95);
+            border-color: rgba(148,163,184,0.3);
+        }
+        body.theme-light #start-menu h3,
+        body.theme-light #user-menu-name,
+        body.theme-light #user-menu-email,
+        body.theme-light .app-item span {
+            color: #111;
+        }
+        body.theme-light .app-item:hover { background: rgba(15, 23, 42, 0.08); }
+        body.theme-dark {
+            background-color: #0e1726;
+            color: #fff;
+        }
+        body.theme-dark .window {
+            background: #111827;
+            color: #f8fafc;
+            border-color: #374151;
+        }
+        body.theme-dark .title-bar {
+            background: #1f2937;
+            color: #f8fafc;
+            border-bottom: 1px solid rgba(248,250,252,0.08);
+        }
+        body.theme-dark .win-btn { color: #f8fafc; }
+        body.theme-dark .win-btn:hover { color: #fff; }
+        body.theme-dark #taskbar,
+        body.theme-dark #user-menu,
+        body.theme-dark #start-menu {
+            background: rgba(15,23,42,0.88);
+        }
+        body.theme-dark #start-menu h3,
+        body.theme-dark #user-menu-name,
+        body.theme-dark #user-menu-email,
+        body.theme-dark .app-item span {
+            color: #f8fafc;
+        }
+        body.theme-dark .app-item:hover { background: rgba(255,255,255,0.08); }
 
         /* ── WINDOWS ── */
         .window {
@@ -328,6 +432,13 @@ body, html {
             animation: winOpen 0.3s cubic-bezier(0.2, 1, 0.3, 1) forwards;
             z-index: 100;
         }
+        .window.minimized { display: none !important; }
+        .taskbar-btn {
+            width:34px;height:34px;border-radius:8px;background:transparent;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;
+        }
+        .taskbar-btn img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+        .taskbar-btn.active{box-shadow:0 6px 18px rgba(0,0,0,0.35);}
+
         .window.closing { animation: winClose 0.2s ease-in forwards; pointer-events: none; }
         .window.maximized { width: 100% !important; height: calc(100% - 75px) !important; top: 0 !important; left: 0 !important; border-radius: 0; }
         .title-bar {
@@ -662,14 +773,17 @@ body, html {
     </div>
 
     <div id="desktop">
-        <div id="desktop-icons"></div>
-        <div id="desktop-welcome">
+            <div id="desktop-icons"></div>
+            <div id="desktop-welcome">
+                <div id="desktop-greeting" style="font-size:1.3rem; opacity:0.9; max-width:520px;">Welcome to EZIER OS: POSTAL.</div>
+            </div>
+            <div id="desktop-watermark">EZIER OS</div>
         </div>
-    </div>
 
     <div id="taskbar">
-        <img src="../sys64/icons/ezierosstarticon.png" class="start-icon" onclick="toggleStart()" onerror="this.src='https://kde.org/stuff/clipart/logo/kde-logo-gray-transparent-3000x3000.png'">
+        <img src="../sys64/icons/ezierosstarticon.png" class="start-icon" onclick="toggleStart()" onerror="this.src='../sys64/icons/MISSING_ICON.png'">
         <div id="pinned-area"></div>
+        <div id="running-area" style="display:flex;align-items:center;gap:6px;"></div>
         <div id="tray-right">
             <div id="tray-clock" onclick="openSysWin('win-taskmanager')">00:00</div>
             <div id="tray-user" onclick="toggleUserMenu()">?</div>
@@ -687,7 +801,8 @@ body, html {
     </div>
 
     <div id="start-menu">
-        <h3 style="color:#999; font-size:10px; letter-spacing:2px; margin:0 0 20px; text-transform:uppercase;">Applications</h3>
+        <h3 style="color:#999; font-size:10px; letter-spacing:2px; margin:0 0 12px; text-transform:uppercase;">Applications</h3>
+        <input type="search" id="app-search" placeholder="Search apps…" style="width:100%; padding:12px 14px; border-radius:16px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.08); color:#fff; margin-bottom:18px; outline:none;">
         <div class="app-grid" id="app-list"></div>
     </div>
 
@@ -738,6 +853,21 @@ body, html {
                     <input type="color" id="accent-color-input">
                 </div>
                 <div class="input-group" style="margin-top:14px;">
+                    <label>THEME MODE</label>
+                    <select id="theme-mode-input" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                        <option value="auto">Auto</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
+                    <label>TASKBAR POSITION</label>
+                    <select id="taskbar-position-input" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
+                        <option value="bottom">Bottom</option>
+                        <option value="top">Top</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
                     <label style="display:flex;align-items:center;gap:10px;">
                         <input type="checkbox" id="floating-taskbar-input"> Floating Taskbar
                     </label>
@@ -760,10 +890,40 @@ body, html {
                     <div id="glass-blur-value" style="font-size:12px;color:#666;margin-top:4px;">20px</div>
                 </div>
                 <div class="input-group" style="margin-top:14px;">
+                    <label>WALLPAPER FIT</label>
+                    <select id="wallpaper-fit-input" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
+                        <option value="cover">Cover</option>
+                        <option value="contain">Contain</option>
+                        <option value="auto">Auto</option>
+                        <option value="initial">Initial</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
+                    <label style="display:flex;align-items:center;gap:10px;">
+                        <input type="checkbox" id="show-desktop-icons-input" style="width:18px;height:18px;">
+                        Show desktop icons
+                    </label>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
+                    <label>DESKTOP WATERMARK</label>
+                    <input type="text" id="desktop-watermark-input" placeholder="EZIER OS" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
+                </div>
+                <div class="input-group" style="margin-top:14px;">
+                    <label>WELCOME TEXT</label>
+                    <input type="text" id="desktop-welcome-input" placeholder="Welcome to EZIER OS: POSTAL." style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
+                </div>
+                <div class="input-group" style="margin-top:14px;">
                     <label style="display:flex;align-items:center;gap:10px;">
                         <input type="checkbox" id="reduce-motion-input" style="width:18px;height:18px;">
                         Reduce motion
                     </label>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
+                    <label>UPDATE NOTIFICATIONS</label>
+                    <select id="update-pref-select" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
+                        <option value="always">Always</option>
+                        <option value="never">Never</option>
+                    </select>
                 </div>
                 <button class="btn-install" style="margin-top:16px;" onclick="applyAppearanceSettings()">Apply Appearance</button>
             </div>
@@ -799,6 +959,9 @@ body, html {
 </div>
 
 <script>
+    const OS_TYPE = 'POSTAL';
+    const CURRENT_VERSION = '0.1.4';
+
     async function populateAbout() {
         // Simple data
         document.getElementById('sys-version').innerText = CURRENT_VERSION;
@@ -910,6 +1073,8 @@ body, html {
         </div>
     </div>
 
+    <!-- App context menu removed because right-click behavior was removed -->
+
     <script>
     // ═══════════════════════════════════════════════════════
     // STATE
@@ -965,6 +1130,7 @@ body, html {
     }
 
     function initOS() {
+        ensurePinnedDefaults();
         const account = getAccount();
         if (!account) {
             showSetup();
@@ -1091,9 +1257,15 @@ body, html {
 
     function bootDesktop(account) {
         initSettingsUI();
+        const searchInput = document.getElementById('app-search');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.oninput = (e) => renderOS(e.target.value);
+        }
         renderOS();
+        currentUser = account;
         updateTrayUser(account);
-        document.getElementById('desktop-greeting').textContent = `Welcome back, ${account.name}`;
+        updateDesktopLayout();
     }
 
     function lockScreen() {
@@ -1178,7 +1350,7 @@ body, html {
         apps.push({
             id: 'user-' + Date.now(),
             name,
-            icon: icon || 'https://img.icons8.com/color/48/opened-folder.png',
+            icon: icon || '../sys64/icons/MISSING_ICON.png',
             file: fileUrl,
             custom: true
         });
@@ -1218,43 +1390,13 @@ body, html {
                 const row = document.createElement('div');
                 row.className = 'custom-app-row';
                 row.innerHTML = `
-                    <img src="${app.icon}" onerror="this.src='https://img.icons8.com/color/48/opened-folder.png'">
+                    <img src="${app.icon}" onerror="this.src='../sys64/icons/MISSING_ICON.png'">
                     <span>${app.name}</span>
                     <button class="capp-remove" onclick="removeCustomApp('${app.id}')">Remove</button>
                 `;
                 container.appendChild(row);
             });
         }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // RENDER OS / APPS
-    // ═══════════════════════════════════════════════════════
-    function renderOS() {
-        const grid = document.getElementById('app-list');
-        const desktopIcons = document.getElementById('desktop-icons');
-        if (!grid || !desktopIcons) return;
-        grid.innerHTML = ''; desktopIcons.innerHTML = '';
-
-        const allApps = [...BUILT_IN_APPS, ...getCustomApps()];
-
-        allApps.forEach(app => {
-            const html = `<img src="${app.icon}" onerror="this.src='https://img.icons8.com/color/48/opened-folder.png'"><span>${app.name}</span>`;
-
-            const item = document.createElement('div');
-            item.className = 'app-item';
-            item.innerHTML = html;
-            item.onclick = () => app.isSys ? openSysWin(app.sysId) : tryLaunchApp(app);
-            grid.appendChild(item);
-
-            const dItem = document.createElement('div');
-            dItem.className = 'desktop-icon';
-            dItem.innerHTML = html;
-            dItem.onclick = () => app.isSys ? openSysWin(app.sysId) : tryLaunchApp(app);
-            desktopIcons.appendChild(dItem);
-        });
-
-        renderCustomAppList();
     }
 
     // ═══════════════════════════════════════════════════════
@@ -1298,16 +1440,21 @@ body, html {
     // WINDOW SYSTEM
     // ═══════════════════════════════════════════════════════
     function launchApp(app) {
-        const winId = 'win-' + app.id;
-        if (document.getElementById(winId)) { focusWin(document.getElementById(winId)); return; }
+        // Allow multiple instances for user apps; system apps stay single-instance
+        const baseId = app.isSys ? (app.sysId || app.id) : (app.id + '-' + Date.now());
+        const winId = 'win-' + baseId;
+        if (app.isSys && document.getElementById(winId)) { focusWin(document.getElementById(winId)); return; }
         const win = document.createElement('div');
         win.id = winId; win.className = 'window'; win.style.display = 'flex';
         win.style.top = '80px'; win.style.left = '80px';
         win.onmousedown = () => focusWin(win);
+        win.dataset.appId = app.id;
+        win.dataset.instance = String(Date.now());
         win.innerHTML = `
             <div class="title-bar" onmousedown="dragWin(this)">
                 <span>${app.name}</span>
                 <div>
+                    <span class="win-btn" onclick="minimizeWin('${winId}')">[MINIMIZE]</span>
                     <span class="win-btn" onclick="maximizeWin('${winId}')">[FULLSCREEN]</span>
                     <span class="win-btn" onclick="closeWin('${winId}')">[CLOSE]</span>
                 </div>
@@ -1316,6 +1463,7 @@ body, html {
         document.body.appendChild(win);
         focusWin(win);
         updateTM();
+        updateRunningArea();
     }
 
     function closeWin(id) {
@@ -1327,6 +1475,7 @@ body, html {
                 win.style.display = 'none'; win.classList.remove('closing');
             } else { win.remove(); }
             updateTM();
+            updateRunningArea();
         }, 250);
     }
 
@@ -1334,11 +1483,120 @@ body, html {
         const win = document.getElementById(id);
         win.style.display = 'flex'; win.classList.remove('closing');
         if (!win.style.top) { win.style.top = '80px'; win.style.left = '80px'; }
+        // Link system window to a logical app id for taskbar/contexts
+        const sysApp = BUILT_IN_APPS.find(a => a.isSys && a.sysId === id);
+        if (sysApp) win.dataset.appId = sysApp.id;
         focusWin(win);
         if (id === 'win-taskmanager') updateTM();
         if (id === 'win-appinstaller') renderCustomAppList();
         if (id === 'win-settings') populateSettingsAccount();
         if (document.getElementById('start-menu').classList.contains('open')) toggleStart();
+        updateRunningArea();
+    }
+
+    function getAllApps() {
+        return [...BUILT_IN_APPS, ...getCustomApps()];
+    }
+
+    function applyThemeMode(mode) {
+        document.body.classList.toggle('theme-light', mode === 'light');
+        document.body.classList.toggle('theme-dark', mode === 'dark');
+        if (mode === 'auto') {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.body.classList.toggle('theme-dark', prefersDark);
+            document.body.classList.toggle('theme-light', !prefersDark);
+        }
+    }
+
+    function getPinnedApps() {
+        return JSON.parse(localStorage.getItem('ezieros_pinned_apps') || '[]');
+    }
+
+    function savePinnedApps(ids) {
+        localStorage.setItem('ezieros_pinned_apps', JSON.stringify(ids));
+    }
+
+    function togglePinned(appId, event) {
+        event.stopPropagation();
+        const pinned = getPinnedApps();
+        const index = pinned.indexOf(appId);
+        if (index === -1) {
+            pinned.unshift(appId);
+        } else {
+            pinned.splice(index, 1);
+        }
+        savePinnedApps(pinned);
+        renderOS(document.getElementById('app-search')?.value || '');
+    }
+
+    function ensurePinnedDefaults() {
+        const pinned = getPinnedApps();
+        if (pinned.length === 0) {
+            savePinnedApps(['AE', 'calc', 'taskman']);
+        }
+    }
+
+    function renderPinnedArea() {
+        const pinnedIds = getPinnedApps();
+        const area = document.getElementById('pinned-area');
+        if (!area) return;
+        area.innerHTML = '';
+        const apps = getAllApps();
+        pinnedIds.forEach(id => {
+            const app = apps.find(item => item.id === id);
+            if (!app) return;
+            const icon = document.createElement('img');
+            icon.src = app.icon;
+            icon.alt = app.name;
+            icon.title = app.name;
+            icon.className = 'start-icon';
+            icon.style.width = '34px';
+            icon.style.height = '34px';
+            icon.style.marginRight = '6px';
+            icon.onclick = () => app.isSys ? openSysWin(app.sysId) : tryLaunchApp(app);
+            icon.onerror = () => { icon.src = '../sys64/icons/MISSING_ICON.png'; };
+            area.appendChild(icon);
+        });
+    }
+
+    function renderOS(search = '') {
+        const grid = document.getElementById('app-list');
+        const desktopIcons = document.getElementById('desktop-icons');
+        if (!grid || !desktopIcons) return;
+        const showDesktop = localStorage.getItem('ezier_show_desktop_icons') !== '0';
+        grid.innerHTML = '';
+        desktopIcons.innerHTML = '';
+        desktopIcons.style.display = showDesktop ? 'flex' : 'none';
+
+        const query = String(search || '').trim().toLowerCase();
+        const allApps = getAllApps();
+        const filteredApps = query ? allApps.filter(app => app.name.toLowerCase().includes(query)) : allApps;
+
+        filteredApps.forEach(app => {
+            const isPinned = getPinnedApps().includes(app.id);
+            const html = `
+                <button class="pin-btn" onclick="togglePinned('${app.id}', event)" title="${isPinned ? 'Unpin' : 'Pin'} from taskbar">${isPinned ? '📌' : '📍'}</button>
+                <img src="${app.icon}" onerror="this.src='../sys64/icons/MISSING_ICON.png'">
+                <span>${app.name}</span>`;
+
+            const item = document.createElement('div');
+            item.className = 'app-item';
+            item.innerHTML = html;
+            item.onclick = () => app.isSys ? openSysWin(app.sysId) : tryLaunchApp(app);
+            grid.appendChild(item);
+
+            if (showDesktop) {
+                const dItem = document.createElement('div');
+                dItem.className = 'desktop-icon';
+                dItem.innerHTML = html;
+                dItem.onclick = () => app.isSys ? openSysWin(app.sysId) : tryLaunchApp(app);
+                desktopIcons.appendChild(dItem);
+            }
+        });
+
+        renderCustomAppList();
+        renderPinnedArea();
+        updateDesktopLayout();
     }
 
     function populateSettingsAccount() {
@@ -1348,6 +1606,27 @@ body, html {
         const av = document.getElementById('set-avatar-url');
         if (dn) dn.value = account.name;
         if (av) av.value = (account.avatar && !account.avatar.startsWith('data:')) ? account.avatar : '';
+    }
+
+    function updateDesktopLayout() {
+        const desktopIcons = document.getElementById('desktop-icons');
+        const watermarkEl = document.getElementById('desktop-watermark');
+        const greeting = document.getElementById('desktop-greeting');
+        const showDesktop = localStorage.getItem('ezier_show_desktop_icons') !== '0';
+        const watermark = localStorage.getItem('ezier_desktop_watermark') || 'EZIER OS';
+        const welcomeText = localStorage.getItem('ezier_desktop_welcome_text');
+
+        if (desktopIcons) desktopIcons.style.display = showDesktop ? 'flex' : 'none';
+        if (watermarkEl) watermarkEl.textContent = watermark;
+        if (greeting) {
+            if (welcomeText && welcomeText.trim()) {
+                greeting.textContent = welcomeText;
+            } else if (currentUser) {
+                greeting.textContent = `Welcome back, ${currentUser.name}`;
+            } else {
+                greeting.textContent = 'Welcome to EZIER OS: POSTAL.';
+            }
+        }
     }
 
     function saveAccountSettings() {
@@ -1411,6 +1690,52 @@ body, html {
     function maximizeWin(id) { document.getElementById(id).classList.toggle('maximized'); }
     function toggleStart() { document.getElementById('start-menu').classList.toggle('open'); }
 
+    function minimizeWin(id) {
+        const win = document.getElementById(id);
+        if (!win) return;
+        win.classList.add('minimized');
+        win.style.display = 'none';
+        updateRunningArea();
+    }
+
+    function updateRunningArea() {
+        const area = document.getElementById('running-area');
+        if (!area) return;
+        area.innerHTML = '';
+        // collect visible windows and map to app ids
+        const wins = Array.from(document.querySelectorAll('.window')).filter(w => {
+            try { return window.getComputedStyle(w).display !== 'none'; } catch { return false; }
+        });
+        const apps = getAllApps();
+        const seen = new Set();
+        wins.forEach(w => {
+            let appId = w.dataset.appId;
+            if (!appId) {
+                const sys = apps.find(a => a.isSys && a.sysId === w.id);
+                if (sys) appId = sys.id;
+            }
+            if (!appId || seen.has(appId)) return;
+            seen.add(appId);
+            const app = apps.find(a => a.id === appId);
+            const btn = document.createElement('button');
+            btn.className = 'taskbar-btn';
+            btn.title = app ? app.name : appId;
+            btn.innerHTML = `<img src="${app ? app.icon : '../sys64/icons/MISSING_ICON.png'}" onerror="this.src='../sys64/icons/MISSING_ICON.png'">`;
+            btn.onclick = () => {
+                // toggle first matching window
+                const allWins = Array.from(document.querySelectorAll('.window'));
+                const match = allWins.find(x => x.dataset.appId === appId || x.id === ('win-' + (app?.sysId || appId)));
+                if (!match) return;
+                if (window.getComputedStyle(match).display === 'none') { match.style.display = 'flex'; match.classList.remove('minimized'); focusWin(match); }
+                else { match.style.display = 'none'; match.classList.add('minimized'); }
+                updateRunningArea();
+            };
+                area.appendChild(btn);
+        });
+    }
+
+    // Right-click context menu behavior removed; app actions are available through the Start menu and taskbar buttons only.
+
     function dragWin(el) {
         const win = el.parentElement;
         if (win.classList.contains('maximized')) return;
@@ -1431,34 +1756,31 @@ body, html {
     function applyPersonalization() {
         const input = document.getElementById('wallpaper-input');
         const fileInput = document.getElementById('wallpaper-file');
-        
-        const isFloating = document.getElementById('floating-taskbar-input')?.checked;
-        const isCompact = document.getElementById('compact-start-input')?.checked;
+        const wallpaperFit = document.getElementById('wallpaper-fit-input')?.value || 'cover';
 
-        // Apply Layouts
-        document.getElementById('taskbar').classList.toggle('floating', isFloating);
-        document.getElementById('start-menu').classList.toggle('compact', isCompact);
-        localStorage.setItem('awk_floating_taskbar', isFloating ? '1' : '0');
-        localStorage.setItem('awk_compact_start', isCompact ? '1' : '0');
-
-        // Handle Wallpaper
         if (fileInput.files && fileInput.files[0]) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 document.body.style.backgroundImage = `url('${e.target.result}')`;
+                document.body.style.backgroundSize = wallpaperFit;
                 localStorage.setItem('ezier_wallpaper', e.target.result);
+                localStorage.setItem('ezier_wallpaper_fit', wallpaperFit);
             };
             reader.readAsDataURL(fileInput.files[0]);
         } else if (input.value.trim()) {
             const wall = input.value.trim();
             document.body.style.backgroundImage = `url('${wall}')`;
+            document.body.style.backgroundSize = wallpaperFit;
             localStorage.setItem('ezier_wallpaper', wall);
+            localStorage.setItem('ezier_wallpaper_fit', wallpaperFit);
         }
     }
 
     function clearWallpaper() {
         localStorage.removeItem('ezier_wallpaper');
+        localStorage.removeItem('ezier_wallpaper_fit');
         document.body.style.removeProperty('background-image');
+        document.body.style.removeProperty('background-size');
         const input = document.getElementById('wallpaper-input');
         if (input) input.value = '';
     }
@@ -1467,27 +1789,53 @@ body, html {
         const accent = document.getElementById('accent-color-input')?.value || '#1793d1';
         const opacity = Math.min(1, Math.max(0.2, parseFloat(document.getElementById('taskbar-opacity-input')?.value || '0.85')));
         const blur = Math.min(30, Math.max(0, parseInt(document.getElementById('glass-blur-input')?.value || '20')));
+        const themeMode = document.getElementById('theme-mode-input')?.value || 'dark';
+        const position = document.getElementById('taskbar-position-input')?.value || 'bottom';
         const reduceMotion = !!document.getElementById('reduce-motion-input')?.checked;
-        
+        const ww = Math.min(1200, Math.max(600, parseInt(document.getElementById('window-width-input')?.value || '900')));
+        const wh = Math.min(900, Math.max(400, parseInt(document.getElementById('window-height-input')?.value || '600')));
+        const isFloating = document.getElementById('floating-taskbar-input')?.checked;
+        const isCompact = document.getElementById('compact-start-input')?.checked;
+
         document.documentElement.style.setProperty('--accent', accent);
         document.documentElement.style.setProperty('--taskbar-bg', `rgba(15,15,15,${opacity})`);
         document.documentElement.style.setProperty('--glass', `blur(${blur}px) saturate(150%)`);
         document.documentElement.style.setProperty('--window-width', `${ww}px`);
         document.documentElement.style.setProperty('--window-height', `${wh}px`);
+        const showDesktopIcons = !!document.getElementById('show-desktop-icons-input')?.checked;
+        const watermark = document.getElementById('desktop-watermark-input')?.value || 'EZIER OS';
+        const welcomeText = document.getElementById('desktop-welcome-input')?.value || 'Welcome to EZIER OS: POSTAL.';
+
         document.body.classList.toggle('reduce-motion', reduceMotion);
-        
-        localStorage.setItem('awk_accent_color', accent);
-        localStorage.setItem('awk_taskbar_opacity', String(opacity));
-        localStorage.setItem('awk_glass_blur', String(blur));
-        localStorage.setItem('awk_reduce_motion', reduceMotion ? '1' : '0');
-        
-        // Also ensure layouts are applied from current checkboxes
-        const isFloating = document.getElementById('floating-taskbar-input')?.checked;
-        const isCompact = document.getElementById('compact-start-input')?.checked;
+        applyThemeMode(themeMode);
+
+        const taskbar = document.getElementById('taskbar');
+        taskbar.classList.toggle('top', position === 'top');
+        if (position === 'top') {
+            taskbar.style.top = '10px';
+            taskbar.style.bottom = 'auto';
+        } else {
+            taskbar.style.bottom = '10px';
+            taskbar.style.top = 'auto';
+        }
+
+        localStorage.setItem('ezier_accent_color', accent);
+        localStorage.setItem('ezier_taskbar_opacity', String(opacity));
+        localStorage.setItem('ezier_glass_blur', String(blur));
+        localStorage.setItem('ezier_reduce_motion', reduceMotion ? '1' : '0');
+        localStorage.setItem('ezier_theme_mode', themeMode);
+        localStorage.setItem('ezier_taskbar_position', position);
+        localStorage.setItem('ezier_floating_taskbar', isFloating ? '1' : '0');
+        localStorage.setItem('ezier_compact_start', isCompact ? '1' : '0');
+        localStorage.setItem('update_pref', document.getElementById('update-pref-select')?.value || 'always');
+        localStorage.setItem('ezier_show_desktop_icons', showDesktopIcons ? '1' : '0');
+        localStorage.setItem('ezier_desktop_watermark', watermark);
+        localStorage.setItem('ezier_desktop_welcome_text', welcomeText);
+
         document.getElementById('taskbar').classList.toggle('floating', isFloating);
         document.getElementById('start-menu').classList.toggle('compact', isCompact);
-        localStorage.setItem('awk_floating_taskbar', isFloating ? '1' : '0');
-        localStorage.setItem('awk_compact_start', isCompact ? '1' : '0');
+        updateDesktopLayout();
+        renderOS(document.getElementById('app-search')?.value || '');
     }
 
     function applyWindowSettings() {
@@ -1495,23 +1843,29 @@ body, html {
         const h = Math.min(900, Math.max(400, parseInt(document.getElementById('window-height-input')?.value || '600')));
         document.documentElement.style.setProperty('--window-width', `${w}px`);
         document.documentElement.style.setProperty('--window-height', `${h}px`);
-        localStorage.setItem('awk_window_width', String(w));
-        localStorage.setItem('awk_window_height', String(h));
+        localStorage.setItem('ezier_window_width', String(w));
+        localStorage.setItem('ezier_window_height', String(h));
     }
 
     function initSettingsUI() {
-        const savedWall = localStorage.getItem('awk_wallpaper');
-        if (savedWall) document.body.style.backgroundImage = `url('${savedWall}')`;
+        const savedWall = localStorage.getItem('ezier_wallpaper');
+        const wallpaperFit = localStorage.getItem('ezier_wallpaper_fit') || 'cover';
+        if (savedWall) {
+            document.body.style.backgroundImage = `url('${savedWall}')`;
+            document.body.style.backgroundSize = wallpaperFit;
+        }
         
-        const accent = localStorage.getItem('awk_accent_color') || '#1793d1';
-        const opacity = parseFloat(localStorage.getItem('awk_taskbar_opacity') || '0.85');
-        const blur = parseInt(localStorage.getItem('awk_glass_blur') || '20');
-        const reduceMotion = (localStorage.getItem('awk_reduce_motion') || '0') === '1';
-        const ww = parseInt(localStorage.getItem('awk_window_width') || '900');
-        const wh = parseInt(localStorage.getItem('awk_window_height') || '600');
+        const accent = localStorage.getItem('ezier_accent_color') || '#1793d1';
+        const opacity = parseFloat(localStorage.getItem('ezier_taskbar_opacity') || '0.85');
+        const blur = parseInt(localStorage.getItem('ezier_glass_blur') || '20');
+        const themeMode = localStorage.getItem('ezier_theme_mode') || 'dark';
+        const taskbarPosition = localStorage.getItem('ezier_taskbar_position') || 'bottom';
+        const reduceMotion = (localStorage.getItem('ezier_reduce_motion') || '0') === '1';
+        const ww = parseInt(localStorage.getItem('ezier_window_width') || '900');
+        const wh = parseInt(localStorage.getItem('ezier_window_height') || '600');
         
-        const isFloating = localStorage.getItem('awk_floating_taskbar') === '1';
-        const isCompact = localStorage.getItem('awk_compact_start') === '1';
+        const isFloating = localStorage.getItem('ezier_floating_taskbar') === '1';
+        const isCompact = localStorage.getItem('ezier_compact_start') === '1';
 
         document.documentElement.style.setProperty('--accent', accent);
         document.documentElement.style.setProperty('--taskbar-bg', `rgba(15,15,15,${opacity})`);
@@ -1519,24 +1873,45 @@ body, html {
         document.documentElement.style.setProperty('--window-width', `${ww}px`);
         document.documentElement.style.setProperty('--window-height', `${wh}px`);
         document.body.classList.toggle('reduce-motion', reduceMotion);
-        
-        document.getElementById('taskbar').classList.toggle('floating', isFloating);
+        applyThemeMode(themeMode);
+
+        const taskbar = document.getElementById('taskbar');
+        taskbar.classList.toggle('floating', isFloating);
+        taskbar.classList.toggle('top', taskbarPosition === 'top');
+        if (taskbarPosition === 'top') {
+            taskbar.style.top = '10px';
+            taskbar.style.bottom = 'auto';
+        } else {
+            taskbar.style.bottom = '10px';
+            taskbar.style.top = 'auto';
+        }
         document.getElementById('start-menu').classList.toggle('compact', isCompact);
 
         const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = String(val); };
         const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
         
         if (savedWall && !savedWall.startsWith('data:')) set('wallpaper-input', savedWall);
+        set('wallpaper-fit-input', wallpaperFit);
         set('accent-color-input', accent);
         set('taskbar-opacity-input', String(opacity)); setTxt('taskbar-opacity-value', Number(opacity).toFixed(2));
         set('glass-blur-input', String(blur)); setTxt('glass-blur-value', `${blur}px`);
+        set('theme-mode-input', themeMode);
+        set('taskbar-position-input', taskbarPosition);
+        set('update-pref-select', localStorage.getItem('update_pref') || 'always');
         
         const rm = document.getElementById('reduce-motion-input'); if (rm) rm.checked = reduceMotion;
         const fl = document.getElementById('floating-taskbar-input'); if (fl) fl.checked = isFloating;
         const cp = document.getElementById('compact-start-input'); if (cp) cp.checked = isCompact;
-        
+        const showDesktopIcons = localStorage.getItem('ezier_show_desktop_icons') !== '0';
+        const watermark = localStorage.getItem('ezier_desktop_watermark') || 'EZIER OS';
+        const welcomeText = localStorage.getItem('ezier_desktop_welcome_text') || 'Welcome to EZIER OS: POSTAL.';
+        const desktopIconsInput = document.getElementById('show-desktop-icons-input'); if (desktopIconsInput) desktopIconsInput.checked = showDesktopIcons;
+        const watermarkInput = document.getElementById('desktop-watermark-input'); if (watermarkInput) watermarkInput.value = watermark;
+        const welcomeInput = document.getElementById('desktop-welcome-input'); if (welcomeInput) welcomeInput.value = welcomeText;
+
         set('window-width-input', String(ww)); setTxt('window-width-value', `${ww}px`);
         set('window-height-input', String(wh)); setTxt('window-height-value', `${wh}px`);
+        updateDesktopLayout();
     }
 
     // ═══════════════════════════════════════════════════════

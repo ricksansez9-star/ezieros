@@ -1,4 +1,4 @@
-// AWK OS 2 BIOS Boot Script
+// BIOS Boot Script
 let bootTimer = null;
 let countdownInterval = null;
 let fPressed = false;
@@ -100,7 +100,7 @@ function startBootTimer() {
     }, 1000);
 }
 
-// System info detection
+// System info detection and initialization sequence
 document.addEventListener('DOMContentLoaded', () => {
     const memoryDisplay = document.getElementById('total-memory');
     if (memoryDisplay) {
@@ -112,7 +112,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    startBootTimer();
+    // Check if biosskip.txt exists before running normal timer
+    fetch('biosskip.txt', { method: 'HEAD' })
+        .then(response => {
+            if (response.ok) {
+                // File exists, bypass everything and go straight to AwkLoader
+                bootDesktop();
+            } else {
+                // File does not exist, start the normal countdown
+                startBootTimer();
+            }
+        })
+        .catch(() => {
+            // If the fetch fails completely (e.g., offline/network issues), default back to normal boot
+            startBootTimer();
+        });
 });
 
 const kernelDisplay = document.getElementById('kernel-version');
