@@ -716,6 +716,10 @@ body, html {
                     </label>
                 </div>
                 <div class="input-group" style="margin-top:14px;">
+                    <label>Desktop icon visibility</label>
+                    <div id="desktop-icon-settings" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:220px;overflow:auto;padding:8px;border:1px solid #ced4da;border-radius:8px;background:rgba(255,255,255,0.08);"></div>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
                     <label>DESKTOP WATERMARK</label>
                     <input type="text" id="desktop-watermark-input" placeholder="EZIER OS" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
                 </div>
@@ -903,26 +907,12 @@ body, html {
         { id: 'calc', name: 'Calculator', icon: 'https://img.icons8.com/color/48/calculator.png', file: '../Program Files/Games/Calc.html' },
         { id: 'cc', name: 'Case Clicker', icon: 'https://internet.medialities.org/wp-content/uploads/2024/02/7a767-csgo-operation-10-details.jpg?w=810&h=580&crop=1', file: 'https://mtsl.dk/csgo/' },
         { id: 'Gaz', name: 'Gaz Launcher', icon: '../sys64/icons/GazAppICO.png', file: 'https://ricksansez9-star.github.io/ezierosgaming/main.html' },
-        { id: 'taskman', name: 'Task Manager', icon: 'https://img.icons8.com/color/48/stack-of-tasks.png', isSys: true, sysId: 'win-taskmanager' },
+        { id: 'taskman', name: 'Task Manager', icon: '', isSys: true, sysId: 'win-taskmanager' },
         { id: 'set', name: 'Settings', icon: 'https://img.icons8.com/color/48/settings.png', isSys: true, sysId: 'win-settings' },
         { id: 'installer', name: 'App Installer', icon: 'https://img.icons8.com/color/48/installing-updates.png', isSys: true, sysId: 'win-appinstaller' },
         {id: 'aos2', name: 'Awk OS 2 VM', icon: 'https://imgs.search.brave.com/TBm2g9uyRRdKyVrZkLH1P0Ucfj8SwdpGZn5W7weDi9Y/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9wcmV2/aWV3LnJlZGQuaXQv/N2gxY204eG03NjY4/MS5naWY_d2lkdGg9/MTkyMCZhdXRvPXdl/YnAmcz01YTlmOGMy/NGNhMTU1ZGY1YzRm/MWUwZGM4ZTE1ZTc3/YWM0NDUxMDk0.gif', file: 'https://ricksansez9-star.github.io/awkos2vm/(BOOT%20THIS%20FIRST)%20BIOS.html'},
         {id: 'ee', name: 'Ezier Explorer', icon: '../sys64/icons/ezierosstarticon.png', file: 'ezierexplore.html'},
         {id: 'std', name: 'Simple Text Editor', icon: 'https://icon-icons.com/download-file?file=https%3A%2F%2Fimages.icon-icons.com%2F2839%2FPNG%2F512%2Ftext_editor_icon_180962.png&id=180962&pack_or_individual=pack', file: '../Program Files/Games/STD.html' },
-    ];
-
-    const ERROR_POOL = [
-        { icon: '💥', title: 'Segmentation Fault', msg: 'The application attempted to access restricted memory and has been terminated.', code: 'SIGSEGV: 0xC0000005' },
-        { icon: '🔥', title: 'Kernel Panic', msg: 'A fatal exception occurred in the system kernel. The process could not be recovered.', code: 'KERN_PANIC: IRQ_UNHANDLED 0x0000007E' },
-        { icon: '⚡', title: 'Stack Overflow Exception', msg: 'The application exceeded its allocated stack space.', code: 'STACK_OVERFLOW: 0xC00000FD' },
-        { icon: '🛑', title: 'Access Denied', msg: 'Permission was denied when trying to load the application binary. Try running as root.', code: 'EACCES: errno 13' },
-        { icon: '📛', title: 'Null Pointer Dereference', msg: 'The application attempted to read from a null memory address.', code: 'NULL_DEREF: 0x00000000' },
-        { icon: '💀', title: 'Fatal Runtime Error', msg: 'An unhandled exception caused the application to terminate.', code: 'RUNTIME_ERR: 0xDEADC0DE' },
-        { icon: '🧨', title: 'Dependency Missing', msg: 'A required shared library could not be found.', code: 'ENOENT: libawkcore.so.2' },
-        { icon: '🌀', title: 'Infinite Loop Detected', msg: 'The watchdog timer killed a process stuck in an infinite loop.', code: 'WATCHDOG: PID timed out after 5000ms' },
-        { icon: '🔴', title: 'Out of Memory', msg: 'The system ran out of available memory.', code: 'ENOMEM: malloc() failed — 0 bytes free' },
-        { icon: '⚠️', title: 'Corrupted Executable', msg: 'The application binary appears corrupted or was not compiled for this architecture.', code: 'EXEC_FORMAT: invalid ELF header' },
-        { icon: '💀', title: 'VIRUS DETECTED', msg: 'A virus has been detected. Please reinstall EZIER OS: POSTAL.', code: 'VIRUS #asfasfdasdasdfasdfasdfasfd123123' },
     ];
 
     // ═══════════════════════════════════════════════════════
@@ -1217,6 +1207,10 @@ body, html {
         localStorage.setItem('ezieros_pinned_apps', JSON.stringify(ids));
     }
 
+    function getHiddenDesktopApps(){ return JSON.parse(localStorage.getItem('ezier_hidden_desktop_apps')||'[]'); }
+    function saveHiddenDesktopApps(ids){ localStorage.setItem('ezier_hidden_desktop_apps', JSON.stringify(ids)); }
+    function setDesktopIconVisibility(appId, visible){ const hidden=getHiddenDesktopApps(); const idx=hidden.indexOf(appId); if(visible){ if(idx>-1) hidden.splice(idx,1); } else if(idx===-1){ hidden.push(appId); } saveHiddenDesktopApps(hidden); renderOS($('app-search')?.value||''); }
+
     function togglePinned(appId,event){ event.stopPropagation(); const pinned=getPinnedApps(); const i=pinned.indexOf(appId); i===-1? pinned.unshift(appId): pinned.splice(i,1); savePinnedApps(pinned); renderOS($('app-search')?.value||''); }
 
     function ensurePinnedDefaults() {
@@ -1275,7 +1269,7 @@ body, html {
             item.onclick = () => app.isSys ? openSysWin(app.sysId) : tryLaunchApp(app);
             grid.appendChild(item);
 
-            if (showDesktop) {
+            if (showDesktop && !getHiddenDesktopApps().includes(app.id)) {
                 const dItem = document.createElement('div');
                 dItem.className = 'desktop-icon';
                 dItem.innerHTML = html;
@@ -1285,7 +1279,8 @@ body, html {
         });
 
         renderCustomAppList(); renderPinnedArea(); updateDesktopLayout(); }
-    function populateSettingsAccount(){ const account=getAccount(); if(!account) return; const dn=$('set-displayname'), av=$('set-avatar-url'); if(dn) dn.value=account.name; if(av) av.value=(account.avatar&&!account.avatar.startsWith('data:'))?account.avatar:''; }
+    function renderDesktopIconSettings(){ const container=$('desktop-icon-settings'); if(!container) return; container.innerHTML=''; const hidden=getHiddenDesktopApps(); getAllApps().forEach(app=>{ const id=app.id; const label=document.createElement('label'); label.style.display='flex'; label.style.alignItems='center'; label.style.gap='6px'; label.style.padding='4px 6px'; label.style.border='1px solid rgba(255,255,255,0.12)'; label.style.borderRadius='6px'; label.style.background='rgba(255,255,255,0.04)'; const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!hidden.includes(id); cb.onchange=()=>setDesktopIconVisibility(id, cb.checked); label.append(cb, document.createTextNode(app.name)); container.append(label); }); }
+    function populateSettingsAccount(){ const account=getAccount(); if(!account) return; const dn=$('set-displayname'), av=$('set-avatar-url'); if(dn) dn.value=account.name; if(av) av.value=(account.avatar&&!account.avatar.startsWith('data:'))?account.avatar:''; renderDesktopIconSettings(); }
 
     function updateDesktopLayout() {
         const desktopIcons = document.getElementById('desktop-icons');
@@ -1381,10 +1376,7 @@ body, html {
         const area = document.getElementById('running-area');
         if (!area) return;
         area.innerHTML = '';
-        // collect visible windows and map to app ids
-        const wins = Array.from(document.querySelectorAll('.window')).filter(w => {
-            try { return window.getComputedStyle(w).display !== 'none'; } catch { return false; }
-        });
+        const wins = Array.from(document.querySelectorAll('.window'));
         const apps = getAllApps();
         const seen = new Set();
         wins.forEach(w => {
@@ -1587,6 +1579,7 @@ body, html {
         const desktopIconsInput = document.getElementById('show-desktop-icons-input'); if (desktopIconsInput) desktopIconsInput.checked = showDesktopIcons;
         const watermarkInput = document.getElementById('desktop-watermark-input'); if (watermarkInput) watermarkInput.value = watermark;
         const welcomeInput = document.getElementById('desktop-welcome-input'); if (welcomeInput) welcomeInput.value = welcomeText;
+        renderDesktopIconSettings();
 
         set('window-width-input', String(ww)); setTxt('window-width-value', `${ww}px`);
         set('window-height-input', String(wh)); setTxt('window-height-value', `${wh}px`);
