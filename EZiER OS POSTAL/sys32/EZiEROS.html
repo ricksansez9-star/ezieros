@@ -450,213 +450,24 @@ body, html {
         .win-btn:hover { color: #000; }
         iframe { flex: 1; border: none; background: #fff; }
 
-        /* ── TASK MANAGER: POSTAL EDITION ── */
-#task-manager {
-    background: #1a1a1a;
-    color: #eee;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    border: 1px solid #333;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-/* Header Row */
-.tm-header {
-    display: flex;
-    background: #111;
-    padding: 8px 15px;
-    font-weight: bold;
-    font-size: 11px;
-    text-transform: uppercase;
-    color: #ff4d4d; /* POSTAL Red */
-    border-bottom: 2px solid #333;
-}
-
-/* Process Rows */
-.tm-row {
-    display: grid;
-    grid-template-columns: 40px 1fr 80px 70px; /* PID, Name, Usage, Action */
-    padding: 8px 15px;
-    border-bottom: 1px solid #222;
-    align-items: center;
-    font-size: 13px;
-    transition: background 0.2s;
-}
-
-.tm-row:hover {
-    background: #252525;
-}
-
-/* Resource Usage Bars */
-.tm-usage-container {
-    width: 60px;
-    height: 4px;
-    background: #333;
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.tm-usage-fill {
-    height: 100%;
-    background: #ff4d4d;
-    width: 45%; /* Dynamically update this with JS */
-}
-
-/* The "Kill" Button */
-.tm-kill-btn {
-    background: transparent;
-    border: 1px solid #ff4d4d;
-    color: #ff4d4d;
-    padding: 4px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 10px;
-    font-weight: bold;
-    text-transform: uppercase;
-    transition: all 0.2s ease;
-    justify-self: end;
-}
-
-.tm-kill-btn:hover {
-    background: #ff4d4d;
-    color: #1a1a1a;
-    box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
-}
-
-/* PID Styling */
-.tm-pid {
-    color: #666;
-    font-family: monospace;
-    font-size: 11px;
-}
-
-/* ── TASK MANAGER: POSTAL EDITION ── */
-#task-manager {
-    background: #1a1a1a;
-    color: #eee;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    border: 1px solid #333;
-    border-radius: 6px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-/* New: Top Stats Dashboard */
-.tm-dashboard {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 15px;
-    background: #111;
-    border-bottom: 2px solid #ff4d4d;
-}
-
-.tm-stat-card {
-    background: #181818;
-    padding: 8px;
-    border: 1px solid #222;
-    border-radius: 4px;
-}
-
-.tm-stat-label {
-    font-size: 9px;
-    color: #666;
-    text-transform: uppercase;
-}
-
-.tm-stat-value {
-    font-size: 18px;
-    font-weight: bold;
-    color: #ff4d4d;
-}
-
-/* Header Row */
-.tm-header {
-    display: grid;
-    grid-template-columns: 40px 1fr 80px 70px;
-    background: #111;
-    padding: 8px 15px;
-    font-weight: bold;
-    font-size: 11px;
-    text-transform: uppercase;
-    color: #ff4d4d; /* POSTAL Red */
-    border-bottom: 2px solid #333;
-}
-
-/* Process Rows */
-.tm-body {
-    overflow-y: auto;
-    max-height: 400px; /* Adjust based on window size */
-}
-
-.tm-row {
-    display: grid;
-    grid-template-columns: 40px 1fr 80px 70px; /* PID, Name, Usage, Action */
-    padding: 8px 15px;
-    border-bottom: 1px solid #222;
-    align-items: center;
-    font-size: 13px;
-    transition: background 0.2s;
-}
-
-.tm-row:hover {
-    background: #252525;
-}
-
-/* Resource Usage Bars */
-.tm-usage-container {
-    width: 60px;
-    height: 4px;
-    background: #333;
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.tm-usage-fill {
-    height: 100%;
-    background: #ff4d4d;
-    width: 45%; /* Dynamically update this with JS */
-}
-
-/* The "Kill" Button */
-.tm-kill-btn {
-    background: transparent;
-    border: 1px solid #ff4d4d;
-    color: #ff4d4d;
-    padding: 4px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 10px;
-    font-weight: bold;
-    text-transform: uppercase;
-    transition: all 0.2s ease;
-    justify-self: end;
-}
-
-.tm-kill-btn:hover {
-    background: #ff4d4d;
-    color: #1a1a1a;
-    box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
-}
-
-/* PID Styling */
-.tm-pid {
-    color: #666;
-    font-family: monospace;
-    font-size: 11px;
-}
-
-/* Custom Scrollbar for the list */
-.tm-body::-webkit-scrollbar {
-    width: 4px;
-}
-.tm-body::-webkit-scrollbar-track {
-    background: #111;
-}
-.tm-body::-webkit-scrollbar-thumb {
-    background: #ff4d4d;
-}
+        /* ── TASK MANAGER ── */
+#task-manager{background:#1a1a1a;color:#eee;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;border:1px solid #333;border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.tm-dashboard{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:15px;background:#111;border-bottom:2px solid #ff4d4d}
+.tm-stat-card{background:#181818;padding:8px;border:1px solid #222;border-radius:4px}
+.tm-stat-label{font-size:9px;color:#666;text-transform:uppercase}
+.tm-stat-value{font-size:18px;font-weight:700;color:#ff4d4d}
+.tm-header{display:grid;grid-template-columns:40px 1fr 80px 70px;background:#111;padding:8px 15px;font-weight:700;font-size:11px;text-transform:uppercase;color:#ff4d4d;border-bottom:2px solid #333}
+.tm-body{overflow-y:auto;max-height:400px}
+.tm-row{display:grid;grid-template-columns:40px 1fr 80px 70px;padding:8px 15px;border-bottom:1px solid #222;align-items:center;font-size:13px;transition:background .2s}
+.tm-row:hover{background:#252525}
+.tm-usage-container{width:60px;height:4px;background:#333;border-radius:2px;overflow:hidden}
+.tm-usage-fill{height:100%;background:#ff4d4d;width:45%}
+.tm-kill-btn{background:transparent;border:1px solid #ff4d4d;color:#ff4d4d;padding:4px 10px;border-radius:3px;cursor:pointer;font-size:10px;font-weight:700;text-transform:uppercase;transition:.2s;justify-self:end}
+.tm-kill-btn:hover{background:#ff4d4d;color:#1a1a1a;box-shadow:0 0 10px rgba(255,77,77,.4)}
+.tm-pid{color:#666;font-family:monospace;font-size:11px}
+.tm-body::-webkit-scrollbar{width:4px}
+.tm-body::-webkit-scrollbar-track{background:#111}
+.tm-body::-webkit-scrollbar-thumb{background:#ff4d4d}
         /* ── SETTINGS & INSTALLER ── */
         .installer-ui {
             background: #f8f9fa; border: 1px solid #dee2e6;
@@ -1083,6 +894,7 @@ body, html {
     let currentUser = null;
     let setupStep = 0;
     let setupData = {};
+    const $ = id => document.getElementById(id);
 
     const BUILT_IN_APPS = [
         { id: 'AE', name: 'Awk Edge', icon: '../sys64/icons/AE.png', file: '../Program Files/Games/Awk Edge.html' },
@@ -1125,10 +937,6 @@ body, html {
         localStorage.setItem('ezieros_account', JSON.stringify(data));
     }
 
-    function getUserKey(key) {
-        return currentUser ? `ezieros_${currentUser.username}_${key}` : `ezieros${key}`;
-    }
-
     function initOS() {
         ensurePinnedDefaults();
         const account = getAccount();
@@ -1141,132 +949,25 @@ body, html {
         updateClock();
     }
 
-    function showSetup() {
-        document.getElementById('setup-screen').classList.add('active');
-        document.getElementById('lock-screen').style.display = 'none';
-        setupStep = 0;
-        setupData = {};
-        gotoSetupStep(0);
-    }
-
-    function gotoSetupStep(n) {
-        [0, 1, 2].forEach(i => {
-            const el = document.getElementById(`setup-step-${i}`);
-            if(el) el.style.display = i === n ? 'flex' : 'none';
-            const dot = document.getElementById(`dot-${i}`);
-            if(dot) dot.classList.toggle('active', i <= n);
-        });
-        document.getElementById('setup-step').textContent = ['STEP 1 OF 3 — WELCOME', 'STEP 2 OF 3 — ACCOUNT', 'STEP 3 OF 3 — AVATAR'][n];
-        setupStep = n;
-    }
-
-    function setupNext(n) {
-        if (n === 2) {
-            const name = document.getElementById('setup-name').value.trim();
-            const username = document.getElementById('setup-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-            const pass = document.getElementById('setup-pass').value;
-            const pass2 = document.getElementById('setup-pass2').value;
-            const errEl = document.getElementById('setup-error');
-            if (!name) { errEl.textContent = 'Display name is required.'; return; }
-            if (!username || username.length < 2) { errEl.textContent = 'Username must be at least 2 characters.'; return; }
-            if (pass.length < 4) { errEl.textContent = 'Password must be at least 4 characters.'; return; }
-            if (pass !== pass2) { errEl.textContent = 'Passwords do not match.'; return; }
-            errEl.textContent = '';
-            setupData.name = name;
-            setupData.username = username;
-            setupData.password = pass;
-            document.getElementById('setup-avatar-initials').textContent = name[0].toUpperCase();
-        }
-        gotoSetupStep(n);
-    }
-
-    function handleAvatarUpload(input) {
-        const file = input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            const img = document.getElementById('setup-avatar-img');
-            img.src = e.target.result;
-            img.style.display = 'block';
-            document.getElementById('setup-avatar-initials').style.display = 'none';
-            setupData.avatarDataUrl = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
+    function showSetup(){ $('setup-screen').classList.add('active'); $('lock-screen').style.display='none'; setupStep=0; setupData={}; gotoSetupStep(0); }
+    function gotoSetupStep(n){ ['STEP 1 OF 3 — WELCOME','STEP 2 OF 3 — ACCOUNT','STEP 3 OF 3 — AVATAR'].forEach((t,i)=>{ const el=$(`setup-step-${i}`); if(el) el.style.display=i===n?'flex':'none'; const dot=$(`dot-${i}`); if(dot) dot.classList.toggle('active',i<=n); }); $('setup-step').textContent=['STEP 1 OF 3 — WELCOME','STEP 2 OF 3 — ACCOUNT','STEP 3 OF 3 — AVATAR'][n]; setupStep=n; }
+    function setupNext(n){ if(n===2){ const name=$('setup-name').value.trim(); const username=$('setup-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,''); const pass=$('setup-pass').value; const pass2=$('setup-pass2').value; const err=$('setup-error'); if(!name){err.textContent='Display name is required.';return;} if(!username||username.length<2){err.textContent='Username must be at least 2 characters.';return;} if(pass.length<4){err.textContent='Password must be at least 4 characters.';return;} if(pass!==pass2){err.textContent='Passwords do not match.';return;} err.textContent=''; setupData.name=name; setupData.username=username; setupData.password=pass; $('setup-avatar-initials').textContent=name[0].toUpperCase(); } gotoSetupStep(n); }
+    function handleAvatarUpload(input){ const file=input.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ const img=$('setup-avatar-img'); img.src=e.target.result; img.style.display='block'; $('setup-avatar-initials').style.display='none'; setupData.avatarDataUrl=e.target.result; }; reader.readAsDataURL(file); }
 
     function finishSetup() {
         const urlInput = document.getElementById('setup-avatar-url').value.trim();
         const avatar = setupData.avatarDataUrl || urlInput || '';
-        const account = {
-            name: setupData.name,
-            username: setupData.username,
-            password: setupData.password,
-            avatar: avatar,
-            created: Date.now()
-        };
+        const account={name:setupData.name,username:setupData.username,password:setupData.password,avatar:avatar,created:Date.now()};
         saveAccount(account);
-        document.getElementById('setup-screen').classList.remove('active');
+        $('setup-screen').classList.remove('active');
         showLockScreen(account);
     }
 
-    function showLockScreen(account) {
-        const ls = document.getElementById('lock-screen');
-        ls.style.display = 'flex';
-        ls.classList.remove('hidden');
+    function showLockScreen(account){ const ls=$('lock-screen'); ls.style.display='flex'; ls.classList.remove('hidden'); const initials=(account.name||'?')[0].toUpperCase(); const avatarImg=$('lock-avatar-img'), avatarInitials=$('lock-avatar-initials'); if(account.avatar){ avatarImg.src=account.avatar; avatarImg.style.display='block'; avatarInitials.style.display='none'; } else { avatarImg.style.display='none'; avatarInitials.style.display='block'; avatarInitials.textContent=initials; } $('lock-username').textContent=account.name; $('lock-pass-input').value=''; $('lock-error').textContent=''; updateClock(); }
 
-        const initials = (account.name || '?')[0].toUpperCase();
-        const avatarImg = document.getElementById('lock-avatar-img');
-        const avatarInitials = document.getElementById('lock-avatar-initials');
+    function attemptLogin(){ const account=getAccount(), input=$('lock-pass-input').value, err=$('lock-error'); if(!account){ showSetup(); return; } if(input===account.password){ err.textContent=''; currentUser=account; $('lock-screen').classList.add('hidden'); setTimeout(()=>{ $('lock-screen').style.display='none'; bootDesktop(account); },600); } else{ err.textContent='Incorrect password. Try again.'; const pass=$('lock-pass-input'); pass.value=''; pass.classList.add('shake'); setTimeout(()=>pass.classList.remove('shake'),500); } }
 
-        if (account.avatar) {
-            avatarImg.src = account.avatar;
-            avatarImg.style.display = 'block';
-            avatarInitials.style.display = 'none';
-        } else {
-            avatarImg.style.display = 'none';
-            avatarInitials.style.display = 'block';
-            avatarInitials.textContent = initials;
-        }
-
-        document.getElementById('lock-username').textContent = account.name;
-        document.getElementById('lock-pass-input').value = '';
-        document.getElementById('lock-error').textContent = '';
-        updateLockClock();
-    }
-
-    function attemptLogin() {
-        const account = getAccount();
-        const input = document.getElementById('lock-pass-input').value;
-        const errEl = document.getElementById('lock-error');
-        if (!account) { showSetup(); return; }
-        if (input === account.password) {
-            errEl.textContent = '';
-            currentUser = account;
-            document.getElementById('lock-screen').classList.add('hidden');
-            setTimeout(() => {
-                document.getElementById('lock-screen').style.display = 'none';
-                bootDesktop(account);
-            }, 600);
-        } else {
-            errEl.textContent = 'Incorrect password. Try again.';
-            document.getElementById('lock-pass-input').value = '';
-            document.getElementById('lock-pass-input').classList.add('shake');
-            setTimeout(() => document.getElementById('lock-pass-input').classList.remove('shake'), 500);
-        }
-    }
-
-    function bootDesktop(account) {
-        initSettingsUI();
-        const searchInput = document.getElementById('app-search');
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.oninput = (e) => renderOS(e.target.value);
-        }
-        renderOS();
-        currentUser = account;
-        updateTrayUser(account);
-        updateDesktopLayout();
-    }
+    function bootDesktop(account){ initSettingsUI(); const searchInput=$('app-search'); if(searchInput){ searchInput.value=''; searchInput.oninput=e=>renderOS(e.target.value);} renderOS(); currentUser=account; updateTrayUser(account); updateDesktopLayout(); }
 
     function lockScreen() {
         const account = getAccount();
@@ -1516,18 +1217,7 @@ body, html {
         localStorage.setItem('ezieros_pinned_apps', JSON.stringify(ids));
     }
 
-    function togglePinned(appId, event) {
-        event.stopPropagation();
-        const pinned = getPinnedApps();
-        const index = pinned.indexOf(appId);
-        if (index === -1) {
-            pinned.unshift(appId);
-        } else {
-            pinned.splice(index, 1);
-        }
-        savePinnedApps(pinned);
-        renderOS(document.getElementById('app-search')?.value || '');
-    }
+    function togglePinned(appId,event){ event.stopPropagation(); const pinned=getPinnedApps(); const i=pinned.indexOf(appId); i===-1? pinned.unshift(appId): pinned.splice(i,1); savePinnedApps(pinned); renderOS($('app-search')?.value||''); }
 
     function ensurePinnedDefaults() {
         const pinned = getPinnedApps();
@@ -1594,19 +1284,8 @@ body, html {
             }
         });
 
-        renderCustomAppList();
-        renderPinnedArea();
-        updateDesktopLayout();
-    }
-
-    function populateSettingsAccount() {
-        const account = getAccount();
-        if (!account) return;
-        const dn = document.getElementById('set-displayname');
-        const av = document.getElementById('set-avatar-url');
-        if (dn) dn.value = account.name;
-        if (av) av.value = (account.avatar && !account.avatar.startsWith('data:')) ? account.avatar : '';
-    }
+        renderCustomAppList(); renderPinnedArea(); updateDesktopLayout(); }
+    function populateSettingsAccount(){ const account=getAccount(); if(!account) return; const dn=$('set-displayname'), av=$('set-avatar-url'); if(dn) dn.value=account.name; if(av) av.value=(account.avatar&&!account.avatar.startsWith('data:'))?account.avatar:''; }
 
     function updateDesktopLayout() {
         const desktopIcons = document.getElementById('desktop-icons');
@@ -1932,8 +1611,6 @@ body, html {
         if (lockClock) lockClock.innerText = timeStr;
         if (lockDate) lockDate.innerText = dateStr;
     }
-
-    function updateLockClock() { updateClock(); }
 
     // ═══════════════════════════════════════════════════════
     // KERNEL (ZIP handler)
