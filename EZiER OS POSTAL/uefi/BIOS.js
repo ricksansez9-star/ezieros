@@ -4,11 +4,6 @@ let countdownInterval = null;
 let fPressed = false;
 let biosOpen = false;
 
-// Load performance optimization script
-const perfScript = document.createElement('script');
-perfScript.src = 'sys64/Performance.js';
-document.head.appendChild(perfScript);
-
 // Key tracking for F+1 combination
 document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
@@ -108,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (navigator.deviceMemory) {
             memoryDisplay.innerText = navigator.deviceMemory + ' GB';
         } else {
-            memoryDisplay.innerText = '8 GB (Estimated)';
+            memoryDisplay.innerText = 'We have no FUCKING CLUE';
         }
     }
     

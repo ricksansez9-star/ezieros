@@ -530,6 +530,53 @@ body, html {
         .btn-secondary:hover { background: #e0e3e7; }
         .btn-danger { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; cursor: pointer; font-weight: 600; font-size: 14px; }
 
+        /* ── BUILT-IN WALLPAPER GALLERY ── */
+        .wallpaper-gallery {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px; margin-top: 4px;
+        }
+        .wallpaper-thumb {
+            position: relative; border-radius: 8px; overflow: hidden; cursor: pointer;
+            border: 2px solid transparent; aspect-ratio: 8/5; background: #eee;
+            transition: 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+        .wallpaper-thumb:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .wallpaper-thumb.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+        .wallpaper-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .wallpaper-thumb span {
+            position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 6px;
+            font-size: 10px; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,0.65));
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .wallpaper-thumb.selected::after {
+            content: '✓'; position: absolute; top: 4px; right: 4px;
+            width: 16px; height: 16px; border-radius: 50%; background: var(--accent);
+            color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* ── ACCENT COLOR SWATCHES ── */
+        .accent-swatches { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .accent-swatch {
+            width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+            border: 2px solid rgba(0,0,0,0.1); transition: 0.15s;
+        }
+        .accent-swatch:hover { transform: scale(1.15); }
+
+        /* ── FULLSCREEN SPLASH / WELCOME VIDEO ── */
+        #welcome-video-overlay {
+            position: fixed; inset: 0; z-index: 99999999;
+            background: #000; display: none; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+        #welcome-video-overlay.active { display: flex; }
+        #welcome-video-overlay video { width: 100%; height: 100%; object-fit: cover; }
+        #welcome-video-skip {
+            position: absolute; bottom: 28px; right: 28px;
+            color: rgba(255,255,255,0.8); font-size: 12px; letter-spacing: 0.3px;
+            background: rgba(0,0,0,0.45); padding: 7px 14px; border-radius: 20px;
+            font-family: 'Segoe UI', system-ui, sans-serif; pointer-events: none;
+        }
+
         /* ── CUSTOM APP MANAGER ── */
         #custom-app-list { max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; margin-top: 10px; }
         .custom-app-row {
@@ -686,21 +733,37 @@ body, html {
                 <h3>Personalization</h3>
 
                 <div class="input-group">
+                    <label>BUILT-IN WALLPAPERS <span style="color:#888; font-weight:400;">(sys64/wallpapers)</span></label>
+                    <div id="wallpaper-gallery" class="wallpaper-gallery"></div>
+                </div>
+
+                <div class="input-group" style="margin-top:18px;">
                     <label>CUSTOM WALLPAPER URL</label>
                     <input type="text" id="wallpaper-input" placeholder="https://..." style="margin-bottom:8px;">
                     <input type="file" id="wallpaper-file" accept="image/*">
                 </div>
-                
+
                 <button class="btn-install" onclick="applyPersonalization()">Apply Personalization</button>
                 <div style="height:10px;"></div>
                 <button class="btn-secondary" onclick="clearWallpaper()">Clear Wallpaper</button>
             </div>
+
 
             <div class="installer-ui">
                 <h3>Appearance & Layout</h3>
                 <div class="input-group">
                     <label>ACCENT COLOR</label>
                     <input type="color" id="accent-color-input">
+                    <div class="accent-swatches">
+                        <div class="accent-swatch" style="background:#1793d1" onclick="quickSetAccent('#1793d1')" title="EZiER Blue"></div>
+                        <div class="accent-swatch" style="background:#9b59b6" onclick="quickSetAccent('#9b59b6')" title="Violet"></div>
+                        <div class="accent-swatch" style="background:#e67e22" onclick="quickSetAccent('#e67e22')" title="Amber"></div>
+                        <div class="accent-swatch" style="background:#27ae60" onclick="quickSetAccent('#27ae60')" title="Emerald"></div>
+                        <div class="accent-swatch" style="background:#e74c3c" onclick="quickSetAccent('#e74c3c')" title="Crimson"></div>
+                        <div class="accent-swatch" style="background:#16a085" onclick="quickSetAccent('#16a085')" title="Teal"></div>
+                        <div class="accent-swatch" style="background:#34495e" onclick="quickSetAccent('#34495e')" title="Slate"></div>
+                        <div class="accent-swatch" style="background:#ff5da2" onclick="quickSetAccent('#ff5da2')" title="Bubblegum"></div>
+                    </div>
                 </div>
                 <div class="input-group" style="margin-top:14px;">
                     <label>THEME MODE</label>
@@ -768,6 +831,12 @@ body, html {
                 </div>
                 <div class="input-group" style="margin-top:14px;">
                     <label style="display:flex;align-items:center;gap:10px;">
+                        <input type="checkbox" id="clock-12h-input" style="width:18px;height:18px;">
+                        Use 12-hour clock
+                    </label>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
+                    <label style="display:flex;align-items:center;gap:10px;">
                         <input type="checkbox" id="reduce-motion-input" style="width:18px;height:18px;">
                         Reduce motion
                     </label>
@@ -800,6 +869,31 @@ body, html {
             </div>
 
             <div class="installer-ui">
+                <h3>Boot & Login Experience</h3>
+                <div class="input-group">
+                    <label style="display:flex;align-items:center;gap:10px;">
+                        <input type="checkbox" id="play-boot-video-input" style="width:18px;height:18px;">
+                        Play splash video while booting
+                    </label>
+                </div>
+                <div class="input-group" style="margin-top:10px;">
+                    <label style="display:flex;align-items:center;gap:10px;">
+                        <input type="checkbox" id="play-login-video-input" style="width:18px;height:18px;">
+                        Play welcome video after signing in
+                    </label>
+                </div>
+                <div class="input-group" style="margin-top:10px;">
+                    <label style="display:flex;align-items:center;gap:10px;">
+                        <input type="checkbox" id="video-muted-input" style="width:18px;height:18px;">
+                        Mute splash/welcome video audio
+                    </label>
+                </div>
+                <button class="btn-install" style="margin-top:16px;" onclick="applyBootSettings()">Apply Boot Settings</button>
+                <div style="height:10px;"></div>
+                <button class="btn-secondary" onclick="playWelcomeVideo(function(){})">▶ Preview Welcome Video</button>
+            </div>
+
+            <div class="installer-ui">
                 <h3>Backup & Restore</h3>
                 <p style="font-size:13px; color:#666; margin-top:-4px;">Save your account, installed apps, and settings to a single file you can keep safe or move to another browser.</p>
                 <button class="btn-install" onclick="exportBackup()">⬇ Export Backup (.ezierbackupfile)</button>
@@ -810,8 +904,8 @@ body, html {
                 </div>
                 <div id="backup-msg" style="font-size:12px;min-height:18px;"></div>
             </div>
-            
-            <div id="about-content">
+
+            <div id="about-sysinfo">
     <p><strong>Developer:</strong> ricksansez9-star</p>
     <p><strong>Version:</strong> <span id="sys-version"></span></p>
     <p><strong>OS Type:</strong> <span id="os-type"></span></p>
@@ -820,13 +914,13 @@ body, html {
     <p><strong>CPU Cores:</strong> <span id="cpu-cores"></span></p>
     <p><strong>RAM:</strong> <span id="ram-info"></span></p>
     <p><strong>Hardware Accelerated:</strong> <span id="hw-accel"></span></p>
-                
+
 
 </div>
 
 <script>
-    const OS_TYPE = 'POSTAL';
-    const CURRENT_VERSION = '0.1.4';
+    const OS_TYPE = 'POSTAL Developer Edition';
+    const CURRENT_VERSION = '0.1.5';
 
     async function populateAbout() {
         // Simple data
@@ -835,10 +929,10 @@ body, html {
         document.getElementById('browser-info').innerText = navigator.userAgent.split(' ').pop();
         document.getElementById('os-platform').innerText = navigator.platform;
         document.getElementById('cpu-cores').innerText = navigator.hardwareConcurrency || "Unknown";
-        
+
         // RAM (Chrome/Edge only)
-        document.getElementById('ram-info').innerText = navigator.deviceMemory 
-            ? `${navigator.deviceMemory} GB` 
+        document.getElementById('ram-info').innerText = navigator.deviceMemory
+            ? `${navigator.deviceMemory} GB`
             : "Unknown";
 
         // Hardware Acceleration Check
@@ -847,11 +941,11 @@ body, html {
         const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
         document.getElementById('hw-accel').innerText = debugInfo ? "Yes" : "No";
     }
-    
+
     populateAbout();
 </script>
 
-<div id="about-content" class="settings-panel">
+<div id="installer-ui" class="settings-panel">
     <h2>About EZiER OS</h2>
     <div class="developer-section">
         <h3>Developer</h3>
@@ -953,1159 +1047,10 @@ body, html {
         </div>
     </div>
 
-    <!-- App context menu removed because right-click behavior was removed -->
-
-    <script>
-    // ═══════════════════════════════════════════════════════
-    // STATE
-    // ═══════════════════════════════════════════════════════
-    let zCounter = 2000;<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>EZIER OS</title>
-    <link rel="icon" type="image/png"
-href="../sys64/icons/ezierosstarticon.png">
-    <script
-src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        :root {
-            --taskbar-bg: rgba(15, 15, 15, 0.85);
-            --menu-bg: rgba(255, 255, 255, 0.98);
-            --accent: #1793d1;
-            --glass: blur(20px) saturate(150%);
-            --window-width: 900px;
-            --window-height: 600px;
-            /* Layout variables */
-            --taskbar-width: auto;
-            --taskbar-bottom: 10px;
-            --taskbar-radius: 14px;
-        }
-       * { box-sizing: border-box; }
-body, html {
-    margin: 0; padding: 0; height: 100%;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: #1e1e2e url('../sys64/icons/EZIEROSDEFAULTPAPER.png')
-center/cover;
-    background-attachment: fixed;
-    overflow: hidden;
-    cursor: default;
-}
-
-/* ── LOCK SCREEN ── */
-#lock-screen {
-    position: fixed; inset: 0; z-index: 9999999;
-    background: #0f0f1a url('../sys64/icons/EZIEROSDEFAULTPAPER.png')
-center/cover;
-    display: flex; flex-direction: column; align-items: center; justify-content:
-center;
-    color: white;
-    transition: opacity 0.6s ease;
-}
-        #lock-screen.hidden { opacity: 0; pointer-events: none; }
-        #lock-screen::before {
-            content: ''; position: absolute; inset: 0;
-            background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
-        }
-        #lock-content {
-            position: relative; z-index: 2;
-            display: flex; flex-direction: column; align-items: center; gap:
-18px;
-            width: 340px;
-        }
-        #lock-avatar {
-            width: 90px; height: 90px; border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            border: 3px solid rgba(255,255,255,0.3);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 36px; font-weight: 300; letter-spacing: -1px;
-            overflow: hidden;
-        }
-        #lock-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        #lock-username { font-size: 22px; font-weight: 400; letter-spacing:
-0.5px; }
-        #lock-clock-big { font-size: 68px; font-weight: 200; line-height: 1;
-margin-bottom: 4px; }
-        #lock-date { font-size: 15px; opacity: 0.7; margin-bottom: 10px; }
-        .lock-input {
-            width: 100%; padding: 12px 16px; border-radius: 10px;
-            background: rgba(255,255,255,0.12); border: 1px solid
-rgba(255,255,255,0.25);
-            color: white; font-size: 15px; outline: none; text-align: center;
-            transition: 0.2s;
-        }
-        .lock-input::placeholder { color: rgba(255,255,255,0.5); }
-        .lock-input:focus { background: rgba(255,255,255,0.2); border-color:
-rgba(255,255,255,0.5); }
-        .lock-btn {
-            width: 100%; padding: 12px; border-radius: 10px;
-            background: var(--accent); border: none; color: white;
-            font-size: 15px; font-weight: 600; cursor: pointer; transition:
-0.2s;
-        }
-        .lock-btn:hover { filter: brightness(1.15); }
-        .lock-btn.secondary {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.25);
-        }
-        .lock-btn.danger { background: #c0392b; }
-        #lock-error { color: #ff6b6b; font-size: 13px; min-height: 18px;
-text-align: center; }
-
-        /* ── SETUP WIZARD ── */
-        #setup-screen {
-            position: fixed; inset: 0; z-index: 9999998;
-            background: #0d0d1a;
-            display: none; flex-direction: column; align-items: center;
-justify-content: center;
-            color: white;
-        }
-        #setup-screen.active { display: flex; }
-        #setup-box {
-            width: 460px; background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 18px;
-            padding: 40px; display: flex; flex-direction: column; gap: 16px;
-        }
-        #setup-logo { font-size: 28px; font-weight: 200; text-align: center;
-margin-bottom: 6px; letter-spacing: 1px; }
-        #setup-step { color: rgba(255,255,255,0.5); font-size: 12px; text-align:
-center; letter-spacing: 2px; text-transform: uppercase; }
-        .setup-label { font-size: 13px; color: rgba(255,255,255,0.6);
-margin-bottom: 4px; }
-        .setup-input {
-            width: 100%; padding: 10px 14px; border-radius: 8px;
-            background: rgba(255,255,255,0.08); border: 1px solid
-rgba(255,255,255,0.15);
-            color: white; font-size: 14px; outline: none; transition: 0.2s;
-        }
-        .setup-input:focus { border-color: var(--accent); background:
-rgba(255,255,255,0.12); }
-        #setup-avatar-preview {
-            width: 80px; height: 80px; border-radius: 50%; background:
-rgba(255,255,255,0.1);
-            border: 2px solid rgba(255,255,255,0.2); margin: 0 auto;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 32px; overflow: hidden; cursor: pointer; transition:
-0.2s;
-        }
-        #setup-avatar-preview:hover { border-color: var(--accent); }
-        #setup-avatar-preview img { width: 100%; height: 100%; object-fit:
-cover; display: none; }
-        #setup-error { color: #ff6b6b; font-size: 13px; min-height: 18px; }
-        .setup-progress { display: flex; gap: 6px; justify-content: center; }
-        .setup-dot { width: 8px; height: 8px; border-radius: 50%; background:
-rgba(255,255,255,0.2); transition: 0.3s; }
-        .setup-dot.active { background: var(--accent); }
-
-#update-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.6); /* Semi-transparent black */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 99999; /* Higher than any desktop icon */
-}
-
-.modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    color: black; /* Ensure text is readable */
-}
-
-
-        /* ── ANIMATIONS ── */
-        @keyframes winOpen {
-            0% { transform: scale(0.85); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes winClose {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.9); opacity: 0; }
-        }
-        @keyframes errorFadeIn {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-        @keyframes errorShake {
-            0%, 100% { transform: translate(-50%, -50%) translateX(0); }
-            20%, 60% { transform: translate(-50%, -50%) translateX(-6px); }
-            40%, 80% { transform: translate(-50%, -50%) translateX(6px); }
-        }
-        @keyframes slideUp {
-            0% { transform: translateY(20px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
-
-        /* ── ERROR DIALOG ── */
-        #error-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.45); z-index: 9999999;
-            backdrop-filter: blur(2px);
-        }
-        #error-overlay.show { display: block; }
-        #error-dialog {
-            position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 420px; background: #f0f0f0;
-            border: 2px solid #444; border-radius: 8px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            z-index: 10000000; font-family: 'Segoe UI', sans-serif;
-            overflow: hidden; display: none;
-            animation: errorFadeIn 0.25s ease forwards;
-        }
-        #error-dialog.shake { animation: errorShake 0.5s ease; }
-        #error-titlebar {
-            background: linear-gradient(to bottom, #c0392b, #922b21);
-            color: white; padding: 10px 14px;
-            display: flex; align-items: center; justify-content: space-between;
-            font-weight: 700; font-size: 13px;
-        }
-        .err-close {
-            cursor: pointer; background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3); color: white;
-            border-radius: 4px; padding: 1px 8px; font-size: 14px; transition:
-0.15s;
-        }
-        .err-close:hover { background: rgba(255,255,255,0.3); }
-        #error-body { padding: 22px 24px; display: flex; align-items:
-flex-start; gap: 16px; }
-        #error-icon { font-size: 42px; flex-shrink: 0; }
-        #error-text-block { flex: 1; }
-        #error-title-text { font-size: 14px; font-weight: 700; color: #c0392b;
-margin-bottom: 6px; }
-        #error-message { font-size: 12.5px; color: #333; line-height: 1.6; }
-        #error-code {
-            margin-top: 10px; font-family: 'Courier New', monospace;
-            font-size: 10.5px; color: #666; background: #e8e8e8;
-            border: 1px solid #ccc; border-radius: 4px; padding: 6px 10px;
-word-break: break-all;
-        }
-        #error-footer {
-            padding: 12px 24px 16px; display: flex; justify-content: flex-end;
-            gap: 8px; border-top: 1px solid #ddd;
-        }
-        .err-btn {
-            padding: 6px 20px; font-size: 12px; border-radius: 4px;
-            cursor: pointer; font-weight: 600; transition: 0.15s;
-            border: 1px solid #aaa; background: #e8e8e8; color: #333;
-        }
-        .err-btn:hover { background: #d0d0d0; }
-        .err-btn.primary { background: #c0392b; color: white; border-color:
-#922b21; }
-        .err-btn.primary:hover { background: #a93226; }
-
-        /* ── ANTIVIRUS (EZIER DEFENDER) ── */
-        #av-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5); z-index: 9999996;
-            backdrop-filter: blur(3px);
-        }
-        #av-overlay.show { display: block; }
-        #av-modal {
-            position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 380px; background: #11161b;
-            border: 1px solid #2ecc71; border-radius: 10px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            z-index: 9999997; font-family: 'Segoe UI', sans-serif;
-            overflow: hidden; display: none;
-            animation: errorFadeIn 0.25s ease forwards;
-        }
-        #av-modal.show { display: block; }
-        #av-titlebar {
-            background: linear-gradient(to bottom, #1e8449, #145a32);
-            color: white; padding: 10px 14px;
-            display: flex; align-items: center; gap: 8px;
-            font-weight: 700; font-size: 13px;
-        }
-        #av-modal.scanning #av-shield { display: inline-block; animation:
-avPulse 1s ease-in-out infinite; }
-        #av-body { padding: 20px 22px 6px; color: #e8f5e9; }
-        #av-target { font-size: 11.5px; color: #8fd6a0; margin-bottom: 14px;
-word-break: break-all; font-family: 'Courier New', monospace; }
-        .av-progress-track { width: 100%; height: 8px; background: #1e2530;
-border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
-        .av-progress-fill { height: 100%; width: 0%; background:
-linear-gradient(90deg,#27ae60,#2ecc71); transition: width 0.28s ease; }
-        #av-status-line { font-size: 12px; min-height: 16px; margin-bottom:
-10px; color: #cfd8dc; font-family: 'Courier New', monospace; }
-        #av-result { font-size: 13px; font-weight: 600; text-align: center;
-min-height: 20px; line-height: 1.5; padding: 4px 0; }
-        #av-result.clean { color: #2ecc71; }
-        #av-result.flag { color: #f1c40f; }
-        #av-footer { padding: 8px 22px 18px; text-align: right; }
-        @keyframes avPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.55; transform: scale(1.18); }
-        }
-
-        /* ── DESKTOP ── */
-        #desktop {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: flex-start;
-            color: white; text-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            padding: 20px; z-index: 10;
-        }
-        #desktop-welcome {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%,
--50%);
-            text-align: center; pointer-events: none; z-index: 5;
-        }
-        #desktop-welcome h1 { font-size: 4rem; margin: 0; font-weight: 300; }
-        #desktop-welcome p { font-size: 1.2rem; opacity: 0.8; }
-        /* Desktop icon support removed; apps are available via the Start menu
-only. */
-
-        /* ── TASKBAR ── */
-        #taskbar {
-            position: fixed; bottom: 10px; left: 50%; transform:
-translateX(-50%);
-            height: 54px; width: auto; min-width: 300px;
-            background: var(--taskbar-bg); backdrop-filter: var(--glass);
-            border-radius: 14px; border: 1px solid rgba(255,255,255,0.1);
-            display: flex; align-items: center; padding: 0 10px; gap: 10px;
-z-index: 1000000;
-            transition: width 0.3s ease, border-radius 0.3s ease, bottom 0.3s
-ease;
-        }
-        #taskbar.floating {
-            width: 95%; max-width: 1200px; bottom: 20px; border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        #taskbar.top {
-            top: 10px;
-            bottom: auto;
-        }
-        .start-icon {
-            width: 38px; height: 38px; cursor: pointer; transition: 0.2s;
-            border-radius: 50%; padding: 4px;
-            background: rgba(255,255,255,0.05); object-fit: contain;
-        }
-        .start-icon:hover { background: rgba(255,255,255,0.15); transform:
-scale(1.05); }
-        #tray-right { margin-left: auto; display: flex; align-items: center;
-gap: 6px; }
-        #tray-clock {
-            color: white; font-size: 13px; font-weight: 600;
-            padding: 0 10px; font-family: 'Segoe UI', sans-serif; cursor:
-pointer;
-        }
-        #tray-user {
-            width: 30px; height: 30px; border-radius: 50%;
-            background: rgba(255,255,255,0.15); border: 1.5px solid
-rgba(255,255,255,0.3);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: 600; color: white; cursor: pointer;
-            overflow: hidden; transition: 0.2s;
-        }
-        #tray-user:hover { border-color: var(--accent); }
-        #tray-user img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* ── USER MENU ── */
-        #user-menu {
-            position: fixed; bottom: 75px; right: 20px;
-            width: 220px; background: var(--taskbar-bg);
-            backdrop-filter: var(--glass); border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.15);
-            padding: 12px; z-index: 999998;
-            display: none; flex-direction: column; gap: 8px;
-            animation: slideUp 0.2s ease;
-        }
-        #user-menu.open { display: flex; }
-        #user-menu-name { color: white; font-weight: 600; font-size: 14px;
-padding: 4px 8px; }
-        #user-menu-email { color: rgba(255,255,255,0.5); font-size: 11px;
-padding: 0 8px 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .um-btn {
-            padding: 8px 10px; border-radius: 8px; cursor: pointer;
-            color: rgba(255,255,255,0.8); font-size: 13px; transition: 0.15s;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .um-btn:hover { background: rgba(255,255,255,0.1); color: white; }
-        .um-btn.danger { color: #ff6b6b; }
-        .um-btn.danger:hover { background: rgba(255,50,50,0.15); }
-
-        /* ── START MENU ── */
-        #start-menu {
-            position: fixed; bottom: -850px; left: 50%; transform:
-translateX(-50%);
-            width: 460px; height: 490px; background: var(--taskbar-bg);
-            border-radius: 20px; box-shadow: 0 -15px 60px rgba(0,0,0,0.5);
-            transition: 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); z-index: 999999;
-padding: 25px;
-            backdrop-filter: var(--glass);
-        }
-        #start-menu.open { bottom: 80px; }
-        /* Compact Mode */
-        #start-menu.compact { width: 320px; height: 420px; left: 20px;
-transform: none; }
-        #start-menu.compact .app-grid { grid-template-columns: repeat(3, 1fr); }
-
-        .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap:
-15px; overflow-y: auto; max-height: 380px; }
-        #desktop-icons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            align-items: flex-start;
-            width: 100%;
-            max-width: calc(100% - 40px);
-            margin-top: 32px;
-        }
-        .desktop-icon {
-            width: 84px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            text-align: center;
-            color: rgba(255,255,255,0.95);
-        }
-        .desktop-icon img {
-            width: 64px;
-            height: 64px;
-            object-fit: cover;
-            border-radius: 16px;
-            background: rgba(255,255,255,0.03);
-        }
-        .desktop-icon span {
-            font-size: 12px;
-            line-height: 1.2;
-            word-wrap: break-word;
-            max-width: 100%;
-            color: rgba(255,255,255,0.95);
-        }
-        .app-item {
-            position: relative;
-            display: flex; flex-direction: column; align-items: center; cursor:
-pointer;
-            padding: 12px; border-radius: 12px; transition: 0.2s;
-        }
-        .app-item:hover { background: rgba(255,255,255,0.1); }
-        .app-item img { width: 48px; height: 48px; object-fit: cover;
-border-radius: 10px; }
-        .app-item span { font-size: 11px; color: #ccc; margin-top: 8px;
-font-weight: 600; text-align: center; }
-        .pin-btn {
-            position: absolute; top: 8px; right: 8px;
-            width: 24px; height: 24px; border-radius: 50%;
-            border: none; background: rgba(0,0,0,0.5); color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; cursor: pointer; opacity: 0.85;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-        .pin-btn:hover { opacity: 1; transform: scale(1.05); }
-        #app-search::placeholder { color: rgba(255,255,255,0.7); }
-        body.theme-light #app-search {
-            color: #111;
-            background: rgba(255,255,255,0.92);
-            border-color: rgba(148,163,184,0.4);
-        }
-        body.theme-light #app-search::placeholder { color: #64748b; }
-        body.theme-dark #app-search {
-            color: #f8fafc;
-            background: rgba(255,255,255,0.08);
-            border-color: rgba(255,255,255,0.15);
-        }
-        body.theme-dark #app-search::placeholder { color: rgba(248,250,252,0.7);
-}
-        body.theme-light {
-            background-color: #edf2f7;
-            color: #1f2937;
-        }
-        body.theme-light .window {
-            background: #fdfdfd;
-            color: #111;
-            border-color: #d1d5db;
-        }
-        body.theme-light .title-bar {
-            background: #e2e8f0;
-            color: #111;
-            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-        }
-        body.theme-light .win-btn { color: #111; }
-        body.theme-light .win-btn:hover { color: #0f172a; }
-        body.theme-light #taskbar,
-        body.theme-light #user-menu,
-        body.theme-light #start-menu {
-            background: rgba(255,255,255,0.95);
-            border-color: rgba(148,163,184,0.3);
-        }
-        body.theme-light #start-menu h3,
-        body.theme-light #user-menu-name,
-        body.theme-light #user-menu-email,
-        body.theme-light .app-item span {
-            color: #111;
-        }
-        body.theme-light .app-item:hover { background: rgba(15, 23, 42, 0.08); }
-        body.theme-dark {
-            background-color: #0e1726;
-            color: #fff;
-        }
-        body.theme-dark .window {
-            background: #111827;
-            color: #f8fafc;
-            border-color: #374151;
-        }
-        body.theme-dark .title-bar {
-            background: #1f2937;
-            color: #f8fafc;
-            border-bottom: 1px solid rgba(248,250,252,0.08);
-        }
-        body.theme-dark .win-btn { color: #f8fafc; }
-        body.theme-dark .win-btn:hover { color: #fff; }
-        body.theme-dark #taskbar,
-        body.theme-dark #user-menu,
-        body.theme-dark #start-menu {
-            background: rgba(15,23,42,0.88);
-        }
-        body.theme-dark #start-menu h3,
-        body.theme-dark #user-menu-name,
-        body.theme-dark #user-menu-email,
-        body.theme-dark .app-item span {
-            color: #f8fafc;
-        }
-        body.theme-dark .app-item:hover { background: rgba(255,255,255,0.08); }
-
-        /* ── WINDOWS ── */
-        .window {
-            position: absolute; width: var(--window-width); height:
-var(--window-height);
-            background: white; border-radius: 12px;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.4);
-            display: none; flex-direction: column; border: 1px solid #333;
-            overflow: hidden; resize: both;
-            animation: winOpen 0.3s cubic-bezier(0.2, 1, 0.3, 1) forwards;
-            z-index: 100;
-        }
-        .window.minimized { display: none !important; }
-        .taskbar-btn {
-
-width:34px;height:34px;border-radius:8px;background:transparent;border:none;
-padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;
-overflow:hidden;
-        }
-        .taskbar-btn
-img{width:100%;height:100%;object-fit:cover;border-radius:6px}
-        .taskbar-btn.active{box-shadow:0 6px 18px rgba(0,0,0,0.35);}
-
-        .window.closing { animation: winClose 0.2s ease-in forwards;
-pointer-events: none; }
-        .window.maximized { width: 100% !important; height: calc(100% - 75px)
-!important; top: 0 !important; left: 0 !important; border-radius: 0; }
-        .title-bar {
-            background: #f1f1f1; padding: 12px 18px;
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: move; user-select: none; flex-shrink: 0;
-        }
-        .win-btn { cursor: pointer; font-size: 14px; padding: 0 5px; color:
-#555; }
-        .win-btn:hover { color: #000; }
-        iframe { flex: 1; border: none; background: #fff; }
-
-        /* ── TASK MANAGER ── */
-#task-manager{background:#1a1a1a;color:#eee;font-family:'Segoe
-UI',Tahoma,Geneva,Verdana,sans-serif;border:1px solid
-#333;border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
-.tm-dashboard{display:grid;grid-template-columns:1fr
-1fr;gap:10px;padding:15px;background:#111;border-bottom:2px solid #ff4d4d}
-.tm-stat-card{background:#181818;padding:8px;border:1px solid
-#222;border-radius:4px}
-.tm-stat-label{font-size:9px;color:#666;text-transform:uppercase}
-.tm-stat-value{font-size:18px;font-weight:700;color:#ff4d4d}
-.tm-header{display:grid;grid-template-columns:40px 1fr 80px
-70px;background:#111;padding:8px
-15px;font-weight:700;font-size:11px;text-transform:uppercase;color:#ff4d4d;
-border-bottom:2px solid #333}
-.tm-body{overflow-y:auto;max-height:400px}
-.tm-row{display:grid;grid-template-columns:40px 1fr 80px 70px;padding:8px
-15px;border-bottom:1px solid
-#222;align-items:center;font-size:13px;transition:background .2s}
-.tm-row:hover{background:#252525}
-.tm-usage-container{width:60px;height:4px;background:#333;border-radius:2px;
-overflow:hidden}
-.tm-usage-fill{height:100%;background:#ff4d4d;width:45%}
-.tm-kill-btn{background:transparent;border:1px solid
-#ff4d4d;color:#ff4d4d;padding:4px
-10px;border-radius:3px;cursor:pointer;font-size:10px;font-weight:700;text-
-transform:uppercase;transition:.2s;justify-self:end}
-.tm-kill-btn:hover{background:#ff4d4d;color:#1a1a1a;box-shadow:0 0 10px
-rgba(255,77,77,.4)}
-.tm-pid{color:#666;font-family:monospace;font-size:11px}
-.tm-body::-webkit-scrollbar{width:4px}
-.tm-body::-webkit-scrollbar-track{background:#111}
-.tm-body::-webkit-scrollbar-thumb{background:#ff4d4d}
-        /* ── SETTINGS & INSTALLER ── */
-        .installer-ui {
-            background: #f8f9fa; border: 1px solid #dee2e6;
-            border-radius: 10px; padding: 20px; margin-bottom: 20px;
-        }
-        .input-group { margin-bottom: 10px; }
-        .input-group label { display: block; font-size: 12px; color: #666;
-margin-bottom: 5px; font-weight: 600; letter-spacing: 0.5px; }
-        .input-group input[type=text],
-        .input-group input[type=password],
-        .input-group input[type=url],
-        .input-group input[type=file] {
-            width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius:
-5px;
-            font-size: 14px;
-        }
-        .btn-install { background: var(--accent); color: white; border: none;
-padding: 10px; border-radius: 5px; width: 100%; cursor: pointer; font-weight:
-600; font-size: 14px; }
-        .btn-install:hover { filter: brightness(1.1); }
-        .btn-secondary {
-            background: #eef1f4; color: #333; border: 1px solid #ced4da;
-            padding: 10px; border-radius: 5px; width: 100%; cursor: pointer;
-font-weight: 600; font-size: 14px;
-        }
-        .btn-secondary:hover { background: #e0e3e7; }
-        .btn-danger { background: #e74c3c; color: white; border: none; padding:
-10px; border-radius: 5px; width: 100%; cursor: pointer; font-weight: 600;
-font-size: 14px; }
-
-        /* ── CUSTOM APP MANAGER ── */
-        #custom-app-list { max-height: 200px; overflow-y: auto; border: 1px
-solid #dee2e6; border-radius: 8px; margin-top: 10px; }
-        .custom-app-row {
-            display: flex; align-items: center; padding: 10px 14px;
-            border-bottom: 1px solid #f0f0f0; gap: 10px; font-size: 13px;
-        }
-        .custom-app-row:last-child { border-bottom: none; }
-        .custom-app-row img { width: 28px; height: 28px; border-radius: 6px;
-object-fit: cover; }
-        .custom-app-row span { flex: 1; }
-        .capp-remove {
-            background: none; border: 1px solid #e74c3c; color: #e74c3c;
-            border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size:
-11px;
-        }
-        .capp-remove:hover { background: #e74c3c; color: white; }
-
-        body.reduce-motion * {
-            animation-duration: 0.001ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.001ms !important;
-        }
-    </style>
-</head>
-<body onmousedown="checkFocus(event)">
-
-    <div id="setup-screen">
-        <div id="setup-box">
-            <div id="setup-logo">EZIER OS: POSTAL</div>
-            <div id="setup-step">FIRST TIME SETUP</div>
-            <div class="setup-progress">
-                <div class="setup-dot active" id="dot-0"></div>
-                <div class="setup-dot" id="dot-1"></div>
-                <div class="setup-dot" id="dot-2"></div>
-            </div>
-
-            <div id="setup-step-0">
-                <p style="color:rgba(255,255,255,0.7); text-align:center;
-line-height:1.6; font-size:14px;">
-                    Welcome! Let's create your user account to get started with
-EZIER OS.
-                </p>
-                <button class="lock-btn" onclick="setupNext(1)">Get Started
-→</button>
-            </div>
-
-            <div id="setup-step-1" style="display:none; flex-direction:column;
-gap:12px;">
-                <div>
-                    <div class="setup-label">DISPLAY NAME</div>
-                    <input class="setup-input" type="text" id="setup-name"
-placeholder="e.g. Awk User" maxlength="24">
-                </div>
-                <div>
-                    <div class="setup-label">USERNAME</div>
-                    <input class="setup-input" type="text" id="setup-username"
-placeholder="e.g. awkuser" maxlength="16">
-                </div>
-                <div>
-                    <div class="setup-label">PASSWORD</div>
-                    <input class="setup-input" type="password" id="setup-pass"
-placeholder="At least 4 characters">
-                </div>
-                <div>
-                    <div class="setup-label">CONFIRM PASSWORD</div>
-                    <input class="setup-input" type="password" id="setup-pass2"
-placeholder="Repeat password">
-                </div>
-                <div id="setup-error" class="setup-error"></div>
-                <button class="lock-btn" onclick="setupNext(2)">Continue
-→</button>
-                <button class="lock-btn secondary" onclick="setupNext(0)">←
-Back</button>
-            </div>
-
-            <div id="setup-step-2" style="display:none; flex-direction:column;
-gap:12px; align-items:center;">
-                <p style="color:rgba(255,255,255,0.6); font-size:13px;
-text-align:center;">Add a profile picture (optional)</p>
-                <div id="setup-avatar-preview"
-onclick="document.getElementById('setup-avatar-file').click()" title="Click to
-upload photo">
-                    <span id="setup-avatar-initials">?</span>
-                    <img id="setup-avatar-img" src="" alt="">
-                </div>
-                <input type="file" id="setup-avatar-file" accept="image/*"
-style="display:none" onchange="handleAvatarUpload(this)">
-                <div style="color:rgba(255,255,255,0.5); font-size:12px;">Or
-paste an image URL:</div>
-                <input class="setup-input" type="url" id="setup-avatar-url"
-placeholder="https://example.com/photo.jpg" style="width:100%">
-                <div style="display:flex; gap:10px; width:100%;">
-                    <button class="lock-btn secondary" style="flex:1"
-onclick="setupNext(1)">← Back</button>
-                    <button class="lock-btn" style="flex:1"
-onclick="finishSetup()">Finish Setup ✓</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="lock-screen">
-        <div id="lock-content">
-            <div id="lock-clock-big">00:00</div>
-            <div id="lock-date">Loading...</div>
-            <div id="lock-avatar"><img id="lock-avatar-img" src="" alt=""><span
-id="lock-avatar-initials">?</span></div>
-            <div id="lock-username">User</div>
-            <input class="lock-input" type="password" id="lock-pass-input"
-placeholder="Enter password" onkeydown="if(event.key==='Enter') attemptLogin()">
-            <div id="lock-error"></div>
-            <button class="lock-btn" onclick="attemptLogin()">Sign In →</button>
-        </div>
-    </div>
-
-    <div id="desktop">
-            <div id="desktop-icons"></div>
-            <div id="desktop-welcome">
-                <div id="desktop-greeting" style="font-size:1.3rem; opacity:0.9;
-max-width:520px;">Welcome to EZIER OS: POSTAL.</div>
-            </div>
-            <div id="desktop-watermark">EZIER OS</div>
-        </div>
-
-    <div id="taskbar">
-        <img src="../sys64/icons/ezierosstarticon.png" class="start-icon"
-onclick="toggleStart()" onerror="this.src='../sys64/icons/MISSING_ICON.png'">
-        <div id="pinned-area"></div>
-        <div id="running-area"
-style="display:flex;align-items:center;gap:6px;"></div>
-        <div id="tray-right">
-            <div id="tray-clock"
-onclick="openSysWin('win-taskmanager')">00:00</div>
-            <div id="tray-user" onclick="toggleUserMenu()">?</div>
-        </div>
-    </div>
-
-    <div id="user-menu">
-        <div id="user-menu-name">User</div>
-        <div id="user-menu-email">@username</div>
-        <div class="um-btn" onclick="openSysWin('win-settings');
-closeUserMenu()">⚙️ Settings</div>
-        <div class="um-btn" onclick="openSysWin('win-taskmanager');
-closeUserMenu()">📋 Task Manager</div>
-        <div class="um-btn" onclick="openSysWin('win-appinstaller');
-closeUserMenu()">📦 Install App</div>
-        <div class="um-btn danger" onclick="lockScreen(); closeUserMenu()">🔒
-Lock Screen</div>
-        <div class="um-btn danger" onclick="signOut()">⬅ Sign Out</div>
-    </div>
-
-    <div id="start-menu">
-        <h3 style="color:#999; font-size:10px; letter-spacing:2px; margin:0 0
-12px; text-transform:uppercase;">Applications</h3>
-        <input type="search" id="app-search" placeholder="Search apps…"
-style="width:100%; padding:12px 14px; border-radius:16px; border:1px solid
-rgba(255,255,255,0.15); background:rgba(255,255,255,0.08); color:#fff;
-margin-bottom:18px; outline:none;">
-        <div class="app-grid" id="app-list"></div>
-    </div>
-
-    <div id="win-settings" class="window" onmousedown="focusWin(this)">
-        <div class="title-bar" onmousedown="dragWin(this)">
-            <span>⚙️ Settings</span>
-            <div><span class="win-btn"
-onclick="maximizeWin('win-settings')">[RESTORE]</span> <span class="win-btn"
-onclick="closeWin('win-settings')">[CLOSE]</span></div>
-        </div>
-        <div style="padding:30px; color:#333; overflow-y:auto; flex:1;">
-            <h2 style="margin-top:0;">System Management</h2>
-
-            <div class="installer-ui">
-                <h3>Account</h3>
-                <div class="input-group">
-                    <label>DISPLAY NAME</label>
-                    <input type="text" id="set-displayname" placeholder="Your
-name">
-                </div>
-                <div class="input-group">
-                    <label>CHANGE PASSWORD</label>
-                    <input type="password" id="set-newpass" placeholder="New
-password (leave blank to keep)">
-                </div>
-                <div class="input-group">
-                    <label>AVATAR</label>
-                    <input type="url" id="set-avatar-url"
-placeholder="https://..." style="margin-bottom:8px;">
-                    <input type="file" id="set-avatar-file" accept="image/*">
-                </div>
-                <button class="btn-install" onclick="saveAccountSettings()">Save
-Account Changes</button>
-            </div>
-
-            <div class="installer-ui">
-                <h3>Personalization</h3>
-
-                <div class="input-group">
-                    <label>CUSTOM WALLPAPER URL</label>
-                    <input type="text" id="wallpaper-input"
-placeholder="https://..." style="margin-bottom:8px;">
-                    <input type="file" id="wallpaper-file" accept="image/*">
-                </div>
-
-                <button class="btn-install"
-onclick="applyPersonalization()">Apply Personalization</button>
-                <div style="height:10px;"></div>
-                <button class="btn-secondary" onclick="clearWallpaper()">Clear
-Wallpaper</button>
-            </div>
-
-            <div class="installer-ui">
-                <h3>Appearance & Layout</h3>
-                <div class="input-group">
-                    <label>ACCENT COLOR</label>
-                    <input type="color" id="accent-color-input">
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label>THEME MODE</label>
-                    <select id="theme-mode-input" style="width:100%;
-padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
-                        <option value="dark">Dark</option>
-                        <option value="light">Light</option>
-                        <option value="auto">Auto</option>
-                    </select>
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label>TASKBAR POSITION</label>
-                    <select id="taskbar-position-input" style="width:100%;
-padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
-                        <option value="bottom">Bottom</option>
-                        <option value="top">Top</option>
-                    </select>
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label style="display:flex;align-items:center;gap:10px;">
-                        <input type="checkbox" id="floating-taskbar-input">
-Floating Taskbar
-                    </label>
-                </div>
-                <div class="input-group">
-                    <label style="display:flex;align-items:center;gap:10px;">
-                        <input type="checkbox" id="compact-start-input"> Compact
-Start Menu
-                    </label>
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label>TASKBAR OPACITY</label>
-                    <input type="range" id="taskbar-opacity-input" min="0.2"
-max="1" step="0.05"
-
-oninput="document.getElementById('taskbar-opacity-value').innerText=Number(this.
-value).toFixed(2)">
-                    <div id="taskbar-opacity-value"
-style="font-size:12px;color:#666;margin-top:4px;">0.85</div>
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label>GLASS BLUR (px)</label>
-                    <input type="range" id="glass-blur-input" min="0" max="30"
-step="1"
-
-oninput="document.getElementById('glass-blur-value').innerText=this.value+'px'">
-                    <div id="glass-blur-value"
-style="font-size:12px;color:#666;margin-top:4px;">20px</div>
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label>WALLPAPER FIT</label>
-                    <select id="wallpaper-fit-input" style="width:100%;
-padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
-                        <option value="cover">Cover</option>
-                        <option value="contain">Contain</option>
-                        <option value="auto">Auto</option>
-                        <option value="initial">Initial</option>
-                    </select>
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label style="display:flex;align-items:center;gap:10px;">
-                        <input type="checkbox" id="show-desktop-icons-input"
-style="width:18px;height:18px;">
-                        Show desktop icons
-                    </label>
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label>Desktop icon visibility</label>
-                    <div id="desktop-icon-settings"
-style="display:grid;grid-template-columns:1fr
-1fr;gap:10px;max-height:220px;overflow:auto;padding:8px;border:1px solid
-#ced4da;border-radius:8px;background:rgba(255,255,255,0.08);"></div>
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label>DESKTOP WATERMARK</label>
-                    <input type="text" id="desktop-watermark-input"
-placeholder="EZIER OS" style="width:100%; padding:10px 12px; border-radius:8px;
-border:1px solid #ced4da;">
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label>WELCOME TEXT</label>
-                    <input type="text" id="desktop-welcome-input"
-placeholder="Welcome to EZIER OS: POSTAL." style="width:100%; padding:10px 12px;
-border-radius:8px; border:1px solid #ced4da;">
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label style="display:flex;align-items:center;gap:10px;">
-                        <input type="checkbox" id="reduce-motion-input"
-style="width:18px;height:18px;">
-                        Reduce motion
-                    </label>
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label>UPDATE NOTIFICATIONS</label>
-                    <select id="update-pref-select" style="width:100%;
-padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
-                        <option value="always">Always</option>
-                        <option value="never">Never</option>
-                    </select>
-                </div>
-                <button class="btn-install" style="margin-top:16px;"
-onclick="applyAppearanceSettings()">Apply Appearance</button>
-            </div>
-
-            <div class="installer-ui">
-                <h3>Window Defaults</h3>
-                <div class="input-group">
-                    <label>DEFAULT WIDTH (px)</label>
-                    <input type="range" id="window-width-input" min="600"
-max="1200" step="10"
-
-oninput="document.getElementById('window-width-value').innerText=this.value+
-'px'">
-                    <div id="window-width-value"
-style="font-size:12px;color:#666;margin-top:4px;">900px</div>
-                </div>
-                <div class="input-group" style="margin-top:14px;">
-                    <label>DEFAULT HEIGHT (px)</label>
-                    <input type="range" id="window-height-input" min="400"
-max="900" step="10"
-
-oninput="document.getElementById('window-height-value').innerText=this.value+
-'px'">
-                    <div id="window-height-value"
-style="font-size:12px;color:#666;margin-top:4px;">600px</div>
-                </div>
-                <button class="btn-install" style="margin-top:16px;"
-onclick="applyWindowSettings()">Apply Window Size</button>
-            </div>
-
-            <div class="installer-ui">
-                <h3>Backup & Restore</h3>
-                <p style="font-size:13px; color:#666; margin-top:-4px;">Save
-your account, installed apps, and settings to a single file you can keep safe or
-move to another browser.</p>
-                <button class="btn-install" onclick="exportBackup()">⬇ Export
-Backup (.ezierbackupfile)</button>
-                <div style="height:14px;"></div>
-                <div class="input-group">
-                    <label>IMPORT BACKUP FILE</label>
-                    <input type="file" id="import-backup-file"
-accept=".ezierbackupfile,application/json" onchange="importBackupFile(this)">
-                </div>
-                <div id="backup-msg"
-style="font-size:12px;min-height:18px;"></div>
-            </div>
-
-            <div id="about-content">
-    <p><strong>Developer:</strong> ricksansez9-star</p>
-    <p><strong>Version:</strong> <span id="sys-version"></span></p>
-    <p><strong>OS Type:</strong> <span id="os-type"></span></p>
-    <p><strong>Browser:</strong> <span id="browser-info"></span></p>
-    <p><strong>OS Version:</strong> <span id="os-platform"></span></p>
-    <p><strong>CPU Cores:</strong> <span id="cpu-cores"></span></p>
-    <p><strong>RAM:</strong> <span id="ram-info"></span></p>
-    <p><strong>Hardware Accelerated:</strong> <span id="hw-accel"></span></p>
-
-
-</div>
-
-<script>
-    const OS_TYPE = 'POSTAL';
-    const CURRENT_VERSION = '0.1.4';
-
-    async function populateAbout() {
-        // Simple data
-        document.getElementById('sys-version').innerText = CURRENT_VERSION;
-        document.getElementById('os-type').innerText = OS_TYPE;
-        document.getElementById('browser-info').innerText =
-navigator.userAgent.split(' ').pop();
-        document.getElementById('os-platform').innerText = navigator.platform;
-        document.getElementById('cpu-cores').innerText =
-navigator.hardwareConcurrency || "Unknown";
-
-        // RAM (Chrome/Edge only)
-        document.getElementById('ram-info').innerText = navigator.deviceMemory
-            ? `${navigator.deviceMemory} GB`
-            : "Unknown";
-
-        // Hardware Acceleration Check
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl') ||
-canvas.getContext('experimental-webgl');
-        const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') :
-null;
-        document.getElementById('hw-accel').innerText = debugInfo ? "Yes" :
-"No";
-    }
-
-    populateAbout();
-</script>
-
-<div id="about-content" class="settings-panel">
-    <h2>About EZiER OS</h2>
-    <div class="developer-section">
-        <h3>Developer</h3>
-        <p><strong>Name:</strong> Awkwarrrdd</p>
-        <div class="social-links">
-            <button
-onclick="window.open('https://discord.com/users/awkwarrrddother',
-'_blank')">Discord Alt Account</button>
-                        <button
-onclick="window.open('https://discord.com/users/awkwarrrdd', '_blank')">Discord
-Main Account</button>
-            <button onclick="window.open('https://www.youtube.com/@Awkwarrrdd',
-'_blank')">YouTube</button>
-            <button onclick="window.open('https://awkwarrrdd.itch.io',
-'_blank')">Itch.io</button>
-        </div>
-    </div>
-</div>
-
-            <div class="installer-ui" style="border-color:#e74c3c;">
-                <h3 style="color:#e74c3c;">Danger Zone</h3>
-                <p style="font-size:13px; color:#666;">This will delete your
-account and all settings. The OS will reset to first-time setup.</p>
-                <button class="btn-danger" onclick="factoryReset()">Factory
-Reset EZIER OS</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="win-taskmanager" class="window" style="width:400px;height:450px;"
-onmousedown="focusWin(this)">
-        <div class="title-bar" onmousedown="dragWin(this)">
-            <span>📋 Task Manager</span>
-            <div><span class="win-btn"
-onclick="closeWin('win-taskmanager')">[CLOSE]</span></div>
-        </div>
-        <div id="tm-list"
-style="flex:1;background:white;overflow-y:auto;"></div>
-    </div>
-
-    <div id="win-appinstaller" class="window" style="width:500px;height:560px;"
-onmousedown="focusWin(this)">
-        <div class="title-bar" onmousedown="dragWin(this)">
-            <span>📦 App Installer</span>
-            <div><span class="win-btn"
-onclick="closeWin('win-appinstaller')">[CLOSE]</span></div>
-        </div>
-        <div
-style="padding:24px;overflow-y:auto;flex:1;background:#fff;color:#333;">
-            <h2 style="margin-top:0;">Install Custom App</h2>
-
-            <div class="installer-ui">
-                <h3>Add New Application</h3>
-                <div class="input-group">
-                    <label>APP NAME</label>
-                    <input type="text" id="new-app-name" placeholder="My App">
-                </div>
-                <div class="input-group">
-                    <label>APP URL <span style="color:#888;
-font-weight:400;">(web address)</span></label>
-                    <input type="url" id="new-app-url"
-placeholder="https://example.com/app.html">
-                </div>
-                <div class="input-group">
-                    <label>ICON URL <span style="color:#888;
-font-weight:400;">(optional)</span></label>
-                    <input type="url" id="new-app-icon"
-placeholder="https://example.com/icon.png">
-                </div>
-                <div class="input-group">
-                    <label>OR UPLOAD HTML / ZIP FILE</label>
-                    <input type="file" id="new-app-file" accept=".html,.zip"
-style="border:none;padding:4px 0;">
-                </div>
-                <div id="installer-msg"
-style="font-size:12px;color:#27ae60;min-height:18px;margin-bottom:8px;"></div>
-                <button class="btn-install" onclick="installCustomApp()">Install
-App</button>
-            </div>
-
-            <div class="installer-ui">
-                <h3>Installed Custom Apps</h3>
-                <div id="custom-app-list"></div>
-                <p id="no-custom-apps"
-style="font-size:13px;color:#888;text-align:center;padding:10px 0;">No custom
-apps installed yet.</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="error-overlay" onclick="handleErrorOverlayClick()"></div>
-    <div id="error-dialog">
-        <div id="error-titlebar">
-            <span>⚠️ EZIER OS — System Error</span>
-            <span class="err-close" onclick="dismissError()">✕</span>
-        </div>
-        <div id="error-body">
-            <div id="error-icon">💥</div>
-            <div id="error-text-block">
-                <div id="error-title-text">Application Failed to Launch</div>
-                <div id="error-message">An unexpected error occurred.</div>
-                <div id="error-code">ERR_CODE: 0x00000000</div>
-            </div>
-        </div>
-        <div id="error-footer">
-            <button class="err-btn" onclick="dismissError()">Ignore</button>
-            <button class="err-btn primary" onclick="dismissError()">OK</button>
-        </div>
-    </div>
-
-    <div id="av-overlay"></div>
-    <div id="av-modal">
-        <div id="av-titlebar"><span id="av-shield">🛡️</span><span>EZiER
-Defender</span></div>
-        <div id="av-body">
-            <div id="av-target">Target: —</div>
-            <div class="av-progress-track"><div class="av-progress-fill"
-id="av-progress-fill"></div></div>
-            <div id="av-status-line">Initializing scan engine…</div>
-            <div id="av-result"></div>
-        </div>
-        <div id="av-footer">
-            <button class="err-btn primary" id="av-dismiss-btn"
-style="display:none;" onclick="dismissAvModal()">OK</button>
-        </div>
+    <!-- ── WELCOME VIDEO (plays after sign-in) ── -->
+    <div id="welcome-video-overlay">
+        <video id="welcome-video" src="../sys64/media/splash.mp4" playsinline></video>
+        <div id="welcome-video-skip">Click anywhere or press any key to skip</div>
     </div>
 
     <!-- App context menu removed because right-click behavior was removed -->
@@ -2115,1142 +1060,6 @@ style="display:none;" onclick="dismissAvModal()">OK</button>
     // STATE
     // ═══════════════════════════════════════════════════════
     let zCounter = 2000;
-    let currentUser = null;
-    let setupStep = 0;
-    let setupData = {};
-    const $ = id => document.getElementById(id);
-
-    const BUILT_IN_APPS = [
-        { id: 'AE', name: 'Awk Edge', icon: '../sys64/icons/AE.png', file:
-'../Program Files/Games/Awk Edge.html' },
-        { id: 'bal', name: 'Balatro', icon: '../sys64/icons/Bal.jpg', file:
-'../Program Files/Games/Balatro.html' },
-        { id: 'osh', name: 'OneShot', icon: '../sys64/icons/oneshot.png', file:
-'../Program Files/Games/Oneshot.html' },
-        { id: 'calc', name: 'Calculator', icon:
-'https://img.icons8.com/color/48/calculator.png', file: '../Program
-Files/Games/Calc.html' },
-        { id: 'cc', name: 'Case Clicker', icon:
-'https://internet.medialities.org/wp-content/uploads/2024/02/7a767-csgo-
-operation-10-details.jpg?w=810&h=580&crop=1', file: 'https://mtsl.dk/csgo/' },
-        { id: 'Gaz', name: 'Gaz Launcher', icon: '../sys64/icons/GazAppICO.png',
-file: 'https://ricksansez9-star.github.io/ezierosgaming' },
-        { id: 'taskman', name: 'Task Manager', icon: '', isSys: true, sysId:
-'win-taskmanager' },
-        { id: 'set', name: 'Settings', icon:
-'https://img.icons8.com/color/48/settings.png', isSys: true, sysId:
-'win-settings' },
-        { id: 'installer', name: 'App Installer', icon:
-'https://img.icons8.com/color/48/installing-updates.png', isSys: true, sysId:
-'win-appinstaller' },
-        {id: 'aos2', name: 'Awk OS 2 VM', icon:
-'https://imgs.search.brave.com/TBm2g9uyRRdKyVrZkLH1P0Ucfj8SwdpGZn5W7weDi9Y/rs:
-fit:860:0:0:0/g:ce/aHR0cHM6Ly9wcmV2/aWV3LnJlZGQuaXQv/N2gxY204eG03NjY4/
-MS5naWY_d2lkdGg9/MTkyMCZhdXRvPXdl/YnAmcz01YTlmOGMy/NGNhMTU1ZGY1YzRm/
-MWUwZGM4ZTE1ZTc3/YWM0NDUxMDk0.gif', file:
-'https://ricksansez9-star.github.io/awkos2vm/(BOOT%20THIS%20FIRST)%20BIOS.html'}
-,
-        {id: 'ee', name: 'Ezier Explorer', icon:
-'../sys64/icons/ezierosstarticon.png', file: 'ezierexplore.html'},
-    ];
-
-    // ═══════════════════════════════════════════════════════
-    // ACCOUNT / SETUP SYSTEM
-    // ═══════════════════════════════════════════════════════
-    function getAccount() {
-        const raw = localStorage.getItem('ezieros_account');
-        return raw ? JSON.parse(raw) : null;
-    }
-
-    function saveAccount(data) {
-        localStorage.setItem('ezieros_account', JSON.stringify(data));
-    }
-
-    function initOS() {
-        ensurePinnedDefaults();
-        const account = getAccount();
-        if (!account) {
-            showSetup();
-        } else {
-            showLockScreen(account);
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-    }
-
-    function showSetup(){ $('setup-screen').classList.add('active');
-$('lock-screen').style.display='none'; setupStep=0; setupData={};
-gotoSetupStep(0); }
-    function gotoSetupStep(n){ ['STEP 1 OF 3 — WELCOME','STEP 2 OF 3 —
-ACCOUNT','STEP 3 OF 3 — AVATAR'].forEach((t,i)=>{ const el=$(`setup-step-${i}`);
-if(el) el.style.display=i===n?'flex':'none'; const dot=$(`dot-${i}`); if(dot)
-dot.classList.toggle('active',i<=n); }); $('setup-step').textContent=['STEP 1 OF
-3 — WELCOME','STEP 2 OF 3 — ACCOUNT','STEP 3 OF 3 — AVATAR'][n]; setupStep=n; }
-    function setupNext(n){ if(n===2){ const name=$('setup-name').value.trim();
-const
-username=$('setup-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,''
-); const pass=$('setup-pass').value; const pass2=$('setup-pass2').value; const
-err=$('setup-error'); if(!name){err.textContent='Display name is
-required.';return;} if(!username||username.length<2){err.textContent='Username
-must be at least 2 characters.';return;}
-if(pass.length<4){err.textContent='Password must be at least 4
-characters.';return;} if(pass!==pass2){err.textContent='Passwords do not
-match.';return;} err.textContent=''; setupData.name=name;
-setupData.username=username; setupData.password=pass;
-$('setup-avatar-initials').textContent=name[0].toUpperCase(); }
-gotoSetupStep(n); }
-    function handleAvatarUpload(input){ const file=input.files[0]; if(!file)
-return; const reader=new FileReader(); reader.onload=e=>{ const
-img=$('setup-avatar-img'); img.src=e.target.result; img.style.display='block';
-$('setup-avatar-initials').style.display='none';
-setupData.avatarDataUrl=e.target.result; }; reader.readAsDataURL(file); }
-
-    function finishSetup() {
-        const urlInput =
-document.getElementById('setup-avatar-url').value.trim();
-        const avatar = setupData.avatarDataUrl || urlInput || '';
-        const
-account={name:setupData.name,username:setupData.username,password:setupData.
-password,avatar:avatar,created:Date.now()};
-        saveAccount(account);
-        $('setup-screen').classList.remove('active');
-        showLockScreen(account);
-    }
-
-    function showLockScreen(account){ const ls=$('lock-screen');
-ls.style.display='flex'; ls.classList.remove('hidden'); const
-initials=(account.name||'?')[0].toUpperCase(); const
-avatarImg=$('lock-avatar-img'), avatarInitials=$('lock-avatar-initials');
-if(account.avatar){ avatarImg.src=account.avatar;
-avatarImg.style.display='block'; avatarInitials.style.display='none'; } else {
-avatarImg.style.display='none'; avatarInitials.style.display='block';
-avatarInitials.textContent=initials; }
-$('lock-username').textContent=account.name; $('lock-pass-input').value='';
-$('lock-error').textContent=''; updateClock(); }
-
-    function attemptLogin(){ const account=getAccount(),
-input=$('lock-pass-input').value, err=$('lock-error'); if(!account){
-showSetup(); return; } if(input===account.password){ err.textContent='';
-currentUser=account; $('lock-screen').classList.add('hidden'); setTimeout(()=>{
-$('lock-screen').style.display='none'; bootDesktop(account); },600); } else{
-err.textContent='Incorrect password. Try again.'; const
-pass=$('lock-pass-input'); pass.value=''; pass.classList.add('shake');
-setTimeout(()=>pass.classList.remove('shake'),500); } }
-
-    function bootDesktop(account){ initSettingsUI(); const
-searchInput=$('app-search'); if(searchInput){ searchInput.value='';
-searchInput.oninput=e=>renderOS(e.target.value);} renderOS();
-currentUser=account; updateTrayUser(account); updateDesktopLayout(); }
-
-    function lockScreen() {
-        const account = getAccount();
-        document.querySelectorAll('.window').forEach(w => {
-            if
-(!['win-settings','win-taskmanager','win-appinstaller'].includes(w.id))
-w.remove();
-            else w.style.display = 'none';
-        });
-        currentUser = null;
-        showLockScreen(account);
-    }
-
-    function signOut() {
-        lockScreen();
-    }
-
-    function factoryReset() {
-        if (!confirm('Are you sure? This will delete your account and all
-settings permanently.')) return;
-        localStorage.clear();
-        location.reload();
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // BACKUP & RESTORE (.ezierbackupfile)
-    // ═══════════════════════════════════════════════════════
-    function showBackupMsg(text, isError) {
-        const el = document.getElementById('backup-msg');
-        if (!el) return;
-        el.style.color = isError ? '#e74c3c' : '#27ae60';
-        el.textContent = text;
-    }
-
-    function exportBackup() {
-        const data = {};
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            data[key] = localStorage.getItem(key);
-        }
-        const payload = {
-            format: 'ezierbackupfile',
-            app: 'EZIER OS',
-            osType: typeof OS_TYPE !== 'undefined' ? OS_TYPE : 'POSTAL',
-            version: typeof CURRENT_VERSION !== 'undefined' ? CURRENT_VERSION :
-'',
-            exportedAt: new Date().toISOString(),
-            data
-        };
-
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type:
-'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const stamp = new Date().toISOString().slice(0, 10);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `EZiER-OS-Backup-${stamp}.ezierbackupfile`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-
-        showBackupMsg('Backup exported! Check your downloads.', false);
-    }
-
-    function importBackupFile(input) {
-        const file = input.files && input.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            let parsed;
-            try {
-                parsed = JSON.parse(e.target.result);
-            } catch (err) {
-                showBackupMsg('Import failed: that file is not a valid EZIER OS
-backup.', true);
-                input.value = '';
-                return;
-            }
-
-            const data = (parsed && typeof parsed === 'object' &&
-!Array.isArray(parsed) && parsed.data && typeof parsed.data === 'object')
-                ? parsed.data
-                : parsed;
-
-            if (!data || typeof data !== 'object' || Array.isArray(data)) {
-                showBackupMsg('Import failed: that file is not a valid EZIER OS
-backup.', true);
-                input.value = '';
-                return;
-            }
-
-            if (!confirm('Importing this backup will overwrite ALL current EZIER
-OS data (account, installed apps, settings) with the contents of the backup
-file. This cannot be undone. Continue?')) {
-                input.value = '';
-                return;
-            }
-
-            localStorage.clear();
-            Object.keys(data).forEach(key => {
-                try { localStorage.setItem(key, data[key]); } catch (err) { /*
-skip unwritable key */ }
-            });
-
-            showBackupMsg('Backup imported! Reloading EZIER OS…', false);
-            setTimeout(() => location.reload(), 1000);
-        };
-        reader.onerror = () => showBackupMsg('Import failed: could not read that
-file.', true);
-        reader.readAsText(file);
-    }
-
-    function updateTrayUser(account) {
-        const tray = document.getElementById('tray-user');
-        const menuName = document.getElementById('user-menu-name');
-        const menuEmail = document.getElementById('user-menu-email');
-        if(!tray || !account) return;
-        menuName.textContent = account.name;
-        menuEmail.textContent = '@' + account.username;
-
-        if (account.avatar) {
-            tray.innerHTML = `<img src="${account.avatar}"
-style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
-onerror="this.parentElement.textContent='${account.name[0].toUpperCase()}'">`;
-        } else {
-            tray.innerHTML = '';
-            tray.textContent = account.name[0].toUpperCase();
-        }
-    }
-
-    function toggleUserMenu() {
-        const menu = document.getElementById('user-menu');
-        menu.classList.toggle('open');
-    }
-
-    function closeUserMenu() {
-        document.getElementById('user-menu').classList.remove('open');
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // CUSTOM APP MANAGEMENT
-    // ═══════════════════════════════════════════════════════
-    function getCustomApps() {
-        return JSON.parse(localStorage.getItem('awkos_custom_apps') || '[]');
-    }
-
-    function saveCustomApps(apps) {
-        localStorage.setItem('awkos_custom_apps', JSON.stringify(apps));
-    }
-
-    async function installCustomApp() {
-        const name = (document.getElementById('new-app-name').value ||
-'').trim();
-        const url = (document.getElementById('new-app-url').value || '').trim();
-        const icon = (document.getElementById('new-app-icon').value ||
-'').trim();
-        const fileInput = document.getElementById('new-app-file');
-        const msgEl = document.getElementById('installer-msg');
-
-        if (!name) { msgEl.style.color = '#e74c3c'; msgEl.textContent = 'App
-name is required.'; return; }
-
-        let fileUrl = url;
-        if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            if (file.name.endsWith('.zip')) {
-                msgEl.style.color = '#888'; msgEl.textContent = 'Processing
-ZIP...';
-                fileUrl = await Kernel.buildVirtualFS(file);
-            } else {
-                fileUrl = URL.createObjectURL(file);
-            }
-        }
-
-        if (!fileUrl) { msgEl.style.color = '#e74c3c'; msgEl.textContent =
-'Provide a URL or upload a file.'; return; }
-
-        const apps = getCustomApps();
-        apps.push({
-            id: 'user-' + Date.now(),
-            name,
-            icon: icon || '../sys64/icons/MISSING_ICON.png',
-            file: fileUrl,
-            custom: true
-        });
-        saveCustomApps(apps);
-
-        document.getElementById('new-app-name').value = '';
-        document.getElementById('new-app-url').value = '';
-        document.getElementById('new-app-icon').value = '';
-        fileInput.value = '';
-
-        msgEl.style.color = '#27ae60';
-        msgEl.textContent = `"${name}" installed successfully!`;
-        setTimeout(() => { msgEl.textContent = ''; }, 3000);
-
-        renderOS();
-        renderCustomAppList();
-        runAntivirusScan(name);
-    }
-
-    function removeCustomApp(id) {
-        const apps = getCustomApps().filter(a => a.id !== id);
-        saveCustomApps(apps);
-        renderOS();
-        renderCustomAppList();
-    }
-
-    function renderCustomAppList() {
-        const apps = getCustomApps();
-        const container = document.getElementById('custom-app-list');
-        const noApps = document.getElementById('no-custom-apps');
-        if(!container) return;
-        container.innerHTML = '';
-        if (apps.length === 0) {
-            noApps.style.display = 'block';
-        } else {
-            noApps.style.display = 'none';
-            apps.forEach(app => {
-                const row = document.createElement('div');
-                row.className = 'custom-app-row';
-                row.innerHTML = `
-                    <img src="${app.icon}"
-onerror="this.src='../sys64/icons/MISSING_ICON.png'">
-                    <span>${app.name}</span>
-                    <button class="capp-remove"
-onclick="removeCustomApp('${app.id}')">Remove</button>
-                `;
-                container.appendChild(row);
-            });
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // EZIER DEFENDER (BUILT-IN ANTIVIRUS)
-    // Runs automatically whenever a new custom app is installed.
-    // ═══════════════════════════════════════════════════════
-    const AV_SCAN_LINES = [
-        'Initializing scan engine…',
-        'Checking digital signature…',
-        'Scanning file headers…',
-        'Cross-referencing threat database…',
-        'Running heuristic analysis…',
-        'Checking for known malware patterns…',
-        'Verifying sandbox integrity…',
-        'Finalizing report…'
-    ];
-    let avScanTimer = null;
-
-    function getAvLog() {
-        return JSON.parse(localStorage.getItem('ezier_av_scan_log') || '[]');
-    }
-    function saveAvLog(log) {
-        localStorage.setItem('ezier_av_scan_log',
-JSON.stringify(log.slice(-20)));
-    }
-
-    function runAntivirusScan(appName) {
-        const overlay = document.getElementById('av-overlay');
-        const modal = document.getElementById('av-modal');
-        const target = document.getElementById('av-target');
-        const fill = document.getElementById('av-progress-fill');
-        const statusLine = document.getElementById('av-status-line');
-        const result = document.getElementById('av-result');
-        const dismissBtn = document.getElementById('av-dismiss-btn');
-        if (!overlay || !modal) return;
-
-        if (avScanTimer) clearInterval(avScanTimer);
-
-        target.textContent = `Target: ${appName}`;
-        fill.style.width = '0%';
-        statusLine.textContent = AV_SCAN_LINES[0];
-        result.textContent = '';
-        result.className = '';
-        dismissBtn.style.display = 'none';
-
-        modal.classList.add('scanning');
-        overlay.classList.add('show');
-        modal.classList.add('show');
-
-        let step = 0;
-        const totalSteps = AV_SCAN_LINES.length;
-        avScanTimer = setInterval(() => {
-            step++;
-            fill.style.width = Math.min(100, Math.round((step / totalSteps) *
-100)) + '%';
-            if (step < totalSteps) {
-                statusLine.textContent = AV_SCAN_LINES[step];
-            } else {
-                clearInterval(avScanTimer);
-                avScanTimer = null;
-                finishAvScan(appName);
-            }
-        }, 320);
-    }
-
-    function finishAvScan(appName) {
-        const modal = document.getElementById('av-modal');
-        const statusLine = document.getElementById('av-status-line');
-        const result = document.getElementById('av-result');
-        const dismissBtn = document.getElementById('av-dismiss-btn');
-
-        modal.classList.remove('scanning');
-        statusLine.textContent = 'Scan complete.';
-
-        // Rare, low-stakes flavor flag — never blocks the app, which is already
-installed.
-        const flagged = Math.floor(Math.random() * 50) === 0;
-
-        const log = getAvLog();
-        log.push({ name: appName, time: Date.now(), flagged });
-        saveAvLog(log);
-
-        if (flagged) {
-            result.className = 'flag';
-            result.textContent = `⚠️ "${appName}" triggered a low-confidence
-heuristic flag, but no action is needed.`;
-        } else {
-            result.className = 'clean';
-            result.textContent = `✅ "${appName}" was scanned and no threats were
-found.`;
-        }
-        dismissBtn.style.display = 'inline-block';
-    }
-
-    function dismissAvModal() {
-        document.getElementById('av-overlay').classList.remove('show');
-        document.getElementById('av-modal').classList.remove('show');
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // ERROR SYSTEM
-    // ═══════════════════════════════════════════════════════
-    function showError(appName) {
-        const err = ERROR_POOL[Math.floor(Math.random() * ERROR_POOL.length)];
-        document.getElementById('error-icon').textContent = err.icon;
-        document.getElementById('error-title-text').textContent = err.title;
-        document.getElementById('error-message').textContent = `Failed to launch
-"${appName}": ${err.msg}`;
-        document.getElementById('error-code').textContent = err.code;
-        const dialog = document.getElementById('error-dialog');
-        dialog.style.display = 'block';
-        dialog.classList.remove('shake');
-        void dialog.offsetWidth;
-        dialog.style.animation = 'none';
-        void dialog.offsetWidth;
-        dialog.style.animation = '';
-        document.getElementById('error-overlay').classList.add('show');
-    }
-
-    function dismissError() {
-        document.getElementById('error-dialog').style.display = 'none';
-        document.getElementById('error-overlay').classList.remove('show');
-    }
-
-    function handleErrorOverlayClick() {
-        const dialog = document.getElementById('error-dialog');
-        dialog.classList.remove('shake');
-        void dialog.offsetWidth;
-        dialog.classList.add('shake');
-    }
-
-    function rollError() { return Math.floor(Math.random() * 20) === 0; }
-
-    function tryLaunchApp(app) {
-        if (rollError()) { showError(app.name); } else { launchApp(app); }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // WINDOW SYSTEM
-    // ═══════════════════════════════════════════════════════
-    function launchApp(app) {
-        // Allow multiple instances for user apps; system apps stay
-single-instance
-        const baseId = app.isSys ? (app.sysId || app.id) : (app.id + '-' +
-Date.now());
-        const winId = 'win-' + baseId;
-        if (app.isSys && document.getElementById(winId)) {
-focusWin(document.getElementById(winId)); return; }
-        const win = document.createElement('div');
-        win.id = winId; win.className = 'window'; win.style.display = 'flex';
-        win.style.top = '80px'; win.style.left = '80px';
-        win.onmousedown = () => focusWin(win);
-        win.dataset.appId = app.id;
-        win.dataset.instance = String(Date.now());
-        win.innerHTML = `
-            <div class="title-bar" onmousedown="dragWin(this)">
-                <span>${app.name}</span>
-                <div>
-                    <span class="win-btn"
-onclick="minimizeWin('${winId}')">[MINIMIZE]</span>
-                    <span class="win-btn"
-onclick="maximizeWin('${winId}')">[FULLSCREEN]</span>
-                    <span class="win-btn"
-onclick="closeWin('${winId}')">[CLOSE]</span>
-                </div>
-            </div>
-            <iframe src="${app.file}"></iframe>`;
-        document.body.appendChild(win);
-        focusWin(win);
-        updateTM();
-        updateRunningArea();
-    }
-
-    function closeWin(id) {
-        const win = document.getElementById(id);
-        if (!win) return;
-        win.classList.add('closing');
-        setTimeout(() => {
-            if
-(['win-settings','win-taskmanager','win-appinstaller'].includes(id)) {
-                win.style.display = 'none'; win.classList.remove('closing');
-            } else { win.remove(); }
-            updateTM();
-            updateRunningArea();
-        }, 250);
-    }
-
-    function openSysWin(id) {
-        const win = document.getElementById(id);
-        win.style.display = 'flex'; win.classList.remove('closing');
-        if (!win.style.top) { win.style.top = '80px'; win.style.left = '80px'; }
-        // Link system window to a logical app id for taskbar/contexts
-        const sysApp = BUILT_IN_APPS.find(a => a.isSys && a.sysId === id);
-        if (sysApp) win.dataset.appId = sysApp.id;
-        focusWin(win);
-        if (id === 'win-taskmanager') updateTM();
-        if (id === 'win-appinstaller') renderCustomAppList();
-        if (id === 'win-settings') populateSettingsAccount();
-        if (document.getElementById('start-menu').classList.contains('open'))
-toggleStart();
-        updateRunningArea();
-    }
-
-    function getAllApps() {
-        return [...BUILT_IN_APPS, ...getCustomApps()];
-    }
-
-    function applyThemeMode(mode) {
-        document.body.classList.toggle('theme-light', mode === 'light');
-        document.body.classList.toggle('theme-dark', mode === 'dark');
-        if (mode === 'auto') {
-            const prefersDark = window.matchMedia('(prefers-color-scheme:
-dark)').matches;
-            document.body.classList.toggle('theme-dark', prefersDark);
-            document.body.classList.toggle('theme-light', !prefersDark);
-        }
-    }
-
-    function getPinnedApps() {
-        return JSON.parse(localStorage.getItem('ezieros_pinned_apps') || '[]');
-    }
-
-    function savePinnedApps(ids) {
-        localStorage.setItem('ezieros_pinned_apps', JSON.stringify(ids));
-    }
-
-    function getHiddenDesktopApps(){ return
-JSON.parse(localStorage.getItem('ezier_hidden_desktop_apps')||'[]'); }
-    function saveHiddenDesktopApps(ids){
-localStorage.setItem('ezier_hidden_desktop_apps', JSON.stringify(ids)); }
-    function setDesktopIconVisibility(appId, visible){ const
-hidden=getHiddenDesktopApps(); const idx=hidden.indexOf(appId); if(visible){
-if(idx>-1) hidden.splice(idx,1); } else if(idx===-1){ hidden.push(appId); }
-saveHiddenDesktopApps(hidden); renderOS($('app-search')?.value||''); }
-
-    function togglePinned(appId,event){ event.stopPropagation(); const
-pinned=getPinnedApps(); const i=pinned.indexOf(appId); i===-1?
-pinned.unshift(appId): pinned.splice(i,1); savePinnedApps(pinned);
-renderOS($('app-search')?.value||''); }
-
-    function ensurePinnedDefaults() {
-        const pinned = getPinnedApps();
-        if (pinned.length === 0) {
-            savePinnedApps(['AE', 'calc', 'taskman']);
-        }
-    }
-
-    function renderPinnedArea() {
-        const pinnedIds = getPinnedApps();
-        const area = document.getElementById('pinned-area');
-        if (!area) return;
-        area.innerHTML = '';
-        const apps = getAllApps();
-        pinnedIds.forEach(id => {
-            const app = apps.find(item => item.id === id);
-            if (!app) return;
-            const icon = document.createElement('img');
-            icon.src = app.icon;
-            icon.alt = app.name;
-            icon.title = app.name;
-            icon.className = 'start-icon';
-            icon.style.width = '34px';
-            icon.style.height = '34px';
-            icon.style.marginRight = '6px';
-            icon.onclick = () => app.isSys ? openSysWin(app.sysId) :
-tryLaunchApp(app);
-            icon.onerror = () => { icon.src = '../sys64/icons/MISSING_ICON.png';
-};
-            area.appendChild(icon);
-        });
-    }
-
-    function renderOS(search = '') {
-        const grid = document.getElementById('app-list');
-        const desktopIcons = document.getElementById('desktop-icons');
-        if (!grid || !desktopIcons) return;
-        const showDesktop = localStorage.getItem('ezier_show_desktop_icons') !==
-'0';
-        grid.innerHTML = '';
-        desktopIcons.innerHTML = '';
-        desktopIcons.style.display = showDesktop ? 'flex' : 'none';
-
-        const query = String(search || '').trim().toLowerCase();
-        const allApps = getAllApps();
-        const filteredApps = query ? allApps.filter(app =>
-app.name.toLowerCase().includes(query)) : allApps;
-
-        filteredApps.forEach(app => {
-            const isPinned = getPinnedApps().includes(app.id);
-            const html = `
-                <button class="pin-btn" onclick="togglePinned('${app.id}',
-event)" title="${isPinned ? 'Unpin' : 'Pin'} from taskbar">${isPinned ? '📌' :
-'📍'}</button>
-                <img src="${app.icon}"
-onerror="this.src='../sys64/icons/MISSING_ICON.png'">
-                <span>${app.name}</span>`;
-
-            const item = document.createElement('div');
-            item.className = 'app-item';
-            item.innerHTML = html;
-            item.onclick = () => app.isSys ? openSysWin(app.sysId) :
-tryLaunchApp(app);
-            grid.appendChild(item);
-
-            if (showDesktop && !getHiddenDesktopApps().includes(app.id)) {
-                const dItem = document.createElement('div');
-                dItem.className = 'desktop-icon';
-                dItem.innerHTML = html;
-                dItem.onclick = () => app.isSys ? openSysWin(app.sysId) :
-tryLaunchApp(app);
-                desktopIcons.appendChild(dItem);
-            }
-        });
-
-        renderCustomAppList(); renderPinnedArea(); updateDesktopLayout(); }
-    function renderDesktopIconSettings(){ const
-container=$('desktop-icon-settings'); if(!container) return;
-container.innerHTML=''; const hidden=getHiddenDesktopApps();
-getAllApps().forEach(app=>{ const id=app.id; const
-label=document.createElement('label'); label.style.display='flex';
-label.style.alignItems='center'; label.style.gap='6px'; label.style.padding='4px
-6px'; label.style.border='1px solid rgba(255,255,255,0.12)';
-label.style.borderRadius='6px'; label.style.background='rgba(255,255,255,0.04)';
-const cb=document.createElement('input'); cb.type='checkbox';
-cb.checked=!hidden.includes(id); cb.onchange=()=>setDesktopIconVisibility(id,
-cb.checked); label.append(cb, document.createTextNode(app.name));
-container.append(label); }); }
-    function populateSettingsAccount(){ const account=getAccount(); if(!account)
-return; const dn=$('set-displayname'), av=$('set-avatar-url'); if(dn)
-dn.value=account.name; if(av)
-av.value=(account.avatar&&!account.avatar.startsWith('data:'))?account.avatar:''
-; renderDesktopIconSettings(); }
-
-    function updateDesktopLayout() {
-        const desktopIcons = document.getElementById('desktop-icons');
-        const watermarkEl = document.getElementById('desktop-watermark');
-        const greeting = document.getElementById('desktop-greeting');
-        const showDesktop = localStorage.getItem('ezier_show_desktop_icons') !==
-'0';
-        const watermark = localStorage.getItem('ezier_desktop_watermark') ||
-'EZIER OS';
-        const welcomeText = localStorage.getItem('ezier_desktop_welcome_text');
-
-        if (desktopIcons) desktopIcons.style.display = showDesktop ? 'flex' :
-'none';
-        if (watermarkEl) watermarkEl.textContent = watermark;
-        if (greeting) {
-            if (welcomeText && welcomeText.trim()) {
-                greeting.textContent = welcomeText;
-            } else if (currentUser) {
-                greeting.textContent = `Welcome back, ${currentUser.name}`;
-            } else {
-                greeting.textContent = 'Welcome to EZIER OS: POSTAL.';
-            }
-        }
-    }
-
-    function saveAccountSettings() {
-        const account = getAccount();
-        if (!account) return;
-
-        const name = (document.getElementById('set-displayname').value ||
-'').trim() || account.name;
-        const avatarUrl = (document.getElementById('set-avatar-url').value ||
-'').trim();
-        const avatarFile = document.getElementById('set-avatar-file');
-        const newPass = document.getElementById('set-newpass').value;
-
-        account.name = name;
-        if (newPass && newPass.length >= 4) account.password = newPass;
-
-        const finalize = (acc) => {
-            saveAccount(acc);
-            currentUser = acc;
-            updateTrayUser(acc);
-            document.getElementById('desktop-greeting').textContent = `Welcome
-back, ${acc.name}`;
-            alert('Account saved!');
-        };
-
-        if (avatarFile.files && avatarFile.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                account.avatar = e.target.result;
-                finalize(account);
-            };
-            reader.readAsDataURL(avatarFile.files[0]);
-        } else {
-            if (avatarUrl) account.avatar = avatarUrl;
-            finalize(account);
-        }
-    }
-
-    function updateTM() {
-        const list = document.getElementById('tm-list');
-        if (!list) return;
-        list.innerHTML = '';
-        const active = Array.from(document.querySelectorAll('.window')).filter(w
-=> {
-            try { return window.getComputedStyle(w).display !== 'none'; } catch
-{ return false; }
-        });
-        active.forEach(win => {
-            const name = win.querySelector('.title-bar span')?.innerText ||
-win.id;
-            const row = document.createElement('div');
-            row.className = 'tm-row';
-            row.innerHTML = `<div style="flex:1">${name}</div><div
-style="color:#27ae60;margin-right:15px;">${(Math.random()*30+10).toFixed(1)}MB</
-div><button class="tm-kill-btn" onclick="closeWin('${win.id}')">End</button>`;
-            list.appendChild(row);
-        });
-    }
-
-    function focusWin(win) { zCounter++; win.style.zIndex = zCounter; }
-    function checkFocus(e) {
-        const menu = document.getElementById('user-menu');
-        if (menu && menu.classList.contains('open') && !menu.contains(e.target)
-&& e.target.id !== 'tray-user') {
-            closeUserMenu();
-        }
-        const win = e.target.closest('.window');
-        if (win) focusWin(win);
-    }
-    function maximizeWin(id) {
-document.getElementById(id).classList.toggle('maximized'); }
-    function toggleStart() {
-document.getElementById('start-menu').classList.toggle('open'); }
-
-    function minimizeWin(id) {
-        const win = document.getElementById(id);
-        if (!win) return;
-        win.classList.add('minimized');
-        win.style.display = 'none';
-        updateRunningArea();
-    }
-
-    function updateRunningArea() {
-        const area = document.getElementById('running-area');
-        if (!area) return;
-        area.innerHTML = '';
-        const wins = Array.from(document.querySelectorAll('.window'));
-        const apps = getAllApps();
-        const seen = new Set();
-        wins.forEach(w => {
-            let appId = w.dataset.appId;
-            if (!appId) {
-                const sys = apps.find(a => a.isSys && a.sysId === w.id);
-                if (sys) appId = sys.id;
-            }
-            if (!appId || seen.has(appId)) return;
-            seen.add(appId);
-            const app = apps.find(a => a.id === appId);
-            const btn = document.createElement('button');
-            btn.className = 'taskbar-btn';
-            btn.title = app ? app.name : appId;
-            btn.innerHTML = `<img src="${app ? app.icon :
-'../sys64/icons/MISSING_ICON.png'}"
-onerror="this.src='../sys64/icons/MISSING_ICON.png'">`;
-            btn.onclick = () => {
-                // toggle first matching window
-                const allWins =
-Array.from(document.querySelectorAll('.window'));
-                const match = allWins.find(x => x.dataset.appId === appId ||
-x.id === ('win-' + (app?.sysId || appId)));
-                if (!match) return;
-                if (window.getComputedStyle(match).display === 'none') {
-match.style.display = 'flex'; match.classList.remove('minimized');
-focusWin(match); }
-                else { match.style.display = 'none';
-match.classList.add('minimized'); }
-                updateRunningArea();
-            };
-                area.appendChild(btn);
-        });
-    }
-
-    // Right-click context menu behavior removed; app actions are available
-through the Start menu and taskbar buttons only.
-
-    function dragWin(el) {
-        const win = el.parentElement;
-        if (win.classList.contains('maximized')) return;
-        let p1=0,p2=0,p3=0,p4=0;
-        el.onmousedown = e => {
-            p3=e.clientX; p4=e.clientY;
-            document.onmouseup = () => { document.onmouseup=null;
-document.onmousemove=null; };
-            document.onmousemove = e => {
-                p1=p3-e.clientX; p2=p4-e.clientY; p3=e.clientX; p4=e.clientY;
-                win.style.top=(win.offsetTop-p2)+'px';
-win.style.left=(win.offsetLeft-p1)+'px';
-            };
-        };
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // SETTINGS
-    // ═══════════════════════════════════════════════════════
-    function applyPersonalization() {
-        const input = document.getElementById('wallpaper-input');
-        const fileInput = document.getElementById('wallpaper-file');
-        const wallpaperFit =
-document.getElementById('wallpaper-fit-input')?.value || 'cover';
-
-        if (fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.body.style.backgroundImage =
-`url('${e.target.result}')`;
-                document.body.style.backgroundSize = wallpaperFit;
-                localStorage.setItem('ezier_wallpaper', e.target.result);
-                localStorage.setItem('ezier_wallpaper_fit', wallpaperFit);
-            };
-            reader.readAsDataURL(fileInput.files[0]);
-        } else if (input.value.trim()) {
-            const wall = input.value.trim();
-            document.body.style.backgroundImage = `url('${wall}')`;
-            document.body.style.backgroundSize = wallpaperFit;
-            localStorage.setItem('ezier_wallpaper', wall);
-            localStorage.setItem('ezier_wallpaper_fit', wallpaperFit);
-        }
-    }
-
-    function clearWallpaper() {
-        localStorage.removeItem('ezier_wallpaper');
-        localStorage.removeItem('ezier_wallpaper_fit');
-        document.body.style.removeProperty('background-image');
-        document.body.style.removeProperty('background-size');
-        const input = document.getElementById('wallpaper-input');
-        if (input) input.value = '';
-    }
-
-    function applyAppearanceSettings() {
-        const accent = document.getElementById('accent-color-input')?.value ||
-'#1793d1';
-        const opacity = Math.min(1, Math.max(0.2,
-parseFloat(document.getElementById('taskbar-opacity-input')?.value || '0.85')));
-        const blur = Math.min(30, Math.max(0,
-parseInt(document.getElementById('glass-blur-input')?.value || '20')));
-        const themeMode = document.getElementById('theme-mode-input')?.value ||
-'dark';
-        const position =
-document.getElementById('taskbar-position-input')?.value || 'bottom';
-        const reduceMotion =
-!!document.getElementById('reduce-motion-input')?.checked;
-        const ww = Math.min(1200, Math.max(600,
-parseInt(document.getElementById('window-width-input')?.value || '900')));
-        const wh = Math.min(900, Math.max(400,
-parseInt(document.getElementById('window-height-input')?.value || '600')));
-        const isFloating =
-document.getElementById('floating-taskbar-input')?.checked;
-        const isCompact =
-document.getElementById('compact-start-input')?.checked;
-
-        document.documentElement.style.setProperty('--accent', accent);
-        document.documentElement.style.setProperty('--taskbar-bg',
-`rgba(15,15,15,${opacity})`);
-        document.documentElement.style.setProperty('--glass', `blur(${blur}px)
-saturate(150%)`);
-        document.documentElement.style.setProperty('--window-width', `${ww}px`);
-        document.documentElement.style.setProperty('--window-height',
-`${wh}px`);
-        const showDesktopIcons =
-!!document.getElementById('show-desktop-icons-input')?.checked;
-        const watermark =
-document.getElementById('desktop-watermark-input')?.value || 'EZIER OS';
-        const welcomeText =
-document.getElementById('desktop-welcome-input')?.value || 'Welcome to EZIER OS:
-POSTAL.';
-
-        document.body.classList.toggle('reduce-motion', reduceMotion);
-        applyThemeMode(themeMode);
-
-        const taskbar = document.getElementById('taskbar');
-        taskbar.classList.toggle('top', position === 'top');
-        if (position === 'top') {
-            taskbar.style.top = '10px';
-            taskbar.style.bottom = 'auto';
-        } else {
-            taskbar.style.bottom = '10px';
-            taskbar.style.top = 'auto';
-        }
-
-        localStorage.setItem('ezier_accent_color', accent);
-        localStorage.setItem('ezier_taskbar_opacity', String(opacity));
-        localStorage.setItem('ezier_glass_blur', String(blur));
-        localStorage.setItem('ezier_reduce_motion', reduceMotion ? '1' : '0');
-        localStorage.setItem('ezier_theme_mode', themeMode);
-        localStorage.setItem('ezier_taskbar_position', position);
-        localStorage.setItem('ezier_floating_taskbar', isFloating ? '1' : '0');
-        localStorage.setItem('ezier_compact_start', isCompact ? '1' : '0');
-        localStorage.setItem('update_pref',
-document.getElementById('update-pref-select')?.value || 'always');
-        localStorage.setItem('ezier_show_desktop_icons', showDesktopIcons ? '1'
-: '0');
-        localStorage.setItem('ezier_desktop_watermark', watermark);
-        localStorage.setItem('ezier_desktop_welcome_text', welcomeText);
-
-        document.getElementById('taskbar').classList.toggle('floating',
-isFloating);
-        document.getElementById('start-menu').classList.toggle('compact',
-isCompact);
-        updateDesktopLayout();
-        renderOS(document.getElementById('app-search')?.value || '');
-    }
-
-    function applyWindowSettings() {
-        const w = Math.min(1200, Math.max(600,
-parseInt(document.getElementById('window-width-input')?.value || '900')));
-        const h = Math.min(900, Math.max(400,
-parseInt(document.getElementById('window-height-input')?.value || '600')));
-        document.documentElement.style.setProperty('--window-width', `${w}px`);
-        document.documentElement.style.setProperty('--window-height', `${h}px`);
-        localStorage.setItem('ezier_window_width', String(w));
-        localStorage.setItem('ezier_window_height', String(h));
-    }
-
-    function initSettingsUI() {
-        const savedWall = localStorage.getItem('ezier_wallpaper');
-        const wallpaperFit = localStorage.getItem('ezier_wallpaper_fit') ||
-'cover';
-        if (savedWall) {
-            document.body.style.backgroundImage = `url('${savedWall}')`;
-            document.body.style.backgroundSize = wallpaperFit;
-        }
-
-        const accent = localStorage.getItem('ezier_accent_color') || '#1793d1';
-        const opacity = parseFloat(localStorage.getItem('ezier_taskbar_opacity')
-|| '0.85');
-        const blur = parseInt(localStorage.getItem('ezier_glass_blur') || '20');
-        const themeMode = localStorage.getItem('ezier_theme_mode') || 'dark';
-        const taskbarPosition = localStorage.getItem('ezier_taskbar_position')
-|| 'bottom';
-        const reduceMotion = (localStorage.getItem('ezier_reduce_motion') ||
-'0') === '1';
-        const ww = parseInt(localStorage.getItem('ezier_window_width') ||
-'900');
-        const wh = parseInt(localStorage.getItem('ezier_window_height') ||
-'600');
-
-        const isFloating = localStorage.getItem('ezier_floating_taskbar') ===
-'1';
-        const isCompact = localStorage.getItem('ezier_compact_start') === '1';
-
-        document.documentElement.style.setProperty('--accent', accent);
-        document.documentElement.style.setProperty('--taskbar-bg',
-`rgba(15,15,15,${opacity})`);
-        document.documentElement.style.setProperty('--glass', `blur(${blur}px)
-saturate(150%)`);
-        document.documentElement.style.setProperty('--window-width', `${ww}px`);
-        document.documentElement.style.setProperty('--window-height',
-`${wh}px`);
-        document.body.classList.toggle('reduce-motion', reduceMotion);
-        applyThemeMode(themeMode);
-
-        const taskbar = document.getElementById('taskbar');
-        taskbar.classList.toggle('floating', isFloating);
-        taskbar.classList.toggle('top', taskbarPosition === 'top');
-        if (taskbarPosition === 'top') {
-            taskbar.style.top = '10px';
-            taskbar.style.bottom = 'auto';
-        } else {
-            taskbar.style.bottom = '10px';
-            taskbar.style.top = 'auto';
-        }
-        document.getElementById('start-menu').classList.toggle('compact',
-isCompact);
-
-        const set = (id, val) => { const el = document.getElementById(id); if
-(el) el.value = String(val); };
-        const setTxt = (id, txt) => { const el = document.getElementById(id); if
-(el) el.innerText = txt; };
-
-        if (savedWall && !savedWall.startsWith('data:')) set('wallpaper-input',
-savedWall);
-        set('wallpaper-fit-input', wallpaperFit);
-        set('accent-color-input', accent);
-        set('taskbar-opacity-input', String(opacity));
-setTxt('taskbar-opacity-value', Number(opacity).toFixed(2));
-        set('glass-blur-input', String(blur)); setTxt('glass-blur-value',
-`${blur}px`);
-        set('theme-mode-input', themeMode);
-        set('taskbar-position-input', taskbarPosition);
-        set('update-pref-select', localStorage.getItem('update_pref') ||
-'always');
-
-        const rm = document.getElementById('reduce-motion-input'); if (rm)
-rm.checked = reduceMotion;
-        const fl = document.getElementById('floating-taskbar-input'); if (fl)
-fl.checked = isFloating;
-        const cp = document.getElementById('compact-start-input'); if (cp)
-cp.checked = isCompact;
-        const showDesktopIcons =
-localStorage.getItem('ezier_show_desktop_icons') !== '0';
-        const watermark = localStorage.getItem('ezier_desktop_watermark') ||
-'EZIER OS';
-        const welcomeText = localStorage.getItem('ezier_desktop_welcome_text')
-|| 'Welcome to EZIER OS: POSTAL.';
-        const desktopIconsInput =
-document.getElementById('show-desktop-icons-input'); if (desktopIconsInput)
-desktopIconsInput.checked = showDesktopIcons;
-        const watermarkInput =
-document.getElementById('desktop-watermark-input'); if (watermarkInput)
-watermarkInput.value = watermark;
-        const welcomeInput = document.getElementById('desktop-welcome-input');
-if (welcomeInput) welcomeInput.value = welcomeText;
-        renderDesktopIconSettings();
-
-        set('window-width-input', String(ww)); setTxt('window-width-value',
-`${ww}px`);
-        set('window-height-input', String(wh)); setTxt('window-height-value',
-`${wh}px`);
-        updateDesktopLayout();
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // CLOCK
-    // ═══════════════════════════════════════════════════════
-    function pad(n) { return String(n).padStart(2, '0'); }
-
-    function updateClock() {
-        const now = new Date();
-        const timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes());
-        const dateStr = now.toLocaleDateString('en-US', { weekday: 'long',
-month: 'long', day: 'numeric' });
-        const mainClock = document.getElementById('clock');
-        const trayClock = document.getElementById('tray-clock');
-        const lockClock = document.getElementById('lock-clock-big');
-        const lockDate = document.getElementById('lock-date');
-        if (mainClock) mainClock.innerText = timeStr;
-        if (trayClock) trayClock.innerText = timeStr;
-        if (lockClock) lockClock.innerText = timeStr;
-        if (lockDate) lockDate.innerText = dateStr;
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // KERNEL (ZIP handler)
-    // ═══════════════════════════════════════════════════════
-    const Kernel = {
-        async buildVirtualFS(zipFile) {
-            const jszip = new JSZip();
-            const zip = await jszip.loadAsync(zipFile);
-            const fileMap = {};
-            for (let filename in zip.files) {
-                if (!zip.files[filename].dir) {
-                    const blob = await zip.files[filename].async('blob');
-                    fileMap[filename] = URL.createObjectURL(blob);
-                }
-            }
-            const indexFile = Object.keys(fileMap).find(f =>
-f.toLowerCase().endsWith('index.html'));
-            if (!indexFile) throw new Error('No index.html found in ZIP');
-            const htmlContent = await zip.file(indexFile).async('string');
-            return URL.createObjectURL(new Blob([htmlContent], { type:
-'text/html' }));
-        }
-    };
-
-    // ═══════════════════════════════════════════════════════
-    // KEYBOARD SHORTCUTS
-    // ═══════════════════════════════════════════════════════
-    window.addEventListener('keydown', e => {
-        if (e.key === 'Alt') { e.preventDefault(); toggleStart(); }
-        if (e.key === 'Escape') { dismissError(); closeUserMenu(); }
-    });
-
-    // ═══════════════════════════════════════════════════════
-    // BOOT
-    // ═══════════════════════════════════════════════════════
-    initOS();
-    </script>
-    <script src="updatechecker.js"></script>
-    <script src="../hinux/terminal.js"></script>
-</body>
-</html>
-
     let currentUser = null;
     let setupStep = 0;
     let setupData = {};
@@ -3270,8 +1079,22 @@ f.toLowerCase().endsWith('index.html'));
         {id: 'ee', name: 'Ezier Explorer', icon: '../sys64/icons/ezierosstarticon.png', file: 'ezierexplore.html'},
     ];
 
-    // ═══════════════════════════════════════════════════════
-    // ACCOUNT / SETUP SYSTEM
+    const WALLPAPER_GALLERY = [
+        { name: 'EZiER OS: Postal', file: '../sys64/wallpapers/EZIER_POSTAL.png', thumb: '../sys64/wallpapers/thumbs/EZIER_POSTAL.jpg' },
+        { name: 'Aero', file: '../sys64/wallpapers/areo.png', thumb: '../sys64/wallpapers/thumbs/areo.jpg' },
+        { name: 'Asadal', file: '../sys64/wallpapers/asadal.png', thumb: '../sys64/wallpapers/thumbs/asadal.jpg' },
+        { name: 'Classic', file: '../sys64/wallpapers/imag.jpg', thumb: '../sys64/wallpapers/thumbs/imag.jpg' },
+        { name: 'macOS 23', file: '../sys64/wallpapers/mac_os_23.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_23.jpg' },
+        { name: 'macOS 24', file: '../sys64/wallpapers/mac_os_24.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_24.jpg' },
+        { name: 'macOS 35', file: '../sys64/wallpapers/mac_os_35.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_35.jpg' },
+        { name: 'macOS 36', file: '../sys64/wallpapers/mac_os_36.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_36.jpg' },
+        { name: 'macOS 37', file: '../sys64/wallpapers/mac_os_37.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_37.jpg' },
+        { name: 'macOS 38', file: '../sys64/wallpapers/mac_os_38.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_38.jpg' },
+        { name: 'macOS 39', file: '../sys64/wallpapers/mac_os_39.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_39.jpg' },
+        { name: 'macOS 40', file: '../sys64/wallpapers/mac_os_40.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_40.jpg' },
+        { name: 'macOS 41', file: '../sys64/wallpapers/mac_os_41.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_41.jpg' },
+        { name: 'macOS 42', file: '../sys64/wallpapers/mac_os_42.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_42.jpg' },
+    ];
     // ═══════════════════════════════════════════════════════
     function getAccount() {
         const raw = localStorage.getItem('ezieros_account');
@@ -3310,9 +1133,51 @@ f.toLowerCase().endsWith('index.html'));
 
     function showLockScreen(account){ const ls=$('lock-screen'); ls.style.display='flex'; ls.classList.remove('hidden'); const initials=(account.name||'?')[0].toUpperCase(); const avatarImg=$('lock-avatar-img'), avatarInitials=$('lock-avatar-initials'); if(account.avatar){ avatarImg.src=account.avatar; avatarImg.style.display='block'; avatarInitials.style.display='none'; } else { avatarImg.style.display='none'; avatarInitials.style.display='block'; avatarInitials.textContent=initials; } $('lock-username').textContent=account.name; $('lock-pass-input').value=''; $('lock-error').textContent=''; updateClock(); }
 
-    function attemptLogin(){ const account=getAccount(), input=$('lock-pass-input').value, err=$('lock-error'); if(!account){ showSetup(); return; } if(input===account.password){ err.textContent=''; currentUser=account; $('lock-screen').classList.add('hidden'); setTimeout(()=>{ $('lock-screen').style.display='none'; bootDesktop(account); },600); } else{ err.textContent='Incorrect password. Try again.'; const pass=$('lock-pass-input'); pass.value=''; pass.classList.add('shake'); setTimeout(()=>pass.classList.remove('shake'),500); } }
+    function attemptLogin(){ const account=getAccount(), input=$('lock-pass-input').value, err=$('lock-error'); if(!account){ showSetup(); return; } if(input===account.password){ err.textContent=''; currentUser=account; $('lock-screen').classList.add('hidden'); setTimeout(()=>{ $('lock-screen').style.display='none'; playWelcomeVideo(()=>bootDesktop(account)); },600); } else{ err.textContent='Incorrect password. Try again.'; const pass=$('lock-pass-input'); pass.value=''; pass.classList.add('shake'); setTimeout(()=>pass.classList.remove('shake'),500); } }
 
     function bootDesktop(account){ initSettingsUI(); const searchInput=$('app-search'); if(searchInput){ searchInput.value=''; searchInput.oninput=e=>renderOS(e.target.value);} renderOS(); currentUser=account; updateTrayUser(account); updateDesktopLayout(); }
+
+    // ═══════════════════════════════════════════════════════
+    // WELCOME / SPLASH VIDEO
+    // ═══════════════════════════════════════════════════════
+    function playWelcomeVideo(callback) {
+        const enabled = localStorage.getItem('ezier_play_login_video') !== '0';
+        const overlay = $('welcome-video-overlay');
+        const video = $('welcome-video');
+
+        if (!enabled || !overlay || !video) { callback(); return; }
+
+        let finished = false;
+        const finish = () => {
+            if (finished) return;
+            finished = true;
+            overlay.classList.remove('active');
+            video.pause();
+            video.currentTime = 0;
+            overlay.removeEventListener('click', finish);
+            document.removeEventListener('keydown', finish);
+            video.onended = null;
+            video.onerror = null;
+            callback();
+        };
+
+        video.muted = localStorage.getItem('ezier_video_muted') === '1';
+        video.currentTime = 0;
+        video.onended = finish;
+        video.onerror = finish;
+        overlay.classList.add('active');
+        overlay.addEventListener('click', finish);
+        document.addEventListener('keydown', finish);
+
+        const playPromise = video.play();
+        if (playPromise && playPromise.catch) {
+            playPromise.catch(() => {
+                // Autoplay-with-sound may be blocked; retry muted before giving up
+                video.muted = true;
+                video.play().catch(finish);
+            });
+        }
+    }
 
     function lockScreen() {
         const account = getAccount();
@@ -3701,7 +1566,7 @@ f.toLowerCase().endsWith('index.html'));
 
     function openSysWin(id) {
         const win = document.getElementById(id);
-        win.style.display = 'flex'; win.classList.remove('closing');
+        win.style.display = 'flex'; win.classList.remove('closing'); win.classList.remove('minimized');
         if (!win.style.top) { win.style.top = '80px'; win.style.left = '80px'; }
         // Link system window to a logical app id for taskbar/contexts
         const sysApp = BUILT_IN_APPS.find(a => a.isSys && a.sysId === id);
@@ -3835,7 +1700,7 @@ f.toLowerCase().endsWith('index.html'));
     function saveAccountSettings() {
         const account = getAccount();
         if (!account) return;
-        
+
         const name = (document.getElementById('set-displayname').value || '').trim() || account.name;
         const avatarUrl = (document.getElementById('set-avatar-url').value || '').trim();
         const avatarFile = document.getElementById('set-avatar-file');
@@ -3905,7 +1770,14 @@ f.toLowerCase().endsWith('index.html'));
         const area = document.getElementById('running-area');
         if (!area) return;
         area.innerHTML = '';
-        const wins = Array.from(document.querySelectorAll('.window'));
+        // Only include windows that are actually open or minimized.
+        // Persistent system windows (Settings/Task Manager/App Installer) stay
+        // in the DOM with display:none after being closed, so without this
+        // check they'd keep showing a stale icon in the taskbar forever.
+        const wins = Array.from(document.querySelectorAll('.window')).filter(w => {
+            if (w.classList.contains('minimized')) return true;
+            try { return window.getComputedStyle(w).display !== 'none'; } catch { return false; }
+        });
         const apps = getAllApps();
         const seen = new Set();
         wins.forEach(w => {
@@ -3983,6 +1855,45 @@ f.toLowerCase().endsWith('index.html'));
         document.body.style.removeProperty('background-size');
         const input = document.getElementById('wallpaper-input');
         if (input) input.value = '';
+        renderWallpaperGallery();
+    }
+
+    function renderWallpaperGallery() {
+        const grid = document.getElementById('wallpaper-gallery');
+        if (!grid) return;
+        const current = localStorage.getItem('ezier_wallpaper') || '';
+        grid.innerHTML = WALLPAPER_GALLERY.map(w => `
+            <div class="wallpaper-thumb ${current === w.file ? 'selected' : ''}" onclick="setBuiltinWallpaper('${w.file}')" title="${w.name}">
+                <img src="${w.thumb}" alt="${w.name}" loading="lazy">
+                <span>${w.name}</span>
+            </div>
+        `).join('');
+    }
+
+    function setBuiltinWallpaper(path) {
+        const fit = document.getElementById('wallpaper-fit-input')?.value || 'cover';
+        document.body.style.backgroundImage = `url('${path}')`;
+        document.body.style.backgroundSize = fit;
+        localStorage.setItem('ezier_wallpaper', path);
+        localStorage.setItem('ezier_wallpaper_fit', fit);
+        const input = document.getElementById('wallpaper-input');
+        if (input) input.value = path;
+        renderWallpaperGallery();
+    }
+
+    function quickSetAccent(hex) {
+        const input = document.getElementById('accent-color-input');
+        if (input) input.value = hex;
+        applyAppearanceSettings();
+    }
+
+    function applyBootSettings() {
+        const playBoot = !!document.getElementById('play-boot-video-input')?.checked;
+        const playLogin = !!document.getElementById('play-login-video-input')?.checked;
+        const muted = !!document.getElementById('video-muted-input')?.checked;
+        localStorage.setItem('ezier_play_boot_video', playBoot ? '1' : '0');
+        localStorage.setItem('ezier_play_login_video', playLogin ? '1' : '0');
+        localStorage.setItem('ezier_video_muted', muted ? '1' : '0');
     }
 
     function applyAppearanceSettings() {
@@ -3992,6 +1903,7 @@ f.toLowerCase().endsWith('index.html'));
         const themeMode = document.getElementById('theme-mode-input')?.value || 'dark';
         const position = document.getElementById('taskbar-position-input')?.value || 'bottom';
         const reduceMotion = !!document.getElementById('reduce-motion-input')?.checked;
+        const use12h = !!document.getElementById('clock-12h-input')?.checked;
         const ww = Math.min(1200, Math.max(600, parseInt(document.getElementById('window-width-input')?.value || '900')));
         const wh = Math.min(900, Math.max(400, parseInt(document.getElementById('window-height-input')?.value || '600')));
         const isFloating = document.getElementById('floating-taskbar-input')?.checked;
@@ -4023,6 +1935,7 @@ f.toLowerCase().endsWith('index.html'));
         localStorage.setItem('ezier_taskbar_opacity', String(opacity));
         localStorage.setItem('ezier_glass_blur', String(blur));
         localStorage.setItem('ezier_reduce_motion', reduceMotion ? '1' : '0');
+        localStorage.setItem('ezier_clock_12h', use12h ? '1' : '0');
         localStorage.setItem('ezier_theme_mode', themeMode);
         localStorage.setItem('ezier_taskbar_position', position);
         localStorage.setItem('ezier_floating_taskbar', isFloating ? '1' : '0');
@@ -4035,6 +1948,7 @@ f.toLowerCase().endsWith('index.html'));
         document.getElementById('taskbar').classList.toggle('floating', isFloating);
         document.getElementById('start-menu').classList.toggle('compact', isCompact);
         updateDesktopLayout();
+        updateClock();
         renderOS(document.getElementById('app-search')?.value || '');
     }
 
@@ -4054,7 +1968,7 @@ f.toLowerCase().endsWith('index.html'));
             document.body.style.backgroundImage = `url('${savedWall}')`;
             document.body.style.backgroundSize = wallpaperFit;
         }
-        
+
         const accent = localStorage.getItem('ezier_accent_color') || '#1793d1';
         const opacity = parseFloat(localStorage.getItem('ezier_taskbar_opacity') || '0.85');
         const blur = parseInt(localStorage.getItem('ezier_glass_blur') || '20');
@@ -4063,7 +1977,7 @@ f.toLowerCase().endsWith('index.html'));
         const reduceMotion = (localStorage.getItem('ezier_reduce_motion') || '0') === '1';
         const ww = parseInt(localStorage.getItem('ezier_window_width') || '900');
         const wh = parseInt(localStorage.getItem('ezier_window_height') || '600');
-        
+
         const isFloating = localStorage.getItem('ezier_floating_taskbar') === '1';
         const isCompact = localStorage.getItem('ezier_compact_start') === '1';
 
@@ -4089,7 +2003,7 @@ f.toLowerCase().endsWith('index.html'));
 
         const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = String(val); };
         const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
-        
+
         if (savedWall && !savedWall.startsWith('data:')) set('wallpaper-input', savedWall);
         set('wallpaper-fit-input', wallpaperFit);
         set('accent-color-input', accent);
@@ -4098,7 +2012,7 @@ f.toLowerCase().endsWith('index.html'));
         set('theme-mode-input', themeMode);
         set('taskbar-position-input', taskbarPosition);
         set('update-pref-select', localStorage.getItem('update_pref') || 'always');
-        
+
         const rm = document.getElementById('reduce-motion-input'); if (rm) rm.checked = reduceMotion;
         const fl = document.getElementById('floating-taskbar-input'); if (fl) fl.checked = isFloating;
         const cp = document.getElementById('compact-start-input'); if (cp) cp.checked = isCompact;
@@ -4113,6 +2027,18 @@ f.toLowerCase().endsWith('index.html'));
         set('window-width-input', String(ww)); setTxt('window-width-value', `${ww}px`);
         set('window-height-input', String(wh)); setTxt('window-height-value', `${wh}px`);
         updateDesktopLayout();
+
+        const use12h = localStorage.getItem('ezier_clock_12h') === '1';
+        const c12 = document.getElementById('clock-12h-input'); if (c12) c12.checked = use12h;
+
+        const playBoot = localStorage.getItem('ezier_play_boot_video') !== '0';
+        const playLogin = localStorage.getItem('ezier_play_login_video') !== '0';
+        const videoMuted = localStorage.getItem('ezier_video_muted') === '1';
+        const pb = document.getElementById('play-boot-video-input'); if (pb) pb.checked = playBoot;
+        const pl = document.getElementById('play-login-video-input'); if (pl) pl.checked = playLogin;
+        const vm = document.getElementById('video-muted-input'); if (vm) vm.checked = videoMuted;
+
+        renderWallpaperGallery();
     }
 
     // ═══════════════════════════════════════════════════════
@@ -4122,7 +2048,15 @@ f.toLowerCase().endsWith('index.html'));
 
     function updateClock() {
         const now = new Date();
-        const timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes());
+        const use12h = localStorage.getItem('ezier_clock_12h') === '1';
+        let timeStr;
+        if (use12h) {
+            let h = now.getHours() % 12;
+            if (h === 0) h = 12;
+            timeStr = h + ':' + pad(now.getMinutes()) + ' ' + (now.getHours() < 12 ? 'AM' : 'PM');
+        } else {
+            timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes());
+        }
         const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
         const mainClock = document.getElementById('clock');
         const trayClock = document.getElementById('tray-clock');
