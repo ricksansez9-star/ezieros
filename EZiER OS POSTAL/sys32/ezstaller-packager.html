@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>.ezstaller Packager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+    :root { --accent: #1793d1; }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0; min-height: 100vh; padding: 40px 20px;
+        background: #0d0d1a; color: #e6edf3;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        display: flex; justify-content: center;
+    }
+    main { width: 100%; max-width: 560px; }
+    h1 { font-size: 22px; font-weight: 300; letter-spacing: .5px; margin-bottom: 2px; }
+    p.lede { color: #8a96a3; font-size: 13px; margin-top: 0; margin-bottom: 28px; }
+    .card {
+        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px; padding: 22px; margin-bottom: 18px;
+    }
+    .card h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #8a96a3; margin: 0 0 16px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; color: #aab4bf; margin-bottom: 5px; }
+    .field input[type="text"], .field textarea, .field select {
+        width: 100%; padding: 10px 12px; border-radius: 8px;
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+        color: #fff; font-size: 14px; outline: none; font-family: inherit;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); }
+    .field textarea { resize: vertical; min-height: 60px; }
+    .row { display: flex; gap: 12px; }
+    .row .field { flex: 1; }
+    input[type="file"] { color: #aab4bf; font-size: 13px; }
+    .hint { font-size: 11px; color: #677685; margin-top: 4px; }
+    button {
+        width: 100%; padding: 13px; border-radius: 10px; border: none;
+        background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
+        cursor: pointer; transition: filter .15s;
+    }
+    button:hover { filter: brightness(1.12); }
+    button:disabled { opacity: 0.5; cursor: default; }
+    #status { font-size: 13px; min-height: 20px; margin-top: 12px; text-align: center; }
+    #status.ok { color: #27ae60; }
+    #status.err { color: #e74c3c; }
+    #manifest-preview {
+        font-family: 'Cascadia Code', Consolas, monospace; font-size: 12px;
+        background: #0b0d10; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
+        padding: 12px; white-space: pre-wrap; color: #9fd2ec; max-height: 180px; overflow-y: auto;
+    }
+    .filelist { font-size: 12px; color: #8a96a3; margin-top: 8px; max-height: 100px; overflow-y: auto; }
+</style>
+</head>
+<body>
+<main>
+    <h1>.ezstaller Packager</h1>
+    <p class="lede">A small dev tool for building .ezstaller packages that EZiER OS's Console Installer can install. Not part of EZiER OS itself — just for packaging your apps.</p>
+
+    <div class="card">
+        <h2>App Info</h2>
+        <div class="row">
+            <div class="field">
+                <label for="f-name">App name *</label>
+                <input type="text" id="f-name" placeholder="My Cool App">
+            </div>
+            <div class="field">
+                <label for="f-id">App id *</label>
+                <input type="text" id="f-id" placeholder="my-cool-app">
+            </div>
+        </div>
+        <div class="row">
+            <div class="field">
+                <label for="f-version">Version</label>
+                <input type="text" id="f-version" placeholder="1.0.0">
+            </div>
+            <div class="field">
+                <label for="f-author">Author</label>
+                <input type="text" id="f-author" placeholder="Your name">
+            </div>
+        </div>
+        <div class="field">
+            <label for="f-desc">Description</label>
+            <textarea id="f-desc" placeholder="What does this app do?"></textarea>
+        </div>
+        <div class="field">
+            <label for="f-icon-url">Icon URL <span style="color:#677685;">(optional — leave blank to pick an icon file below)</span></label>
+            <input type="text" id="f-icon-url" placeholder="https://example.com/icon.png">
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>App Files</h2>
+        <div class="field">
+            <label for="f-folder">Select your app folder</label>
+            <input type="file" id="f-folder" webkitdirectory multiple>
+            <div class="hint">Pick the folder containing your app's html/css/js/images. Subfolders are preserved.</div>
+        </div>
+        <div class="field">
+            <label for="f-entry">Entry file *</label>
+            <select id="f-entry"><option value="">Select a folder first…</option></select>
+        </div>
+        <div class="field">
+            <label for="f-icon-file">Icon file <span style="color:#677685;">(optional, used if no Icon URL is set)</span></label>
+            <select id="f-icon-file"><option value="">None</option></select>
+        </div>
+        <div id="file-list" class="filelist"></div>
+    </div>
+
+    <div class="card">
+        <h2>Manifest preview</h2>
+        <div id="manifest-preview">Fill in the fields above…</div>
+    </div>
+
+    <button id="build-btn">Build .ezstaller</button>
+    <div id="status"></div>
+</main>
+
+<script>
+    let selectedFiles = []; // { relPath, file }
+
+    function slugify(s) {
+        return String(s || '').toLowerCase().trim()
+            .replace(/[^a-z0-9._-]+/g, '-')
+            .replace(/^-+|-+$/g, '') || 'my-app';
+    }
+
+    const $ = id => document.getElementById(id);
+
+    $('f-name').addEventListener('input', () => {
+        if (!$('f-id').dataset.touched) $('f-id').value = slugify($('f-name').value);
+        updatePreview();
+    });
+    $('f-id').addEventListener('input', () => { $('f-id').dataset.touched = '1'; updatePreview(); });
+    ['f-version', 'f-author', 'f-desc', 'f-icon-url', 'f-entry', 'f-icon-file'].forEach(id => {
+        $(id).addEventListener('input', updatePreview);
+        $(id).addEventListener('change', updatePreview);
+    });
+
+    $('f-folder').addEventListener('change', e => {
+        const files = Array.from(e.target.files || []);
+        selectedFiles = files.map(file => {
+            const parts = file.webkitRelativePath.split('/');
+            return { relPath: parts.slice(1).join('/') || file.name, file };
+        });
+
+        const entrySelect = $('f-entry');
+        const iconSelect = $('f-icon-file');
+        entrySelect.innerHTML = '';
+        iconSelect.innerHTML = '<option value="">None</option>';
+
+        const htmlFiles = selectedFiles.filter(f => /\.html?$/i.test(f.relPath));
+        const imageFiles = selectedFiles.filter(f => /\.(png|jpe?g|gif|svg|webp|ico)$/i.test(f.relPath));
+
+        htmlFiles.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.relPath; opt.textContent = f.relPath;
+            entrySelect.appendChild(opt);
+        });
+        const defaultEntry = htmlFiles.find(f => /(^|\/)index\.html?$/i.test(f.relPath));
+        if (defaultEntry) entrySelect.value = defaultEntry.relPath;
+
+        imageFiles.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.relPath; opt.textContent = f.relPath;
+            iconSelect.appendChild(opt);
+        });
+
+        $('file-list').textContent = selectedFiles.length
+            ? `${selectedFiles.length} file(s) selected: ${selectedFiles.map(f => f.relPath).join(', ')}`
+            : '';
+        updatePreview();
+    });
+
+    function buildManifest() {
+        return {
+            ezstaller: 1,
+            id: $('f-id').value.trim() || slugify($('f-name').value),
+            name: $('f-name').value.trim(),
+            version: $('f-version').value.trim(),
+            author: $('f-author').value.trim(),
+            description: $('f-desc').value.trim(),
+            entry: $('f-entry').value,
+            icon: $('f-icon-url').value.trim() || $('f-icon-file').value || undefined
+        };
+    }
+
+    function updatePreview() {
+        const m = buildManifest();
+        const clean = {};
+        Object.keys(m).forEach(k => { if (m[k]) clean[k] = m[k]; });
+        $('manifest-preview').textContent = JSON.stringify(clean, null, 2);
+    }
+
+    function setStatus(text, ok) {
+        const el = $('status');
+        el.textContent = text;
+        el.className = ok === undefined ? '' : (ok ? 'ok' : 'err');
+    }
+
+    $('build-btn').addEventListener('click', async () => {
+        const manifest = buildManifest();
+        if (!manifest.name) return setStatus('App name is required.', false);
+        if (!manifest.id) return setStatus('App id is required.', false);
+        if (!manifest.entry) return setStatus('Pick an entry html file.', false);
+        if (!selectedFiles.length) return setStatus('Select an app folder first.', false);
+
+        setStatus('Building package…');
+        try {
+            const zip = new JSZip();
+            const clean = {};
+            Object.keys(manifest).forEach(k => { if (manifest[k]) clean[k] = manifest[k]; });
+            zip.file('ezstaller.json', JSON.stringify(clean, null, 2));
+            for (const { relPath, file } of selectedFiles) {
+                zip.file(relPath, file);
+            }
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${manifest.id}.ezstaller`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setStatus(`Built ${manifest.id}.ezstaller — check your downloads.`, true);
+        } catch (err) {
+            setStatus('Build failed: ' + (err && err.message ? err.message : err), false);
+        }
+    });
+
+    updatePreview();
+</script>
+</body>
+</html>

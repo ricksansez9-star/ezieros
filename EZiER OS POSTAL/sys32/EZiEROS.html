@@ -5,33 +5,65 @@
     <title>EZIER OS</title>
     <link rel="icon" type="image/png" href="../sys64/icons/ezierosstarticon.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --taskbar-bg: rgba(15, 15, 15, 0.85);
+            --taskbar-bg: rgba(12, 12, 20, 0.78);
             --menu-bg: rgba(255, 255, 255, 0.98);
-            --accent: #1793d1;
-            --glass: blur(20px) saturate(150%);
+            --accent: #7c5cff;
+            --accent-2: #22d3ee;
+            --accent-3: #ff5ec4;
+            --accent-grad: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            --glass: blur(24px) saturate(160%);
             --window-width: 900px;
             --window-height: 600px;
+            --font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+            --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --shadow-glow: 0 8px 32px rgba(124, 92, 255, 0.35);
             /* Layout variables */
             --taskbar-width: auto;
             --taskbar-bottom: 10px;
-            --taskbar-radius: 14px;
+            --taskbar-radius: 18px;
         }
        * { box-sizing: border-box; }
 body, html {
     margin: 0; padding: 0; height: 100%;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: #1e1e2e url('../sys64/icons/EZIEROSDEFAULTPAPER.png') center/cover;
+    font-family: var(--font-body);
+    background: #0b0b14 url('../sys64/icons/EZIEROSDEFAULTPAPER.png') center/cover;
     background-attachment: fixed;
     overflow: hidden;
     cursor: default;
 }
 
+/* ── GLOBAL SCROLLBAR OVERHAUL ── */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    border-radius: 10px; border: 2px solid transparent; background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { filter: brightness(1.15); }
+
+/* ── AMBIENT GRADIENT ORBS (used behind lock/setup screens) ── */
+.ambient-orbs { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.ambient-orbs span {
+    position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.55;
+    animation: orbFloat 14s ease-in-out infinite;
+}
+.ambient-orbs span:nth-child(1) { width: 380px; height: 380px; background: var(--accent); top: -80px; left: -60px; animation-delay: 0s; }
+.ambient-orbs span:nth-child(2) { width: 320px; height: 320px; background: var(--accent-2); bottom: -100px; right: -60px; animation-delay: -4s; }
+.ambient-orbs span:nth-child(3) { width: 260px; height: 260px; background: var(--accent-3); top: 40%; left: 60%; animation-delay: -8s; }
+@keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -25px) scale(1.08); }
+}
+
 /* ── LOCK SCREEN ── */
 #lock-screen {
     position: fixed; inset: 0; z-index: 9999999;
-    background: #0f0f1a url('../sys64/icons/EZIEROSDEFAULTPAPER.png') center/cover;
+    background: #0b0b14 url('../sys64/icons/EZIEROSDEFAULTPAPER.png') center/cover;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     color: white;
     transition: opacity 0.6s ease;
@@ -39,80 +71,124 @@ body, html {
         #lock-screen.hidden { opacity: 0; pointer-events: none; }
         #lock-screen::before {
             content: ''; position: absolute; inset: 0;
-            background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+            background: linear-gradient(160deg, rgba(10,8,20,0.75), rgba(10,10,22,0.6)); backdrop-filter: blur(14px);
         }
         #lock-content {
             position: relative; z-index: 2;
             display: flex; flex-direction: column; align-items: center; gap: 18px;
             width: 340px;
+            animation: slideUp 0.5s cubic-bezier(0.2,1,0.3,1);
         }
         #lock-avatar {
-            width: 90px; height: 90px; border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            border: 3px solid rgba(255,255,255,0.3);
+            width: 96px; height: 96px; border-radius: 50%;
+            background: var(--accent-grad);
+            padding: 3px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 36px; font-weight: 300; letter-spacing: -1px;
+            font-size: 36px; font-weight: 500; letter-spacing: -1px;
             overflow: hidden;
+            box-shadow: var(--shadow-glow);
         }
-        #lock-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        #lock-username { font-size: 22px; font-weight: 400; letter-spacing: 0.5px; }
-        #lock-clock-big { font-size: 68px; font-weight: 200; line-height: 1; margin-bottom: 4px; }
-        #lock-date { font-size: 15px; opacity: 0.7; margin-bottom: 10px; }
+        #lock-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        #lock-username { font-family: var(--font-display); font-size: 23px; font-weight: 600; letter-spacing: 0.3px; }
+        #lock-clock-big { font-family: var(--font-display); font-size: 70px; font-weight: 300; line-height: 1; margin-bottom: 4px; background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        #lock-date { font-size: 15px; opacity: 0.65; margin-bottom: 10px; letter-spacing: 0.3px; }
         .lock-input {
-            width: 100%; padding: 12px 16px; border-radius: 10px;
-            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+            width: 100%; padding: 13px 16px; border-radius: 12px;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
             color: white; font-size: 15px; outline: none; text-align: center;
-            transition: 0.2s;
+            transition: 0.25s; backdrop-filter: blur(10px);
         }
-        .lock-input::placeholder { color: rgba(255,255,255,0.5); }
-        .lock-input:focus { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.5); }
+        .lock-input::placeholder { color: rgba(255,255,255,0.45); }
+        .lock-input:focus { background: rgba(255,255,255,0.14); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,255,0.25); }
         .lock-btn {
-            width: 100%; padding: 12px; border-radius: 10px;
-            background: var(--accent); border: none; color: white;
-            font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s;
+            width: 100%; padding: 13px; border-radius: 12px;
+            background: var(--accent-grad); border: none; color: white;
+            font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.25s;
+            box-shadow: 0 6px 20px rgba(124,92,255,0.3);
+            letter-spacing: 0.2px;
         }
-        .lock-btn:hover { filter: brightness(1.15); }
+        .lock-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 10px 26px rgba(124,92,255,0.42); }
+        .lock-btn:active { transform: translateY(0); }
+        .lock-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none; transform: none; box-shadow: none; }
         .lock-btn.secondary {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: none;
         }
-        .lock-btn.danger { background: #c0392b; }
-        #lock-error { color: #ff6b6b; font-size: 13px; min-height: 18px; text-align: center; }
+        .lock-btn.secondary:hover { background: rgba(255,255,255,0.14); box-shadow: none; }
+        .lock-btn.danger { background: linear-gradient(135deg,#ff5e6c,#c0392b); }
+        #lock-error { color: #ff8080; font-size: 13px; min-height: 18px; text-align: center; }
 
         /* ── SETUP WIZARD ── */
         #setup-screen {
             position: fixed; inset: 0; z-index: 9999998;
-            background: #0d0d1a;
+            background: radial-gradient(circle at 20% 20%, #17162b 0%, #0a0a14 60%);
             display: none; flex-direction: column; align-items: center; justify-content: center;
             color: white;
         }
         #setup-screen.active { display: flex; }
         #setup-box {
-            width: 460px; background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 18px;
-            padding: 40px; display: flex; flex-direction: column; gap: 16px;
+            position: relative; z-index: 2;
+            width: 480px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 22px;
+            padding: 42px; display: flex; flex-direction: column; gap: 16px;
+            backdrop-filter: var(--glass);
+            box-shadow: 0 30px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03) inset;
+            animation: slideUp 0.5s cubic-bezier(0.2,1,0.3,1);
         }
-        #setup-logo { font-size: 28px; font-weight: 200; text-align: center; margin-bottom: 6px; letter-spacing: 1px; }
-        #setup-step { color: rgba(255,255,255,0.5); font-size: 12px; text-align: center; letter-spacing: 2px; text-transform: uppercase; }
-        .setup-label { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+        #setup-logo {
+            font-family: var(--font-display); font-size: 26px; font-weight: 700; text-align: center;
+            margin-bottom: 4px; letter-spacing: 0.5px;
+            background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        #setup-step { color: rgba(255,255,255,0.5); font-size: 11.5px; text-align: center; letter-spacing: 2.5px; text-transform: uppercase; font-weight: 600; }
+        .setup-label { font-size: 12px; color: rgba(255,255,255,0.55); margin-bottom: 5px; letter-spacing: 0.5px; font-weight: 600; text-transform: uppercase; }
         .setup-input {
-            width: 100%; padding: 10px 14px; border-radius: 8px;
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-            color: white; font-size: 14px; outline: none; transition: 0.2s;
+            width: 100%; padding: 11px 14px; border-radius: 10px;
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+            color: white; font-size: 14px; outline: none; transition: 0.25s;
         }
-        .setup-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.12); }
+        .setup-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.11); box-shadow: 0 0 0 3px rgba(124,92,255,0.2); }
         #setup-avatar-preview {
-            width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.1);
+            width: 84px; height: 84px; border-radius: 50%; background: rgba(255,255,255,0.08);
             border: 2px solid rgba(255,255,255,0.2); margin: 0 auto;
             display: flex; align-items: center; justify-content: center;
-            font-size: 32px; overflow: hidden; cursor: pointer; transition: 0.2s;
+            font-size: 32px; overflow: hidden; cursor: pointer; transition: 0.25s;
         }
-        #setup-avatar-preview:hover { border-color: var(--accent); }
+        #setup-avatar-preview:hover { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(124,92,255,0.18); }
         #setup-avatar-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
-        #setup-error { color: #ff6b6b; font-size: 13px; min-height: 18px; }
+        #setup-error { color: #ff8080; font-size: 13px; min-height: 18px; }
         .setup-progress { display: flex; gap: 6px; justify-content: center; }
-        .setup-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; }
-        .setup-dot.active { background: var(--accent); }
+        .setup-dot { width: 22px; height: 4px; border-radius: 3px; background: rgba(255,255,255,0.15); transition: 0.35s; }
+        .setup-dot.active { background: var(--accent-grad); box-shadow: 0 0 8px rgba(124,92,255,0.6); }
+
+        /* ── TOS GATE ── */
+        #setup-tos-box {
+            height: 260px; overflow-y: auto; padding: 16px 18px;
+            background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; font-size: 12px; line-height: 1.7;
+            color: rgba(255,255,255,0.75); white-space: pre-wrap; font-family: 'Courier New', monospace;
+        }
+        #setup-tos-box strong { color: #fff; }
+        .tos-filename {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 11px; color: rgba(255,255,255,0.45); font-family: 'Courier New', monospace;
+            letter-spacing: 0.3px; justify-content: center;
+        }
+        .tos-agree-row {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px; cursor: pointer; transition: 0.2s; user-select: none;
+        }
+        .tos-agree-row:hover { background: rgba(255,255,255,0.08); }
+        .tos-agree-row input[type=checkbox] {
+            width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0;
+        }
+        .tos-agree-row span { font-size: 13px; color: rgba(255,255,255,0.85); }
+        #tos-scroll-hint {
+            font-size: 11px; color: rgba(255,255,255,0.4); text-align: center;
+            transition: opacity 0.3s;
+        }
 
 #update-modal {
     position: fixed;
@@ -269,15 +345,16 @@ body, html {
         /* ── TASKBAR ── */
         #taskbar {
             position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-            height: 54px; width: auto; min-width: 300px;
+            height: 56px; width: auto; min-width: 300px;
             background: var(--taskbar-bg); backdrop-filter: var(--glass);
-            border-radius: 14px; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--taskbar-radius); border: 1px solid rgba(255,255,255,0.12);
             display: flex; align-items: center; padding: 0 10px; gap: 10px; z-index: 1000000;
-            transition: width 0.3s ease, border-radius 0.3s ease, bottom 0.3s ease;
+            transition: width 0.3s ease, border-radius 0.3s ease, bottom 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04) inset;
         }
         #taskbar.floating {
             width: 95%; max-width: 1200px; bottom: 20px; border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 14px 45px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset;
         }
         #taskbar.top {
             top: 10px;
@@ -464,9 +541,9 @@ body, html {
         /* ── WINDOWS ── */
         .window {
             position: absolute; width: var(--window-width); height: var(--window-height);
-            background: white; border-radius: 12px;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.4);
-            display: none; flex-direction: column; border: 1px solid #333;
+            background: white; border-radius: 14px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset;
+            display: none; flex-direction: column; border: 1px solid rgba(0,0,0,0.25);
             overflow: hidden; resize: both;
             animation: winOpen 0.3s cubic-bezier(0.2, 1, 0.3, 1) forwards;
             z-index: 100;
@@ -521,8 +598,8 @@ body, html {
             width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 5px;
             font-size: 14px;
         }
-        .btn-install { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; cursor: pointer; font-weight: 600; font-size: 14px; }
-        .btn-install:hover { filter: brightness(1.1); }
+        .btn-install { background: var(--accent-grad); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: 600; font-size: 14px; box-shadow: 0 4px 14px rgba(124,92,255,0.3); transition: 0.2s; }
+        .btn-install:hover { filter: brightness(1.1); transform: translateY(-1px); }
         .btn-secondary {
             background: #eef1f4; color: #333; border: 1px solid #ced4da;
             padding: 10px; border-radius: 5px; width: 100%; cursor: pointer; font-weight: 600; font-size: 14px;
@@ -598,10 +675,13 @@ body, html {
             transition-duration: 0.001ms !important;
         }
     </style>
+    <!-- Console Installer feature: terminal styling -->
+    <link rel="stylesheet" href="console-installer.css">
 </head>
 <body onmousedown="checkFocus(event)">
 
     <div id="setup-screen">
+        <div class="ambient-orbs"><span></span><span></span><span></span></div>
         <div id="setup-box">
             <div id="setup-logo">EZIER OS: POSTAL</div>
             <div id="setup-step">FIRST TIME SETUP</div>
@@ -609,16 +689,32 @@ body, html {
                 <div class="setup-dot active" id="dot-0"></div>
                 <div class="setup-dot" id="dot-1"></div>
                 <div class="setup-dot" id="dot-2"></div>
+                <div class="setup-dot" id="dot-3"></div>
             </div>
 
-            <div id="setup-step-0">
-                <p style="color:rgba(255,255,255,0.7); text-align:center; line-height:1.6; font-size:14px;">
-                    Welcome! Let's create your user account to get started with EZIER OS.
+            <div id="setup-step-0" style="display:flex; flex-direction:column; gap:12px;">
+                <p style="color:rgba(255,255,255,0.7); text-align:center; line-height:1.6; font-size:13.5px; margin:0;">
+                    Before you create your account, please review and accept the EZIER OS Terms of Service.
                 </p>
-                <button class="lock-btn" onclick="setupNext(1)">Get Started →</button>
+                <div id="setup-tos-box">Loading Terms of Service…</div>
+                <div id="tos-scroll-hint">↓ Scroll to the bottom to continue ↓</div>
+                <label class="tos-agree-row" for="setup-tos-agree">
+                    <input type="checkbox" id="setup-tos-agree" disabled onchange="updateTosAgreeState()">
+                    <span>I have read and agree to the EZIER OS Terms of Service</span>
+                </label>
+                <div id="setup-error" class="setup-error"></div>
+                <button class="lock-btn" id="setup-tos-continue" disabled onclick="setupNext(1)">I Agree &amp; Continue →</button>
             </div>
 
             <div id="setup-step-1" style="display:none; flex-direction:column; gap:12px;">
+                <p style="color:rgba(255,255,255,0.7); text-align:center; line-height:1.6; font-size:14px;">
+                    Welcome! Let's create your user account to get started with EZIER OS.
+                </p>
+                <button class="lock-btn" onclick="setupNext(2)">Get Started →</button>
+                <button class="lock-btn secondary" onclick="setupNext(0)">← Back to Terms</button>
+            </div>
+
+            <div id="setup-step-2" style="display:none; flex-direction:column; gap:12px;">
                 <div>
                     <div class="setup-label">DISPLAY NAME</div>
                     <input class="setup-input" type="text" id="setup-name" placeholder="e.g. Awk User" maxlength="24">
@@ -635,12 +731,12 @@ body, html {
                     <div class="setup-label">CONFIRM PASSWORD</div>
                     <input class="setup-input" type="password" id="setup-pass2" placeholder="Repeat password">
                 </div>
-                <div id="setup-error" class="setup-error"></div>
-                <button class="lock-btn" onclick="setupNext(2)">Continue →</button>
-                <button class="lock-btn secondary" onclick="setupNext(0)">← Back</button>
+                <div id="setup-error-account" class="setup-error"></div>
+                <button class="lock-btn" onclick="setupNext(3)">Continue →</button>
+                <button class="lock-btn secondary" onclick="setupNext(1)">← Back</button>
             </div>
 
-            <div id="setup-step-2" style="display:none; flex-direction:column; gap:12px; align-items:center;">
+            <div id="setup-step-3" style="display:none; flex-direction:column; gap:12px; align-items:center;">
                 <p style="color:rgba(255,255,255,0.6); font-size:13px; text-align:center;">Add a profile picture (optional)</p>
                 <div id="setup-avatar-preview" onclick="document.getElementById('setup-avatar-file').click()" title="Click to upload photo">
                     <span id="setup-avatar-initials">?</span>
@@ -650,7 +746,7 @@ body, html {
                 <div style="color:rgba(255,255,255,0.5); font-size:12px;">Or paste an image URL:</div>
                 <input class="setup-input" type="url" id="setup-avatar-url" placeholder="https://example.com/photo.jpg" style="width:100%">
                 <div style="display:flex; gap:10px; width:100%;">
-                    <button class="lock-btn secondary" style="flex:1" onclick="setupNext(1)">← Back</button>
+                    <button class="lock-btn secondary" style="flex:1" onclick="setupNext(2)">← Back</button>
                     <button class="lock-btn" style="flex:1" onclick="finishSetup()">Finish Setup ✓</button>
                 </div>
             </div>
@@ -1094,6 +1190,7 @@ body, html {
         { name: 'macOS 40', file: '../sys64/wallpapers/mac_os_40.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_40.jpg' },
         { name: 'macOS 41', file: '../sys64/wallpapers/mac_os_41.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_41.jpg' },
         { name: 'macOS 42', file: '../sys64/wallpapers/mac_os_42.jpg', thumb: '../sys64/wallpapers/thumbs/mac_os_42.jpg' },
+        { name: 'Default Wallpaper', file: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.png', thumb: '../sys64/wallpapers/thumbs/EZIEROSDEFAULTPAPER.png' },
     ];
     // ═══════════════════════════════════════════════════════
     function getAccount() {
@@ -1117,9 +1214,76 @@ body, html {
         updateClock();
     }
 
-    function showSetup(){ $('setup-screen').classList.add('active'); $('lock-screen').style.display='none'; setupStep=0; setupData={}; gotoSetupStep(0); }
-    function gotoSetupStep(n){ ['STEP 1 OF 3 — WELCOME','STEP 2 OF 3 — ACCOUNT','STEP 3 OF 3 — AVATAR'].forEach((t,i)=>{ const el=$(`setup-step-${i}`); if(el) el.style.display=i===n?'flex':'none'; const dot=$(`dot-${i}`); if(dot) dot.classList.toggle('active',i<=n); }); $('setup-step').textContent=['STEP 1 OF 3 — WELCOME','STEP 2 OF 3 — ACCOUNT','STEP 3 OF 3 — AVATAR'][n]; setupStep=n; }
-    function setupNext(n){ if(n===2){ const name=$('setup-name').value.trim(); const username=$('setup-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,''); const pass=$('setup-pass').value; const pass2=$('setup-pass2').value; const err=$('setup-error'); if(!name){err.textContent='Display name is required.';return;} if(!username||username.length<2){err.textContent='Username must be at least 2 characters.';return;} if(pass.length<4){err.textContent='Password must be at least 4 characters.';return;} if(pass!==pass2){err.textContent='Passwords do not match.';return;} err.textContent=''; setupData.name=name; setupData.username=username; setupData.password=pass; $('setup-avatar-initials').textContent=name[0].toUpperCase(); } gotoSetupStep(n); }
+    const SETUP_STEP_TITLES = ['STEP 1 OF 4 — TERMS OF SERVICE','STEP 2 OF 4 — WELCOME','STEP 3 OF 4 — ACCOUNT','STEP 4 OF 4 — AVATAR'];
+
+    function showSetup(){ $('setup-screen').classList.add('active'); $('lock-screen').style.display='none'; setupStep=0; setupData={}; gotoSetupStep(0); loadTermsOfService(); }
+    function gotoSetupStep(n){ SETUP_STEP_TITLES.forEach((t,i)=>{ const el=$(`setup-step-${i}`); if(el) el.style.display=i===n?'flex':'none'; const dot=$(`dot-${i}`); if(dot) dot.classList.toggle('active',i<=n); }); $('setup-step').textContent=SETUP_STEP_TITLES[n]; setupStep=n; }
+    function setupNext(n){ if(n===3){ const name=$('setup-name').value.trim(); const username=$('setup-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,''); const pass=$('setup-pass').value; const pass2=$('setup-pass2').value; const err=$('setup-error-account'); if(!name){err.textContent='Display name is required.';return;} if(!username||username.length<2){err.textContent='Username must be at least 2 characters.';return;} if(pass.length<4){err.textContent='Password must be at least 4 characters.';return;} if(pass!==pass2){err.textContent='Passwords do not match.';return;} err.textContent=''; setupData.name=name; setupData.username=username; setupData.password=pass; $('setup-avatar-initials').textContent=name[0].toUpperCase(); } gotoSetupStep(n); }
+
+    // ── TERMS OF SERVICE GATE ──
+    const TOS_FALLBACK_TEXT = `TERMS OF SERVICE FOR EZiER OS
+Last Updated: June 30, 2026
+
+Please read these Terms of Service ("Terms") carefully before using EZiER OS (including all versions, sub-editions, and updates, specifically "POSTAL Developer Edition"). By accessing or utilizing this web-based operating system environment, you agree to be bound by these Terms. If you do not agree to these Terms, do not use the software.
+
+1. ACKNOWLEDGMENT OF NON-PROFIT & HOBBYIST NATURE
+EZiER OS is an open-source, non-profit, educational, and hobbyist web application project developed by Awkwarrrdd (ricksansez9-star). It is designed strictly for personal entertainment, customization experiments, and educational demonstration purposes. No commercial monetization, premium tiers, or paid distribution structures exist under official development.
+
+2. OWNERSHIP OF ORIGINAL TITLES & INTERNAL GAMES
+- The software includes original creative projects developed natively by the creator. Specifically, the game "ZSA" is an original work entirely created and developed by Awkwarrrdd. All rights, intellectual property, and creative assets associated with ZSA belong exclusively to the developer.
+- Any other gaming applications, titles, or interactive software modules provided natively within the environment's app library are standalone web-based ports, built or refactored using standard HTML, JavaScript (JS), and Cascading Style Sheets (CSS). 
+
+3. THIRD-PARTY ASSETS & WALLPAPER DISCLAIMER
+The software includes a built-in wallpaper gallery containing various digital backgrounds, including assets historically or visually associated with third-party operating systems (such as Apple's macOS). 
+- These assets are included solely under a non-profit, transformative, educational, and non-commercial framework.
+- No ownership over third-party trademarks, proprietary graphics, or copyrighted visual assets is claimed or implied by the developer. 
+- All external trademarks and copyrights belong completely to their respective corporate owners.
+
+4. "AS-IS" SOFTWARE & LIMITATION OF LIABILITY
+EZiER OS RUNS ENTIRELY WITHIN THE USER'S WEB BROWSER AND UTILIZES LOCAL STORAGE (LOCALSTORAGE) AND CLIENT-SIDE RUNTIMES.
+- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+- IN NO EVENT SHALL THE DEVELOPER (AWKWARRRDD / RICKSANSEZ9-STAR) BE LIABLE FOR ANY CLAIM, DAMAGES, LOSS OF DATA (INCLUDING RESET LOCALSTORAGE OR BACKUP FILE CORRUPTION), HARDWARE DAMAGE, SYSTEM CRASHES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+5. USER-INSTALLED CUSTOM APPLICATIONS & SANDBOXING
+EZiER OS features an App Installer mechanism capable of processing custom web applications via raw URLs, HTML files, or compressed ZIP structures.
+- You are solely responsible for any third-party code, apps, or links you import into your instance of EZiER OS.
+- The built-in protection utility ("EZiER Defender") utilizes simulated, heuristic, or algorithmic pattern evaluations to log activity and identify baseline low-confidence heuristic anomalies. It is not an enterprise-grade cybersecurity solution and does not guarantee complete security or immunization against malicious client-side scripts executed inside the browser iframe container.
+
+6. DATA PRIVACY & BACKUPS
+- EZiER OS operates locally within your browser sandbox. Your account credentials (passwords, usernames, display names) and customization preferences are saved directly to your local web storage.
+- The developer does not host central databases tracking your personal data, unencrypted passwords, or telemetry logs.
+- You are solely responsible for managing your recovery vectors by utilizing the "Export Backup (.ezierbackupfile)" feature. If your browser cache or web database is cleared, the developer cannot recover your account.
+
+7. ACCEPTABLE USE
+You agree not to modify or use EZiER OS to host, link to, or propagate malicious software, perform denial-of-service attempts against external web frames via internal app views, or violate any local, state, or international laws.
+
+8. TERMINATION & CHANGES
+The developer reserves the complete right to update, modify, suspend, or discontinue any branch, platform repository, or feature of EZiER OS at any time without prior notification or liability.
+
+-------------------------------------------------------------------------------
+EZiER OS: POSTAL — Built by technical tinkerers, for technical tinkerers.`;
+
+    function loadTermsOfService(){
+        const box = $('setup-tos-box');
+        if (!box) return;
+        fetch('ezierostos.txt').then(r => { if(!r.ok) throw new Error('not ok'); return r.text(); })
+            .then(text => { box.textContent = text; })
+            .catch(() => { box.textContent = TOS_FALLBACK_TEXT; });
+        box.onscroll = () => {
+            const reachedBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 12;
+            const checkbox = $('setup-tos-agree');
+            const hint = $('tos-scroll-hint');
+            if (reachedBottom) {
+                checkbox.disabled = false;
+                if (hint) hint.style.opacity = '0';
+            }
+        };
+    }
+    function updateTosAgreeState(){
+        const checkbox = $('setup-tos-agree');
+        const btn = $('setup-tos-continue');
+        if (btn) btn.disabled = !checkbox.checked;
+    }
     function handleAvatarUpload(input){ const file=input.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ const img=$('setup-avatar-img'); img.src=e.target.result; img.style.display='block'; $('setup-avatar-initials').style.display='none'; setupData.avatarDataUrl=e.target.result; }; reader.readAsDataURL(file); }
 
     function finishSetup() {
@@ -2104,5 +2268,8 @@ body, html {
     </script>
     <script src="updatechecker.js"></script>
     <script src="../hinux/terminal.js"></script>
+    <!-- Console Installer feature: installs apps from .ezstaller packages -->
+    <script src="ezstaller-format.js"></script>
+    <script src="console-installer.js"></script>
 </body>
 </html>
