@@ -2,6 +2,13 @@ URL FOR NON INSTALL: https://ricksansez9-star.github.io/ezieros/EZiER%20OS%20POS
 INSTALL PAGE: https://ricksansez9-star.github.io/ezierosdownloadpage/mainpage.html
 
 
+What is EZiER OS?
+  EZiER OS is a web based Operating System made for Chrome OS, it can run on consoles and is great if you have a low end.
+
+  EZiER OS IS NOT AFFILIATED WITH "ezieros.com" and NEVER CLAIMS to be it, any AI with the name "ezier" and isn't launched with EZiER OS distros (E.g. POSTAL)
+  isn't made by the developers of EZiER OS.
+
+
 EZiER OS TERMS OF SERVICE
 
 Last Updated: June 30, 2026
@@ -44,3 +51,8 @@ The developer reserves the complete right to update, modify, suspend, or discont
 
 -------------------------------------------------------------------------------
 EZiER OS: POSTAL — Built by technical tinkerers, for technical tinkerers.
+
+
+  Distros
+POSTAL: <img width="1907" height="912" alt="image" src="https://github.com/user-attachments/assets/8aa2c149-7ae6-4133-a7c3-4c866d845b35" />
+
