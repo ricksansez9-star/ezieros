@@ -5,33 +5,65 @@
     <title>EZIER OS</title>
     <link rel="icon" type="image/png" href="../sys64/icons/ezierosstarticon.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --taskbar-bg: rgba(15, 15, 15, 0.85);
+            --taskbar-bg: rgba(12, 12, 20, 0.78);
             --menu-bg: rgba(255, 255, 255, 0.98);
-            --accent: #1793d1;
-            --glass: blur(20px) saturate(150%);
+            --accent: #7c5cff;
+            --accent-2: #22d3ee;
+            --accent-3: #ff5ec4;
+            --accent-grad: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            --glass: blur(24px) saturate(160%);
             --window-width: 900px;
             --window-height: 600px;
+            --font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+            --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            --shadow-glow: 0 8px 32px rgba(124, 92, 255, 0.35);
             /* Layout variables */
             --taskbar-width: auto;
             --taskbar-bottom: 10px;
-            --taskbar-radius: 14px;
+            --taskbar-radius: 18px;
         }
        * { box-sizing: border-box; }
 body, html {
     margin: 0; padding: 0; height: 100%;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: #1e1e2e url('../sys64/icons/EZIEROSDEFAULTPAPER.png') center/cover;
+    font-family: var(--font-body);
+    background: #0b0b14 url('../sys64/icons/EZIEROSDEFAULTPAPER.png') center/cover;
     background-attachment: fixed;
     overflow: hidden;
     cursor: default;
 }
 
+/* ── GLOBAL SCROLLBAR OVERHAUL ── */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    border-radius: 10px; border: 2px solid transparent; background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { filter: brightness(1.15); }
+
+/* ── AMBIENT GRADIENT ORBS (used behind lock/setup screens) ── */
+.ambient-orbs { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.ambient-orbs span {
+    position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.55;
+    animation: orbFloat 14s ease-in-out infinite;
+}
+.ambient-orbs span:nth-child(1) { width: 380px; height: 380px; background: var(--accent); top: -80px; left: -60px; animation-delay: 0s; }
+.ambient-orbs span:nth-child(2) { width: 320px; height: 320px; background: var(--accent-2); bottom: -100px; right: -60px; animation-delay: -4s; }
+.ambient-orbs span:nth-child(3) { width: 260px; height: 260px; background: var(--accent-3); top: 40%; left: 60%; animation-delay: -8s; }
+@keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -25px) scale(1.08); }
+}
+
 /* ── LOCK SCREEN ── */
 #lock-screen {
     position: fixed; inset: 0; z-index: 9999999;
-    background: #0f0f1a url('../sys64/icons/EZIEROSDEFAULTPAPER.png') center/cover;
+    background: #0b0b14 url('../sys64/icons/EZIEROSDEFAULTPAPER.png') center/cover;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     color: white;
     transition: opacity 0.6s ease;
@@ -39,80 +71,124 @@ body, html {
         #lock-screen.hidden { opacity: 0; pointer-events: none; }
         #lock-screen::before {
             content: ''; position: absolute; inset: 0;
-            background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+            background: linear-gradient(160deg, rgba(10,8,20,0.75), rgba(10,10,22,0.6)); backdrop-filter: blur(14px);
         }
         #lock-content {
             position: relative; z-index: 2;
             display: flex; flex-direction: column; align-items: center; gap: 18px;
             width: 340px;
+            animation: slideUp 0.5s cubic-bezier(0.2,1,0.3,1);
         }
         #lock-avatar {
-            width: 90px; height: 90px; border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            border: 3px solid rgba(255,255,255,0.3);
+            width: 96px; height: 96px; border-radius: 50%;
+            background: var(--accent-grad);
+            padding: 3px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 36px; font-weight: 300; letter-spacing: -1px;
+            font-size: 36px; font-weight: 500; letter-spacing: -1px;
             overflow: hidden;
+            box-shadow: var(--shadow-glow);
         }
-        #lock-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        #lock-username { font-size: 22px; font-weight: 400; letter-spacing: 0.5px; }
-        #lock-clock-big { font-size: 68px; font-weight: 200; line-height: 1; margin-bottom: 4px; }
-        #lock-date { font-size: 15px; opacity: 0.7; margin-bottom: 10px; }
+        #lock-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        #lock-username { font-family: var(--font-display); font-size: 23px; font-weight: 600; letter-spacing: 0.3px; }
+        #lock-clock-big { font-family: var(--font-display); font-size: 70px; font-weight: 300; line-height: 1; margin-bottom: 4px; background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        #lock-date { font-size: 15px; opacity: 0.65; margin-bottom: 10px; letter-spacing: 0.3px; }
         .lock-input {
-            width: 100%; padding: 12px 16px; border-radius: 10px;
-            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+            width: 100%; padding: 13px 16px; border-radius: 12px;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
             color: white; font-size: 15px; outline: none; text-align: center;
-            transition: 0.2s;
+            transition: 0.25s; backdrop-filter: blur(10px);
         }
-        .lock-input::placeholder { color: rgba(255,255,255,0.5); }
-        .lock-input:focus { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.5); }
+        .lock-input::placeholder { color: rgba(255,255,255,0.45); }
+        .lock-input:focus { background: rgba(255,255,255,0.14); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,92,255,0.25); }
         .lock-btn {
-            width: 100%; padding: 12px; border-radius: 10px;
-            background: var(--accent); border: none; color: white;
-            font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s;
+            width: 100%; padding: 13px; border-radius: 12px;
+            background: var(--accent-grad); border: none; color: white;
+            font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.25s;
+            box-shadow: 0 6px 20px rgba(124,92,255,0.3);
+            letter-spacing: 0.2px;
         }
-        .lock-btn:hover { filter: brightness(1.15); }
+        .lock-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 10px 26px rgba(124,92,255,0.42); }
+        .lock-btn:active { transform: translateY(0); }
+        .lock-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none; transform: none; box-shadow: none; }
         .lock-btn.secondary {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: none;
         }
-        .lock-btn.danger { background: #c0392b; }
-        #lock-error { color: #ff6b6b; font-size: 13px; min-height: 18px; text-align: center; }
+        .lock-btn.secondary:hover { background: rgba(255,255,255,0.14); box-shadow: none; }
+        .lock-btn.danger { background: linear-gradient(135deg,#ff5e6c,#c0392b); }
+        #lock-error { color: #ff8080; font-size: 13px; min-height: 18px; text-align: center; }
 
         /* ── SETUP WIZARD ── */
         #setup-screen {
             position: fixed; inset: 0; z-index: 9999998;
-            background: #0d0d1a;
+            background: radial-gradient(circle at 20% 20%, #17162b 0%, #0a0a14 60%);
             display: none; flex-direction: column; align-items: center; justify-content: center;
             color: white;
         }
         #setup-screen.active { display: flex; }
         #setup-box {
-            width: 460px; background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 18px;
-            padding: 40px; display: flex; flex-direction: column; gap: 16px;
+            position: relative; z-index: 2;
+            width: 480px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 22px;
+            padding: 42px; display: flex; flex-direction: column; gap: 16px;
+            backdrop-filter: var(--glass);
+            box-shadow: 0 30px 90px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03) inset;
+            animation: slideUp 0.5s cubic-bezier(0.2,1,0.3,1);
         }
-        #setup-logo { font-size: 28px; font-weight: 200; text-align: center; margin-bottom: 6px; letter-spacing: 1px; }
-        #setup-step { color: rgba(255,255,255,0.5); font-size: 12px; text-align: center; letter-spacing: 2px; text-transform: uppercase; }
-        .setup-label { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+        #setup-logo {
+            font-family: var(--font-display); font-size: 26px; font-weight: 700; text-align: center;
+            margin-bottom: 4px; letter-spacing: 0.5px;
+            background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        #setup-step { color: rgba(255,255,255,0.5); font-size: 11.5px; text-align: center; letter-spacing: 2.5px; text-transform: uppercase; font-weight: 600; }
+        .setup-label { font-size: 12px; color: rgba(255,255,255,0.55); margin-bottom: 5px; letter-spacing: 0.5px; font-weight: 600; text-transform: uppercase; }
         .setup-input {
-            width: 100%; padding: 10px 14px; border-radius: 8px;
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-            color: white; font-size: 14px; outline: none; transition: 0.2s;
+            width: 100%; padding: 11px 14px; border-radius: 10px;
+            background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+            color: white; font-size: 14px; outline: none; transition: 0.25s;
         }
-        .setup-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.12); }
+        .setup-input:focus { border-color: var(--accent); background: rgba(255,255,255,0.11); box-shadow: 0 0 0 3px rgba(124,92,255,0.2); }
         #setup-avatar-preview {
-            width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.1);
+            width: 84px; height: 84px; border-radius: 50%; background: rgba(255,255,255,0.08);
             border: 2px solid rgba(255,255,255,0.2); margin: 0 auto;
             display: flex; align-items: center; justify-content: center;
-            font-size: 32px; overflow: hidden; cursor: pointer; transition: 0.2s;
+            font-size: 32px; overflow: hidden; cursor: pointer; transition: 0.25s;
         }
-        #setup-avatar-preview:hover { border-color: var(--accent); }
+        #setup-avatar-preview:hover { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(124,92,255,0.18); }
         #setup-avatar-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
-        #setup-error { color: #ff6b6b; font-size: 13px; min-height: 18px; }
+        #setup-error { color: #ff8080; font-size: 13px; min-height: 18px; }
         .setup-progress { display: flex; gap: 6px; justify-content: center; }
-        .setup-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; }
-        .setup-dot.active { background: var(--accent); }
+        .setup-dot { width: 22px; height: 4px; border-radius: 3px; background: rgba(255,255,255,0.15); transition: 0.35s; }
+        .setup-dot.active { background: var(--accent-grad); box-shadow: 0 0 8px rgba(124,92,255,0.6); }
+
+        /* ── TOS GATE ── */
+        #setup-tos-box {
+            height: 260px; overflow-y: auto; padding: 16px 18px;
+            background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; font-size: 12px; line-height: 1.7;
+            color: rgba(255,255,255,0.75); white-space: pre-wrap; font-family: 'Courier New', monospace;
+        }
+        #setup-tos-box strong { color: #fff; }
+        .tos-filename {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 11px; color: rgba(255,255,255,0.45); font-family: 'Courier New', monospace;
+            letter-spacing: 0.3px; justify-content: center;
+        }
+        .tos-agree-row {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px; cursor: pointer; transition: 0.2s; user-select: none;
+        }
+        .tos-agree-row:hover { background: rgba(255,255,255,0.08); }
+        .tos-agree-row input[type=checkbox] {
+            width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0;
+        }
+        .tos-agree-row span { font-size: 13px; color: rgba(255,255,255,0.85); }
+        #tos-scroll-hint {
+            font-size: 11px; color: rgba(255,255,255,0.4); text-align: center;
+            transition: opacity 0.3s;
+        }
 
 #update-modal {
     position: fixed;
@@ -212,6 +288,45 @@ body, html {
         .err-btn.primary { background: #c0392b; color: white; border-color: #922b21; }
         .err-btn.primary:hover { background: #a93226; }
 
+        /* ── ANTIVIRUS (EZIER DEFENDER) ── */
+        #av-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 9999996;
+            backdrop-filter: blur(3px);
+        }
+        #av-overlay.show { display: block; }
+        #av-modal {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 380px; background: #11161b;
+            border: 1px solid #2ecc71; border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            z-index: 9999997; font-family: 'Segoe UI', sans-serif;
+            overflow: hidden; display: none;
+            animation: errorFadeIn 0.25s ease forwards;
+        }
+        #av-modal.show { display: block; }
+        #av-titlebar {
+            background: linear-gradient(to bottom, #1e8449, #145a32);
+            color: white; padding: 10px 14px;
+            display: flex; align-items: center; gap: 8px;
+            font-weight: 700; font-size: 13px;
+        }
+        #av-modal.scanning #av-shield { display: inline-block; animation: avPulse 1s ease-in-out infinite; }
+        #av-body { padding: 20px 22px 6px; color: #e8f5e9; }
+        #av-target { font-size: 11.5px; color: #8fd6a0; margin-bottom: 14px; word-break: break-all; font-family: 'Courier New', monospace; }
+        .av-progress-track { width: 100%; height: 8px; background: #1e2530; border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+        .av-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg,#27ae60,#2ecc71); transition: width 0.28s ease; }
+        #av-status-line { font-size: 12px; min-height: 16px; margin-bottom: 10px; color: #cfd8dc; font-family: 'Courier New', monospace; }
+        #av-result { font-size: 13px; font-weight: 600; text-align: center; min-height: 20px; line-height: 1.5; padding: 4px 0; }
+        #av-result.clean { color: #2ecc71; }
+        #av-result.flag { color: #f1c40f; }
+        #av-footer { padding: 8px 22px 18px; text-align: right; }
+        @keyframes avPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.55; transform: scale(1.18); }
+        }
+
         /* ── DESKTOP ── */
         #desktop {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -230,15 +345,16 @@ body, html {
         /* ── TASKBAR ── */
         #taskbar {
             position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-            height: 54px; width: auto; min-width: 300px;
+            height: 56px; width: auto; min-width: 300px;
             background: var(--taskbar-bg); backdrop-filter: var(--glass);
-            border-radius: 14px; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--taskbar-radius); border: 1px solid rgba(255,255,255,0.12);
             display: flex; align-items: center; padding: 0 10px; gap: 10px; z-index: 1000000;
-            transition: width 0.3s ease, border-radius 0.3s ease, bottom 0.3s ease;
+            transition: width 0.3s ease, border-radius 0.3s ease, bottom 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04) inset;
         }
         #taskbar.floating {
             width: 95%; max-width: 1200px; bottom: 20px; border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 14px 45px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset;
         }
         #taskbar.top {
             top: 10px;
@@ -425,9 +541,9 @@ body, html {
         /* ── WINDOWS ── */
         .window {
             position: absolute; width: var(--window-width); height: var(--window-height);
-            background: white; border-radius: 12px;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.4);
-            display: none; flex-direction: column; border: 1px solid #333;
+            background: white; border-radius: 14px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06) inset;
+            display: none; flex-direction: column; border: 1px solid rgba(0,0,0,0.25);
             overflow: hidden; resize: both;
             animation: winOpen 0.3s cubic-bezier(0.2, 1, 0.3, 1) forwards;
             z-index: 100;
@@ -450,213 +566,24 @@ body, html {
         .win-btn:hover { color: #000; }
         iframe { flex: 1; border: none; background: #fff; }
 
-        /* ── TASK MANAGER: POSTAL EDITION ── */
-#task-manager {
-    background: #1a1a1a;
-    color: #eee;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    border: 1px solid #333;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-/* Header Row */
-.tm-header {
-    display: flex;
-    background: #111;
-    padding: 8px 15px;
-    font-weight: bold;
-    font-size: 11px;
-    text-transform: uppercase;
-    color: #ff4d4d; /* POSTAL Red */
-    border-bottom: 2px solid #333;
-}
-
-/* Process Rows */
-.tm-row {
-    display: grid;
-    grid-template-columns: 40px 1fr 80px 70px; /* PID, Name, Usage, Action */
-    padding: 8px 15px;
-    border-bottom: 1px solid #222;
-    align-items: center;
-    font-size: 13px;
-    transition: background 0.2s;
-}
-
-.tm-row:hover {
-    background: #252525;
-}
-
-/* Resource Usage Bars */
-.tm-usage-container {
-    width: 60px;
-    height: 4px;
-    background: #333;
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.tm-usage-fill {
-    height: 100%;
-    background: #ff4d4d;
-    width: 45%; /* Dynamically update this with JS */
-}
-
-/* The "Kill" Button */
-.tm-kill-btn {
-    background: transparent;
-    border: 1px solid #ff4d4d;
-    color: #ff4d4d;
-    padding: 4px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 10px;
-    font-weight: bold;
-    text-transform: uppercase;
-    transition: all 0.2s ease;
-    justify-self: end;
-}
-
-.tm-kill-btn:hover {
-    background: #ff4d4d;
-    color: #1a1a1a;
-    box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
-}
-
-/* PID Styling */
-.tm-pid {
-    color: #666;
-    font-family: monospace;
-    font-size: 11px;
-}
-
-/* ── TASK MANAGER: POSTAL EDITION ── */
-#task-manager {
-    background: #1a1a1a;
-    color: #eee;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    border: 1px solid #333;
-    border-radius: 6px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-/* New: Top Stats Dashboard */
-.tm-dashboard {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 15px;
-    background: #111;
-    border-bottom: 2px solid #ff4d4d;
-}
-
-.tm-stat-card {
-    background: #181818;
-    padding: 8px;
-    border: 1px solid #222;
-    border-radius: 4px;
-}
-
-.tm-stat-label {
-    font-size: 9px;
-    color: #666;
-    text-transform: uppercase;
-}
-
-.tm-stat-value {
-    font-size: 18px;
-    font-weight: bold;
-    color: #ff4d4d;
-}
-
-/* Header Row */
-.tm-header {
-    display: grid;
-    grid-template-columns: 40px 1fr 80px 70px;
-    background: #111;
-    padding: 8px 15px;
-    font-weight: bold;
-    font-size: 11px;
-    text-transform: uppercase;
-    color: #ff4d4d; /* POSTAL Red */
-    border-bottom: 2px solid #333;
-}
-
-/* Process Rows */
-.tm-body {
-    overflow-y: auto;
-    max-height: 400px; /* Adjust based on window size */
-}
-
-.tm-row {
-    display: grid;
-    grid-template-columns: 40px 1fr 80px 70px; /* PID, Name, Usage, Action */
-    padding: 8px 15px;
-    border-bottom: 1px solid #222;
-    align-items: center;
-    font-size: 13px;
-    transition: background 0.2s;
-}
-
-.tm-row:hover {
-    background: #252525;
-}
-
-/* Resource Usage Bars */
-.tm-usage-container {
-    width: 60px;
-    height: 4px;
-    background: #333;
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.tm-usage-fill {
-    height: 100%;
-    background: #ff4d4d;
-    width: 45%; /* Dynamically update this with JS */
-}
-
-/* The "Kill" Button */
-.tm-kill-btn {
-    background: transparent;
-    border: 1px solid #ff4d4d;
-    color: #ff4d4d;
-    padding: 4px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 10px;
-    font-weight: bold;
-    text-transform: uppercase;
-    transition: all 0.2s ease;
-    justify-self: end;
-}
-
-.tm-kill-btn:hover {
-    background: #ff4d4d;
-    color: #1a1a1a;
-    box-shadow: 0 0 10px rgba(255, 77, 77, 0.4);
-}
-
-/* PID Styling */
-.tm-pid {
-    color: #666;
-    font-family: monospace;
-    font-size: 11px;
-}
-
-/* Custom Scrollbar for the list */
-.tm-body::-webkit-scrollbar {
-    width: 4px;
-}
-.tm-body::-webkit-scrollbar-track {
-    background: #111;
-}
-.tm-body::-webkit-scrollbar-thumb {
-    background: #ff4d4d;
-}
+        /* ── TASK MANAGER ── */
+#task-manager{background:#1a1a1a;color:#eee;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;border:1px solid #333;border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.tm-dashboard{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:15px;background:#111;border-bottom:2px solid #ff4d4d}
+.tm-stat-card{background:#181818;padding:8px;border:1px solid #222;border-radius:4px}
+.tm-stat-label{font-size:9px;color:#666;text-transform:uppercase}
+.tm-stat-value{font-size:18px;font-weight:700;color:#ff4d4d}
+.tm-header{display:grid;grid-template-columns:40px 1fr 80px 70px;background:#111;padding:8px 15px;font-weight:700;font-size:11px;text-transform:uppercase;color:#ff4d4d;border-bottom:2px solid #333}
+.tm-body{overflow-y:auto;max-height:400px}
+.tm-row{display:grid;grid-template-columns:40px 1fr 80px 70px;padding:8px 15px;border-bottom:1px solid #222;align-items:center;font-size:13px;transition:background .2s}
+.tm-row:hover{background:#252525}
+.tm-usage-container{width:60px;height:4px;background:#333;border-radius:2px;overflow:hidden}
+.tm-usage-fill{height:100%;background:#ff4d4d;width:45%}
+.tm-kill-btn{background:transparent;border:1px solid #ff4d4d;color:#ff4d4d;padding:4px 10px;border-radius:3px;cursor:pointer;font-size:10px;font-weight:700;text-transform:uppercase;transition:.2s;justify-self:end}
+.tm-kill-btn:hover{background:#ff4d4d;color:#1a1a1a;box-shadow:0 0 10px rgba(255,77,77,.4)}
+.tm-pid{color:#666;font-family:monospace;font-size:11px}
+.tm-body::-webkit-scrollbar{width:4px}
+.tm-body::-webkit-scrollbar-track{background:#111}
+.tm-body::-webkit-scrollbar-thumb{background:#ff4d4d}
         /* ── SETTINGS & INSTALLER ── */
         .installer-ui {
             background: #f8f9fa; border: 1px solid #dee2e6;
@@ -671,14 +598,61 @@ body, html {
             width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 5px;
             font-size: 14px;
         }
-        .btn-install { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; cursor: pointer; font-weight: 600; font-size: 14px; }
-        .btn-install:hover { filter: brightness(1.1); }
+        .btn-install { background: var(--accent-grad); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: 600; font-size: 14px; box-shadow: 0 4px 14px rgba(124,92,255,0.3); transition: 0.2s; }
+        .btn-install:hover { filter: brightness(1.1); transform: translateY(-1px); }
         .btn-secondary {
             background: #eef1f4; color: #333; border: 1px solid #ced4da;
             padding: 10px; border-radius: 5px; width: 100%; cursor: pointer; font-weight: 600; font-size: 14px;
         }
         .btn-secondary:hover { background: #e0e3e7; }
         .btn-danger { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; cursor: pointer; font-weight: 600; font-size: 14px; }
+
+        /* ── BUILT-IN WALLPAPER GALLERY ── */
+        .wallpaper-gallery {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px; margin-top: 4px;
+        }
+        .wallpaper-thumb {
+            position: relative; border-radius: 8px; overflow: hidden; cursor: pointer;
+            border: 2px solid transparent; aspect-ratio: 8/5; background: #eee;
+            transition: 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+        .wallpaper-thumb:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .wallpaper-thumb.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+        .wallpaper-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .wallpaper-thumb span {
+            position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 6px;
+            font-size: 10px; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,0.65));
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .wallpaper-thumb.selected::after {
+            content: '✓'; position: absolute; top: 4px; right: 4px;
+            width: 16px; height: 16px; border-radius: 50%; background: var(--accent);
+            color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* ── ACCENT COLOR SWATCHES ── */
+        .accent-swatches { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .accent-swatch {
+            width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+            border: 2px solid rgba(0,0,0,0.1); transition: 0.15s;
+        }
+        .accent-swatch:hover { transform: scale(1.15); }
+
+        /* ── FULLSCREEN SPLASH / WELCOME VIDEO ── */
+        #welcome-video-overlay {
+            position: fixed; inset: 0; z-index: 99999999;
+            background: #000; display: none; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+        #welcome-video-overlay.active { display: flex; }
+        #welcome-video-overlay video { width: 100%; height: 100%; object-fit: cover; }
+        #welcome-video-skip {
+            position: absolute; bottom: 28px; right: 28px;
+            color: rgba(255,255,255,0.8); font-size: 12px; letter-spacing: 0.3px;
+            background: rgba(0,0,0,0.45); padding: 7px 14px; border-radius: 20px;
+            font-family: 'Segoe UI', system-ui, sans-serif; pointer-events: none;
+        }
 
         /* ── CUSTOM APP MANAGER ── */
         #custom-app-list { max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; margin-top: 10px; }
@@ -701,10 +675,13 @@ body, html {
             transition-duration: 0.001ms !important;
         }
     </style>
+    <!-- Console Installer feature: terminal styling -->
+    <link rel="stylesheet" href="console-installer.css">
 </head>
 <body onmousedown="checkFocus(event)">
 
     <div id="setup-screen">
+        <div class="ambient-orbs"><span></span><span></span><span></span></div>
         <div id="setup-box">
             <div id="setup-logo">EZIER OS: POSTAL</div>
             <div id="setup-step">FIRST TIME SETUP</div>
@@ -712,16 +689,32 @@ body, html {
                 <div class="setup-dot active" id="dot-0"></div>
                 <div class="setup-dot" id="dot-1"></div>
                 <div class="setup-dot" id="dot-2"></div>
+                <div class="setup-dot" id="dot-3"></div>
             </div>
 
-            <div id="setup-step-0">
-                <p style="color:rgba(255,255,255,0.7); text-align:center; line-height:1.6; font-size:14px;">
-                    Welcome! Let's create your user account to get started with EZIER OS.
+            <div id="setup-step-0" style="display:flex; flex-direction:column; gap:12px;">
+                <p style="color:rgba(255,255,255,0.7); text-align:center; line-height:1.6; font-size:13.5px; margin:0;">
+                    Before you create your account, please review and accept the EZIER OS Terms of Service.
                 </p>
-                <button class="lock-btn" onclick="setupNext(1)">Get Started →</button>
+                <div id="setup-tos-box">Loading Terms of Service…</div>
+                <div id="tos-scroll-hint">↓ Scroll to the bottom to continue ↓</div>
+                <label class="tos-agree-row" for="setup-tos-agree">
+                    <input type="checkbox" id="setup-tos-agree" disabled onchange="updateTosAgreeState()">
+                    <span>I have read and agree to the EZIER OS Terms of Service</span>
+                </label>
+                <div id="setup-error" class="setup-error"></div>
+                <button class="lock-btn" id="setup-tos-continue" disabled onclick="setupNext(1)">I Agree &amp; Continue →</button>
             </div>
 
             <div id="setup-step-1" style="display:none; flex-direction:column; gap:12px;">
+                <p style="color:rgba(255,255,255,0.7); text-align:center; line-height:1.6; font-size:14px;">
+                    Welcome! Let's create your user account to get started with EZIER OS.
+                </p>
+                <button class="lock-btn" onclick="setupNext(2)">Get Started →</button>
+                <button class="lock-btn secondary" onclick="setupNext(0)">← Back to Terms</button>
+            </div>
+
+            <div id="setup-step-2" style="display:none; flex-direction:column; gap:12px;">
                 <div>
                     <div class="setup-label">DISPLAY NAME</div>
                     <input class="setup-input" type="text" id="setup-name" placeholder="e.g. Awk User" maxlength="24">
@@ -738,12 +731,12 @@ body, html {
                     <div class="setup-label">CONFIRM PASSWORD</div>
                     <input class="setup-input" type="password" id="setup-pass2" placeholder="Repeat password">
                 </div>
-                <div id="setup-error" class="setup-error"></div>
-                <button class="lock-btn" onclick="setupNext(2)">Continue →</button>
-                <button class="lock-btn secondary" onclick="setupNext(0)">← Back</button>
+                <div id="setup-error-account" class="setup-error"></div>
+                <button class="lock-btn" onclick="setupNext(3)">Continue →</button>
+                <button class="lock-btn secondary" onclick="setupNext(1)">← Back</button>
             </div>
 
-            <div id="setup-step-2" style="display:none; flex-direction:column; gap:12px; align-items:center;">
+            <div id="setup-step-3" style="display:none; flex-direction:column; gap:12px; align-items:center;">
                 <p style="color:rgba(255,255,255,0.6); font-size:13px; text-align:center;">Add a profile picture (optional)</p>
                 <div id="setup-avatar-preview" onclick="document.getElementById('setup-avatar-file').click()" title="Click to upload photo">
                     <span id="setup-avatar-initials">?</span>
@@ -753,7 +746,7 @@ body, html {
                 <div style="color:rgba(255,255,255,0.5); font-size:12px;">Or paste an image URL:</div>
                 <input class="setup-input" type="url" id="setup-avatar-url" placeholder="https://example.com/photo.jpg" style="width:100%">
                 <div style="display:flex; gap:10px; width:100%;">
-                    <button class="lock-btn secondary" style="flex:1" onclick="setupNext(1)">← Back</button>
+                    <button class="lock-btn secondary" style="flex:1" onclick="setupNext(2)">← Back</button>
                     <button class="lock-btn" style="flex:1" onclick="finishSetup()">Finish Setup ✓</button>
                 </div>
             </div>
@@ -836,21 +829,37 @@ body, html {
                 <h3>Personalization</h3>
 
                 <div class="input-group">
+                    <label>BUILT-IN WALLPAPERS <span style="color:#888; font-weight:400;">(sys64/wallpapers)</span></label>
+                    <div id="wallpaper-gallery" class="wallpaper-gallery"></div>
+                </div>
+
+                <div class="input-group" style="margin-top:18px;">
                     <label>CUSTOM WALLPAPER URL</label>
                     <input type="text" id="wallpaper-input" placeholder="https://..." style="margin-bottom:8px;">
                     <input type="file" id="wallpaper-file" accept="image/*">
                 </div>
-                
+
                 <button class="btn-install" onclick="applyPersonalization()">Apply Personalization</button>
                 <div style="height:10px;"></div>
                 <button class="btn-secondary" onclick="clearWallpaper()">Clear Wallpaper</button>
             </div>
+
 
             <div class="installer-ui">
                 <h3>Appearance & Layout</h3>
                 <div class="input-group">
                     <label>ACCENT COLOR</label>
                     <input type="color" id="accent-color-input">
+                    <div class="accent-swatches">
+                        <div class="accent-swatch" style="background:#1793d1" onclick="quickSetAccent('#1793d1')" title="EZiER Blue"></div>
+                        <div class="accent-swatch" style="background:#9b59b6" onclick="quickSetAccent('#9b59b6')" title="Violet"></div>
+                        <div class="accent-swatch" style="background:#e67e22" onclick="quickSetAccent('#e67e22')" title="Amber"></div>
+                        <div class="accent-swatch" style="background:#27ae60" onclick="quickSetAccent('#27ae60')" title="Emerald"></div>
+                        <div class="accent-swatch" style="background:#e74c3c" onclick="quickSetAccent('#e74c3c')" title="Crimson"></div>
+                        <div class="accent-swatch" style="background:#16a085" onclick="quickSetAccent('#16a085')" title="Teal"></div>
+                        <div class="accent-swatch" style="background:#34495e" onclick="quickSetAccent('#34495e')" title="Slate"></div>
+                        <div class="accent-swatch" style="background:#ff5da2" onclick="quickSetAccent('#ff5da2')" title="Bubblegum"></div>
+                    </div>
                 </div>
                 <div class="input-group" style="margin-top:14px;">
                     <label>THEME MODE</label>
@@ -905,12 +914,22 @@ body, html {
                     </label>
                 </div>
                 <div class="input-group" style="margin-top:14px;">
+                    <label>Desktop icon visibility</label>
+                    <div id="desktop-icon-settings" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:220px;overflow:auto;padding:8px;border:1px solid #ced4da;border-radius:8px;background:rgba(255,255,255,0.08);"></div>
+                </div>
+                <div class="input-group" style="margin-top:14px;">
                     <label>DESKTOP WATERMARK</label>
                     <input type="text" id="desktop-watermark-input" placeholder="EZIER OS" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
                 </div>
                 <div class="input-group" style="margin-top:14px;">
                     <label>WELCOME TEXT</label>
                     <input type="text" id="desktop-welcome-input" placeholder="Welcome to EZIER OS: POSTAL." style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ced4da;">
+                </div>
+                <div class="input-group" style="margin-top:14px;">
+                    <label style="display:flex;align-items:center;gap:10px;">
+                        <input type="checkbox" id="clock-12h-input" style="width:18px;height:18px;">
+                        Use 12-hour clock
+                    </label>
                 </div>
                 <div class="input-group" style="margin-top:14px;">
                     <label style="display:flex;align-items:center;gap:10px;">
@@ -944,8 +963,45 @@ body, html {
                 </div>
                 <button class="btn-install" style="margin-top:16px;" onclick="applyWindowSettings()">Apply Window Size</button>
             </div>
-            
-            <div id="about-content">
+
+            <div class="installer-ui">
+                <h3>Boot & Login Experience</h3>
+                <div class="input-group">
+                    <label style="display:flex;align-items:center;gap:10px;">
+                        <input type="checkbox" id="play-boot-video-input" style="width:18px;height:18px;">
+                        Play splash video while booting
+                    </label>
+                </div>
+                <div class="input-group" style="margin-top:10px;">
+                    <label style="display:flex;align-items:center;gap:10px;">
+                        <input type="checkbox" id="play-login-video-input" style="width:18px;height:18px;">
+                        Play welcome video after signing in
+                    </label>
+                </div>
+                <div class="input-group" style="margin-top:10px;">
+                    <label style="display:flex;align-items:center;gap:10px;">
+                        <input type="checkbox" id="video-muted-input" style="width:18px;height:18px;">
+                        Mute splash/welcome video audio
+                    </label>
+                </div>
+                <button class="btn-install" style="margin-top:16px;" onclick="applyBootSettings()">Apply Boot Settings</button>
+                <div style="height:10px;"></div>
+                <button class="btn-secondary" onclick="playWelcomeVideo(function(){})">▶ Preview Welcome Video</button>
+            </div>
+
+            <div class="installer-ui">
+                <h3>Backup & Restore</h3>
+                <p style="font-size:13px; color:#666; margin-top:-4px;">Save your account, installed apps, and settings to a single file you can keep safe or move to another browser.</p>
+                <button class="btn-install" onclick="exportBackup()">⬇ Export Backup (.ezierbackupfile)</button>
+                <div style="height:14px;"></div>
+                <div class="input-group">
+                    <label>IMPORT BACKUP FILE</label>
+                    <input type="file" id="import-backup-file" accept=".ezierbackupfile,application/json" onchange="importBackupFile(this)">
+                </div>
+                <div id="backup-msg" style="font-size:12px;min-height:18px;"></div>
+            </div>
+
+            <div id="about-sysinfo">
     <p><strong>Developer:</strong> ricksansez9-star</p>
     <p><strong>Version:</strong> <span id="sys-version"></span></p>
     <p><strong>OS Type:</strong> <span id="os-type"></span></p>
@@ -954,13 +1010,13 @@ body, html {
     <p><strong>CPU Cores:</strong> <span id="cpu-cores"></span></p>
     <p><strong>RAM:</strong> <span id="ram-info"></span></p>
     <p><strong>Hardware Accelerated:</strong> <span id="hw-accel"></span></p>
-                
+
 
 </div>
 
 <script>
-    const OS_TYPE = 'POSTAL';
-    const CURRENT_VERSION = '0.1.4';
+    const OS_TYPE = 'POSTAL Developer Edition';
+    const CURRENT_VERSION = '0.1.5';
 
     async function populateAbout() {
         // Simple data
@@ -969,10 +1025,10 @@ body, html {
         document.getElementById('browser-info').innerText = navigator.userAgent.split(' ').pop();
         document.getElementById('os-platform').innerText = navigator.platform;
         document.getElementById('cpu-cores').innerText = navigator.hardwareConcurrency || "Unknown";
-        
+
         // RAM (Chrome/Edge only)
-        document.getElementById('ram-info').innerText = navigator.deviceMemory 
-            ? `${navigator.deviceMemory} GB` 
+        document.getElementById('ram-info').innerText = navigator.deviceMemory
+            ? `${navigator.deviceMemory} GB`
             : "Unknown";
 
         // Hardware Acceleration Check
@@ -981,11 +1037,11 @@ body, html {
         const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
         document.getElementById('hw-accel').innerText = debugInfo ? "Yes" : "No";
     }
-    
+
     populateAbout();
 </script>
 
-<div id="about-content" class="settings-panel">
+<div id="installer-ui" class="settings-panel">
     <h2>About EZiER OS</h2>
     <div class="developer-section">
         <h3>Developer</h3>
@@ -1073,6 +1129,26 @@ body, html {
         </div>
     </div>
 
+    <div id="av-overlay"></div>
+    <div id="av-modal">
+        <div id="av-titlebar"><span id="av-shield">🛡️</span><span>EZiER Defender</span></div>
+        <div id="av-body">
+            <div id="av-target">Target: —</div>
+            <div class="av-progress-track"><div class="av-progress-fill" id="av-progress-fill"></div></div>
+            <div id="av-status-line">Initializing scan engine…</div>
+            <div id="av-result"></div>
+        </div>
+        <div id="av-footer">
+            <button class="err-btn primary" id="av-dismiss-btn" style="display:none;" onclick="dismissAvModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- ── WELCOME VIDEO (plays after sign-in) ── -->
+    <div id="welcome-video-overlay">
+        <video id="welcome-video" src="../sys64/media/splash.mp4" playsinline></video>
+        <div id="welcome-video-skip">Click anywhere or press any key to skip</div>
+    </div>
+
     <!-- App context menu removed because right-click behavior was removed -->
 
     <script>
@@ -1083,6 +1159,7 @@ body, html {
     let currentUser = null;
     let setupStep = 0;
     let setupData = {};
+    const $ = id => document.getElementById(id);
 
     const BUILT_IN_APPS = [
         { id: 'AE', name: 'Awk Edge', icon: '../sys64/icons/AE.png', file: '../Program Files/Games/Awk Edge.html' },
@@ -1091,30 +1168,30 @@ body, html {
         { id: 'calc', name: 'Calculator', icon: 'https://img.icons8.com/color/48/calculator.png', file: '../Program Files/Games/Calc.html' },
         { id: 'cc', name: 'Case Clicker', icon: 'https://internet.medialities.org/wp-content/uploads/2024/02/7a767-csgo-operation-10-details.jpg?w=810&h=580&crop=1', file: 'https://mtsl.dk/csgo/' },
         { id: 'Gaz', name: 'Gaz Launcher', icon: '../sys64/icons/GazAppICO.png', file: 'https://ricksansez9-star.github.io/ezierosgaming' },
-        { id: 'taskman', name: 'Task Manager', icon: 'https://img.icons8.com/color/48/stack-of-tasks.png', isSys: true, sysId: 'win-taskmanager' },
+        { id: 'taskman', name: 'Task Manager', icon: '', isSys: true, sysId: 'win-taskmanager' },
         { id: 'set', name: 'Settings', icon: 'https://img.icons8.com/color/48/settings.png', isSys: true, sysId: 'win-settings' },
         { id: 'installer', name: 'App Installer', icon: 'https://img.icons8.com/color/48/installing-updates.png', isSys: true, sysId: 'win-appinstaller' },
-        {id: 'aos2', name: 'Awk OS 2 VM', icon: '../Program Files/Games/AwkOS2VM/sys64/KDEPLASMA.png', file: '../Program Files/Games/AwkOS2VM/(BOOT THIS FIRST) BIOS.html'},
+        {id: 'aos2', name: 'Awk OS 2 VM', icon: 'https://imgs.search.brave.com/TBm2g9uyRRdKyVrZkLH1P0Ucfj8SwdpGZn5W7weDi9Y/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9wcmV2/aWV3LnJlZGQuaXQv/N2gxY204eG03NjY4/MS5naWY_d2lkdGg9/MTkyMCZhdXRvPXdl/YnAmcz01YTlmOGMy/NGNhMTU1ZGY1YzRm/MWUwZGM4ZTE1ZTc3/YWM0NDUxMDk0.gif', file: 'https://ricksansez9-star.github.io/awkos2vm/(BOOT%20THIS%20FIRST)%20BIOS.html'},
         {id: 'ee', name: 'Ezier Explorer', icon: '../sys64/icons/ezierosstarticon.png', file: 'ezierexplore.html'},
-        {id: 'std', name: 'Simple Text Editor', icon: 'https://icon-icons.com/download-file?file=https%3A%2F%2Fimages.icon-icons.com%2F2839%2FPNG%2F512%2Ftext_editor_icon_180962.png&id=180962&pack_or_individual=pack', file: '../Program Files/Games/STD.html' },
     ];
-
-    const ERROR_POOL = [
-        { icon: '💥', title: 'Segmentation Fault', msg: 'The application attempted to access restricted memory and has been terminated.', code: 'SIGSEGV: 0xC0000005' },
-        { icon: '🔥', title: 'Kernel Panic', msg: 'A fatal exception occurred in the system kernel. The process could not be recovered.', code: 'KERN_PANIC: IRQ_UNHANDLED 0x0000007E' },
-        { icon: '⚡', title: 'Stack Overflow Exception', msg: 'The application exceeded its allocated stack space.', code: 'STACK_OVERFLOW: 0xC00000FD' },
-        { icon: '🛑', title: 'Access Denied', msg: 'Permission was denied when trying to load the application binary. Try running as root.', code: 'EACCES: errno 13' },
-        { icon: '📛', title: 'Null Pointer Dereference', msg: 'The application attempted to read from a null memory address.', code: 'NULL_DEREF: 0x00000000' },
-        { icon: '💀', title: 'Fatal Runtime Error', msg: 'An unhandled exception caused the application to terminate.', code: 'RUNTIME_ERR: 0xDEADC0DE' },
-        { icon: '🧨', title: 'Dependency Missing', msg: 'A required shared library could not be found.', code: 'ENOENT: libawkcore.so.2' },
-        { icon: '🌀', title: 'Infinite Loop Detected', msg: 'The watchdog timer killed a process stuck in an infinite loop.', code: 'WATCHDOG: PID timed out after 5000ms' },
-        { icon: '🔴', title: 'Out of Memory', msg: 'The system ran out of available memory.', code: 'ENOMEM: malloc() failed — 0 bytes free' },
-        { icon: '⚠️', title: 'Corrupted Executable', msg: 'The application binary appears corrupted or was not compiled for this architecture.', code: 'EXEC_FORMAT: invalid ELF header' },
-        { icon: '💀', title: 'VIRUS DETECTED', msg: 'A virus has been detected. Please reinstall EZIER OS: POSTAL.', code: 'VIRUS #asfasfdasdasdfasdfasdfasfd123123' },
-    ];
-
-    // ═══════════════════════════════════════════════════════
-    // ACCOUNT / SETUP SYSTEM
+        const WALLPAPER_GALLERY = [
+            { name: 'EZiER OS: Postal', file: '../sys64/wallpapers/EZIER_POSTAL.png', thumb: '../sys64/wallpapers/EZIER_POSTAL.jpg' },
+            { name: 'Aero', file: '../sys64/wallpapers/areo.png', thumb: '../sys64/wallpapers/areo.jpg' },
+            { name: 'Asadal', file: '../sys64/wallpapers/asadal.png', thumb: '../sys64/wallpapers/asadal.jpg' },
+            { name: 'Classic', file: '../sys64/wallpapers/imag.jpg', thumb: '../sys64/wallpapers/imag.jpg' },
+            { name: 'macOS 23', file: '../sys64/wallpapers/mac_os_23.jpg', thumb: '../sys64/wallpapers/mac_os_23.jpg' },
+            { name: 'macOS 24', file: '../sys64/wallpapers/mac_os_24.jpg', thumb: '../sys64/wallpapers/mac_os_24.jpg' },
+            { name: 'macOS 35', file: '../sys64/wallpapers/mac_os_35.jpg', thumb: '../sys64/wallpapers/mac_os_35.jpg' },
+            { name: 'macOS 36', file: '../sys64/wallpapers/mac_os_36.jpg', thumb: '../sys64/wallpapers/mac_os_36.jpg' },
+            { name: 'macOS 37', file: '../sys64/wallpapers/mac_os_37.jpg', thumb: '../sys64/wallpapers/mac_os_37.jpg' },
+            { name: 'macOS 38', file: '../sys64/wallpapers/mac_os_38.jpg', thumb: '../sys64/wallpapers/mac_os_38.jpg' },
+            { name: 'macOS 39', file: '../sys64/wallpapers/mac_os_39.jpg', thumb: '../sys64/wallpapers/mac_os_39.jpg' },
+            { name: 'macOS 40', file: '../sys64/wallpapers/mac_os_40.jpg', thumb: '../sys64/wallpapers/mac_os_40.jpg' },
+            { name: 'macOS 41', file: '../sys64/wallpapers/mac_os_41.jpg', thumb: '../sys64/wallpapers/mac_os_41.jpg' },
+            { name: 'macOS 42', file: '../sys64/wallpapers/mac_os_42.jpg', thumb: '../sys64/wallpapers/mac_os_42.jpg' },
+            { name: 'Default Wallpaper', file: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.png', thumb: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.png' },
+            { name: '90s', file: '../sys64/wallpapers/90s.png', thumb: '../sys64/wallpapers/90s.png' }
+        ];
     // ═══════════════════════════════════════════════════════
     function getAccount() {
         const raw = localStorage.getItem('ezieros_account');
@@ -1123,10 +1200,6 @@ body, html {
 
     function saveAccount(data) {
         localStorage.setItem('ezieros_account', JSON.stringify(data));
-    }
-
-    function getUserKey(key) {
-        return currentUser ? `ezieros_${currentUser.username}_${key}` : `ezieros${key}`;
     }
 
     function initOS() {
@@ -1141,131 +1214,133 @@ body, html {
         updateClock();
     }
 
-    function showSetup() {
-        document.getElementById('setup-screen').classList.add('active');
-        document.getElementById('lock-screen').style.display = 'none';
-        setupStep = 0;
-        setupData = {};
-        gotoSetupStep(0);
-    }
+    const SETUP_STEP_TITLES = ['STEP 1 OF 4 — TERMS OF SERVICE','STEP 2 OF 4 — WELCOME','STEP 3 OF 4 — ACCOUNT','STEP 4 OF 4 — AVATAR'];
 
-    function gotoSetupStep(n) {
-        [0, 1, 2].forEach(i => {
-            const el = document.getElementById(`setup-step-${i}`);
-            if(el) el.style.display = i === n ? 'flex' : 'none';
-            const dot = document.getElementById(`dot-${i}`);
-            if(dot) dot.classList.toggle('active', i <= n);
-        });
-        document.getElementById('setup-step').textContent = ['STEP 1 OF 3 — WELCOME', 'STEP 2 OF 3 — ACCOUNT', 'STEP 3 OF 3 — AVATAR'][n];
-        setupStep = n;
-    }
+    function showSetup(){ $('setup-screen').classList.add('active'); $('lock-screen').style.display='none'; setupStep=0; setupData={}; gotoSetupStep(0); loadTermsOfService(); }
+    function gotoSetupStep(n){ SETUP_STEP_TITLES.forEach((t,i)=>{ const el=$(`setup-step-${i}`); if(el) el.style.display=i===n?'flex':'none'; const dot=$(`dot-${i}`); if(dot) dot.classList.toggle('active',i<=n); }); $('setup-step').textContent=SETUP_STEP_TITLES[n]; setupStep=n; }
+    function setupNext(n){ if(n===3){ const name=$('setup-name').value.trim(); const username=$('setup-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,''); const pass=$('setup-pass').value; const pass2=$('setup-pass2').value; const err=$('setup-error-account'); if(!name){err.textContent='Display name is required.';return;} if(!username||username.length<2){err.textContent='Username must be at least 2 characters.';return;} if(pass.length<4){err.textContent='Password must be at least 4 characters.';return;} if(pass!==pass2){err.textContent='Passwords do not match.';return;} err.textContent=''; setupData.name=name; setupData.username=username; setupData.password=pass; $('setup-avatar-initials').textContent=name[0].toUpperCase(); } gotoSetupStep(n); }
 
-    function setupNext(n) {
-        if (n === 2) {
-            const name = document.getElementById('setup-name').value.trim();
-            const username = document.getElementById('setup-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-            const pass = document.getElementById('setup-pass').value;
-            const pass2 = document.getElementById('setup-pass2').value;
-            const errEl = document.getElementById('setup-error');
-            if (!name) { errEl.textContent = 'Display name is required.'; return; }
-            if (!username || username.length < 2) { errEl.textContent = 'Username must be at least 2 characters.'; return; }
-            if (pass.length < 4) { errEl.textContent = 'Password must be at least 4 characters.'; return; }
-            if (pass !== pass2) { errEl.textContent = 'Passwords do not match.'; return; }
-            errEl.textContent = '';
-            setupData.name = name;
-            setupData.username = username;
-            setupData.password = pass;
-            document.getElementById('setup-avatar-initials').textContent = name[0].toUpperCase();
-        }
-        gotoSetupStep(n);
-    }
+    // ── TERMS OF SERVICE GATE ──
+    const TOS_FALLBACK_TEXT = `TERMS OF SERVICE FOR EZiER OS
+Last Updated: June 30, 2026
 
-    function handleAvatarUpload(input) {
-        const file = input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            const img = document.getElementById('setup-avatar-img');
-            img.src = e.target.result;
-            img.style.display = 'block';
-            document.getElementById('setup-avatar-initials').style.display = 'none';
-            setupData.avatarDataUrl = e.target.result;
+Please read these Terms of Service ("Terms") carefully before using EZiER OS (including all versions, sub-editions, and updates, specifically "POSTAL Developer Edition"). By accessing or utilizing this web-based operating system environment, you agree to be bound by these Terms. If you do not agree to these Terms, do not use the software.
+
+1. ACKNOWLEDGMENT OF NON-PROFIT & HOBBYIST NATURE
+EZiER OS is an open-source, non-profit, educational, and hobbyist web application project developed by Awkwarrrdd (ricksansez9-star). It is designed strictly for personal entertainment, customization experiments, and educational demonstration purposes. No commercial monetization, premium tiers, or paid distribution structures exist under official development.
+
+2. OWNERSHIP OF ORIGINAL TITLES & INTERNAL GAMES
+- The software includes original creative projects developed natively by the creator. Specifically, the game "ZSA" is an original work entirely created and developed by Awkwarrrdd. All rights, intellectual property, and creative assets associated with ZSA belong exclusively to the developer.
+- Any other gaming applications, titles, or interactive software modules provided natively within the environment's app library are standalone web-based ports, built or refactored using standard HTML, JavaScript (JS), and Cascading Style Sheets (CSS). 
+
+3. THIRD-PARTY ASSETS & WALLPAPER DISCLAIMER
+The software includes a built-in wallpaper gallery containing various digital backgrounds, including assets historically or visually associated with third-party operating systems (such as Apple's macOS). 
+- These assets are included solely under a non-profit, transformative, educational, and non-commercial framework.
+- No ownership over third-party trademarks, proprietary graphics, or copyrighted visual assets is claimed or implied by the developer. 
+- All external trademarks and copyrights belong completely to their respective corporate owners.
+
+4. "AS-IS" SOFTWARE & LIMITATION OF LIABILITY
+EZiER OS RUNS ENTIRELY WITHIN THE USER'S WEB BROWSER AND UTILIZES LOCAL STORAGE (LOCALSTORAGE) AND CLIENT-SIDE RUNTIMES.
+- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+- IN NO EVENT SHALL THE DEVELOPER (AWKWARRRDD / RICKSANSEZ9-STAR) BE LIABLE FOR ANY CLAIM, DAMAGES, LOSS OF DATA (INCLUDING RESET LOCALSTORAGE OR BACKUP FILE CORRUPTION), HARDWARE DAMAGE, SYSTEM CRASHES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+5. USER-INSTALLED CUSTOM APPLICATIONS & SANDBOXING
+EZiER OS features an App Installer mechanism capable of processing custom web applications via raw URLs, HTML files, or compressed ZIP structures.
+- You are solely responsible for any third-party code, apps, or links you import into your instance of EZiER OS.
+- The built-in protection utility ("EZiER Defender") utilizes simulated, heuristic, or algorithmic pattern evaluations to log activity and identify baseline low-confidence heuristic anomalies. It is not an enterprise-grade cybersecurity solution and does not guarantee complete security or immunization against malicious client-side scripts executed inside the browser iframe container.
+
+6. DATA PRIVACY & BACKUPS
+- EZiER OS operates locally within your browser sandbox. Your account credentials (passwords, usernames, display names) and customization preferences are saved directly to your local web storage.
+- The developer does not host central databases tracking your personal data, unencrypted passwords, or telemetry logs.
+- You are solely responsible for managing your recovery vectors by utilizing the "Export Backup (.ezierbackupfile)" feature. If your browser cache or web database is cleared, the developer cannot recover your account.
+
+7. ACCEPTABLE USE
+You agree not to modify or use EZiER OS to host, link to, or propagate malicious software, perform denial-of-service attempts against external web frames via internal app views, or violate any local, state, or international laws.
+
+8. TERMINATION & CHANGES
+The developer reserves the complete right to update, modify, suspend, or discontinue any branch, platform repository, or feature of EZiER OS at any time without prior notification or liability.
+
+-------------------------------------------------------------------------------
+EZiER OS: POSTAL — Built by technical tinkerers, for technical tinkerers.`;
+
+    function loadTermsOfService(){
+        const box = $('setup-tos-box');
+        if (!box) return;
+        fetch('ezierostos.txt').then(r => { if(!r.ok) throw new Error('not ok'); return r.text(); })
+            .then(text => { box.textContent = text; })
+            .catch(() => { box.textContent = TOS_FALLBACK_TEXT; });
+        box.onscroll = () => {
+            const reachedBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 12;
+            const checkbox = $('setup-tos-agree');
+            const hint = $('tos-scroll-hint');
+            if (reachedBottom) {
+                checkbox.disabled = false;
+                if (hint) hint.style.opacity = '0';
+            }
         };
-        reader.readAsDataURL(file);
     }
+    function updateTosAgreeState(){
+        const checkbox = $('setup-tos-agree');
+        const btn = $('setup-tos-continue');
+        if (btn) btn.disabled = !checkbox.checked;
+    }
+    function handleAvatarUpload(input){ const file=input.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ const img=$('setup-avatar-img'); img.src=e.target.result; img.style.display='block'; $('setup-avatar-initials').style.display='none'; setupData.avatarDataUrl=e.target.result; }; reader.readAsDataURL(file); }
 
     function finishSetup() {
         const urlInput = document.getElementById('setup-avatar-url').value.trim();
         const avatar = setupData.avatarDataUrl || urlInput || '';
-        const account = {
-            name: setupData.name,
-            username: setupData.username,
-            password: setupData.password,
-            avatar: avatar,
-            created: Date.now()
-        };
+        const account={name:setupData.name,username:setupData.username,password:setupData.password,avatar:avatar,created:Date.now()};
         saveAccount(account);
-        document.getElementById('setup-screen').classList.remove('active');
+        $('setup-screen').classList.remove('active');
         showLockScreen(account);
     }
 
-    function showLockScreen(account) {
-        const ls = document.getElementById('lock-screen');
-        ls.style.display = 'flex';
-        ls.classList.remove('hidden');
+    function showLockScreen(account){ const ls=$('lock-screen'); ls.style.display='flex'; ls.classList.remove('hidden'); const initials=(account.name||'?')[0].toUpperCase(); const avatarImg=$('lock-avatar-img'), avatarInitials=$('lock-avatar-initials'); if(account.avatar){ avatarImg.src=account.avatar; avatarImg.style.display='block'; avatarInitials.style.display='none'; } else { avatarImg.style.display='none'; avatarInitials.style.display='block'; avatarInitials.textContent=initials; } $('lock-username').textContent=account.name; $('lock-pass-input').value=''; $('lock-error').textContent=''; updateClock(); }
 
-        const initials = (account.name || '?')[0].toUpperCase();
-        const avatarImg = document.getElementById('lock-avatar-img');
-        const avatarInitials = document.getElementById('lock-avatar-initials');
+    function attemptLogin(){ const account=getAccount(), input=$('lock-pass-input').value, err=$('lock-error'); if(!account){ showSetup(); return; } if(input===account.password){ err.textContent=''; currentUser=account; $('lock-screen').classList.add('hidden'); setTimeout(()=>{ $('lock-screen').style.display='none'; playWelcomeVideo(()=>bootDesktop(account)); },600); } else{ err.textContent='Incorrect password. Try again.'; const pass=$('lock-pass-input'); pass.value=''; pass.classList.add('shake'); setTimeout(()=>pass.classList.remove('shake'),500); } }
 
-        if (account.avatar) {
-            avatarImg.src = account.avatar;
-            avatarImg.style.display = 'block';
-            avatarInitials.style.display = 'none';
-        } else {
-            avatarImg.style.display = 'none';
-            avatarInitials.style.display = 'block';
-            avatarInitials.textContent = initials;
+    function bootDesktop(account){ initSettingsUI(); const searchInput=$('app-search'); if(searchInput){ searchInput.value=''; searchInput.oninput=e=>renderOS(e.target.value);} renderOS(); currentUser=account; updateTrayUser(account); updateDesktopLayout(); }
+
+    // ═══════════════════════════════════════════════════════
+    // WELCOME / SPLASH VIDEO
+    // ═══════════════════════════════════════════════════════
+    function playWelcomeVideo(callback) {
+        const enabled = localStorage.getItem('ezier_play_login_video') !== '0';
+        const overlay = $('welcome-video-overlay');
+        const video = $('welcome-video');
+
+        if (!enabled || !overlay || !video) { callback(); return; }
+
+        let finished = false;
+        const finish = () => {
+            if (finished) return;
+            finished = true;
+            overlay.classList.remove('active');
+            video.pause();
+            video.currentTime = 0;
+            overlay.removeEventListener('click', finish);
+            document.removeEventListener('keydown', finish);
+            video.onended = null;
+            video.onerror = null;
+            callback();
+        };
+
+        video.muted = localStorage.getItem('ezier_video_muted') === '1';
+        video.currentTime = 0;
+        video.onended = finish;
+        video.onerror = finish;
+        overlay.classList.add('active');
+        overlay.addEventListener('click', finish);
+        document.addEventListener('keydown', finish);
+
+        const playPromise = video.play();
+        if (playPromise && playPromise.catch) {
+            playPromise.catch(() => {
+                // Autoplay-with-sound may be blocked; retry muted before giving up
+                video.muted = true;
+                video.play().catch(finish);
+            });
         }
-
-        document.getElementById('lock-username').textContent = account.name;
-        document.getElementById('lock-pass-input').value = '';
-        document.getElementById('lock-error').textContent = '';
-        updateLockClock();
-    }
-
-    function attemptLogin() {
-        const account = getAccount();
-        const input = document.getElementById('lock-pass-input').value;
-        const errEl = document.getElementById('lock-error');
-        if (!account) { showSetup(); return; }
-        if (input === account.password) {
-            errEl.textContent = '';
-            currentUser = account;
-            document.getElementById('lock-screen').classList.add('hidden');
-            setTimeout(() => {
-                document.getElementById('lock-screen').style.display = 'none';
-                bootDesktop(account);
-            }, 600);
-        } else {
-            errEl.textContent = 'Incorrect password. Try again.';
-            document.getElementById('lock-pass-input').value = '';
-            document.getElementById('lock-pass-input').classList.add('shake');
-            setTimeout(() => document.getElementById('lock-pass-input').classList.remove('shake'), 500);
-        }
-    }
-
-    function bootDesktop(account) {
-        initSettingsUI();
-        const searchInput = document.getElementById('app-search');
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.oninput = (e) => renderOS(e.target.value);
-        }
-        renderOS();
-        currentUser = account;
-        updateTrayUser(account);
-        updateDesktopLayout();
     }
 
     function lockScreen() {
@@ -1286,6 +1361,87 @@ body, html {
         if (!confirm('Are you sure? This will delete your account and all settings permanently.')) return;
         localStorage.clear();
         location.reload();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // BACKUP & RESTORE (.ezierbackupfile)
+    // ═══════════════════════════════════════════════════════
+    function showBackupMsg(text, isError) {
+        const el = document.getElementById('backup-msg');
+        if (!el) return;
+        el.style.color = isError ? '#e74c3c' : '#27ae60';
+        el.textContent = text;
+    }
+
+    function exportBackup() {
+        const data = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            data[key] = localStorage.getItem(key);
+        }
+        const payload = {
+            format: 'ezierbackupfile',
+            app: 'EZIER OS',
+            osType: typeof OS_TYPE !== 'undefined' ? OS_TYPE : 'POSTAL',
+            version: typeof CURRENT_VERSION !== 'undefined' ? CURRENT_VERSION : '',
+            exportedAt: new Date().toISOString(),
+            data
+        };
+
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const stamp = new Date().toISOString().slice(0, 10);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `EZiER-OS-Backup-${stamp}.ezierbackupfile`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        showBackupMsg('Backup exported! Check your downloads.', false);
+    }
+
+    function importBackupFile(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            let parsed;
+            try {
+                parsed = JSON.parse(e.target.result);
+            } catch (err) {
+                showBackupMsg('Import failed: that file is not a valid EZIER OS backup.', true);
+                input.value = '';
+                return;
+            }
+
+            const data = (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.data && typeof parsed.data === 'object')
+                ? parsed.data
+                : parsed;
+
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                showBackupMsg('Import failed: that file is not a valid EZIER OS backup.', true);
+                input.value = '';
+                return;
+            }
+
+            if (!confirm('Importing this backup will overwrite ALL current EZIER OS data (account, installed apps, settings) with the contents of the backup file. This cannot be undone. Continue?')) {
+                input.value = '';
+                return;
+            }
+
+            localStorage.clear();
+            Object.keys(data).forEach(key => {
+                try { localStorage.setItem(key, data[key]); } catch (err) { /* skip unwritable key */ }
+            });
+
+            showBackupMsg('Backup imported! Reloading EZIER OS…', false);
+            setTimeout(() => location.reload(), 1000);
+        };
+        reader.onerror = () => showBackupMsg('Import failed: could not read that file.', true);
+        reader.readAsText(file);
     }
 
     function updateTrayUser(account) {
@@ -1367,6 +1523,7 @@ body, html {
 
         renderOS();
         renderCustomAppList();
+        runAntivirusScan(name);
     }
 
     function removeCustomApp(id) {
@@ -1397,6 +1554,98 @@ body, html {
                 container.appendChild(row);
             });
         }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // EZIER DEFENDER (BUILT-IN ANTIVIRUS)
+    // Runs automatically whenever a new custom app is installed.
+    // ═══════════════════════════════════════════════════════
+    const AV_SCAN_LINES = [
+        'Initializing scan engine…',
+        'Checking digital signature…',
+        'Scanning file headers…',
+        'Cross-referencing threat database…',
+        'Running heuristic analysis…',
+        'Checking for known malware patterns…',
+        'Verifying sandbox integrity…',
+        'Finalizing report…'
+    ];
+    let avScanTimer = null;
+
+    function getAvLog() {
+        return JSON.parse(localStorage.getItem('ezier_av_scan_log') || '[]');
+    }
+    function saveAvLog(log) {
+        localStorage.setItem('ezier_av_scan_log', JSON.stringify(log.slice(-20)));
+    }
+
+    function runAntivirusScan(appName) {
+        const overlay = document.getElementById('av-overlay');
+        const modal = document.getElementById('av-modal');
+        const target = document.getElementById('av-target');
+        const fill = document.getElementById('av-progress-fill');
+        const statusLine = document.getElementById('av-status-line');
+        const result = document.getElementById('av-result');
+        const dismissBtn = document.getElementById('av-dismiss-btn');
+        if (!overlay || !modal) return;
+
+        if (avScanTimer) clearInterval(avScanTimer);
+
+        target.textContent = `Target: ${appName}`;
+        fill.style.width = '0%';
+        statusLine.textContent = AV_SCAN_LINES[0];
+        result.textContent = '';
+        result.className = '';
+        dismissBtn.style.display = 'none';
+
+        modal.classList.add('scanning');
+        overlay.classList.add('show');
+        modal.classList.add('show');
+
+        let step = 0;
+        const totalSteps = AV_SCAN_LINES.length;
+        avScanTimer = setInterval(() => {
+            step++;
+            fill.style.width = Math.min(100, Math.round((step / totalSteps) * 100)) + '%';
+            if (step < totalSteps) {
+                statusLine.textContent = AV_SCAN_LINES[step];
+            } else {
+                clearInterval(avScanTimer);
+                avScanTimer = null;
+                finishAvScan(appName);
+            }
+        }, 320);
+    }
+
+    function finishAvScan(appName) {
+        const modal = document.getElementById('av-modal');
+        const statusLine = document.getElementById('av-status-line');
+        const result = document.getElementById('av-result');
+        const dismissBtn = document.getElementById('av-dismiss-btn');
+
+        modal.classList.remove('scanning');
+        statusLine.textContent = 'Scan complete.';
+
+        // Rare, low-stakes flavor flag — never blocks the app, which is already installed.
+        const flagged = Math.floor(Math.random() * 50) === 0;
+
+        const log = getAvLog();
+        log.push({ name: appName, time: Date.now(), flagged });
+        saveAvLog(log);
+
+        if (flagged) {
+            result.className = 'flag';
+            result.textContent = `⚠️ "${appName}" triggered a low-confidence heuristic flag, but no action is needed.`;
+        } else {
+            result.className = 'clean';
+            result.textContent = `✅ "${appName}" was scanned and no threats were found.`;
+        }
+        dismissBtn.style.display = 'inline-block';
+    }
+
+    function dismissAvModal() {
+        document.getElementById('av-overlay').classList.remove('show');
+        document.getElementById('av-modal').classList.remove('show');
     }
 
     // ═══════════════════════════════════════════════════════
@@ -1481,7 +1730,7 @@ body, html {
 
     function openSysWin(id) {
         const win = document.getElementById(id);
-        win.style.display = 'flex'; win.classList.remove('closing');
+        win.style.display = 'flex'; win.classList.remove('closing'); win.classList.remove('minimized');
         if (!win.style.top) { win.style.top = '80px'; win.style.left = '80px'; }
         // Link system window to a logical app id for taskbar/contexts
         const sysApp = BUILT_IN_APPS.find(a => a.isSys && a.sysId === id);
@@ -1516,18 +1765,11 @@ body, html {
         localStorage.setItem('ezieros_pinned_apps', JSON.stringify(ids));
     }
 
-    function togglePinned(appId, event) {
-        event.stopPropagation();
-        const pinned = getPinnedApps();
-        const index = pinned.indexOf(appId);
-        if (index === -1) {
-            pinned.unshift(appId);
-        } else {
-            pinned.splice(index, 1);
-        }
-        savePinnedApps(pinned);
-        renderOS(document.getElementById('app-search')?.value || '');
-    }
+    function getHiddenDesktopApps(){ return JSON.parse(localStorage.getItem('ezier_hidden_desktop_apps')||'[]'); }
+    function saveHiddenDesktopApps(ids){ localStorage.setItem('ezier_hidden_desktop_apps', JSON.stringify(ids)); }
+    function setDesktopIconVisibility(appId, visible){ const hidden=getHiddenDesktopApps(); const idx=hidden.indexOf(appId); if(visible){ if(idx>-1) hidden.splice(idx,1); } else if(idx===-1){ hidden.push(appId); } saveHiddenDesktopApps(hidden); renderOS($('app-search')?.value||''); }
+
+    function togglePinned(appId,event){ event.stopPropagation(); const pinned=getPinnedApps(); const i=pinned.indexOf(appId); i===-1? pinned.unshift(appId): pinned.splice(i,1); savePinnedApps(pinned); renderOS($('app-search')?.value||''); }
 
     function ensurePinnedDefaults() {
         const pinned = getPinnedApps();
@@ -1585,7 +1827,7 @@ body, html {
             item.onclick = () => app.isSys ? openSysWin(app.sysId) : tryLaunchApp(app);
             grid.appendChild(item);
 
-            if (showDesktop) {
+            if (showDesktop && !getHiddenDesktopApps().includes(app.id)) {
                 const dItem = document.createElement('div');
                 dItem.className = 'desktop-icon';
                 dItem.innerHTML = html;
@@ -1594,19 +1836,9 @@ body, html {
             }
         });
 
-        renderCustomAppList();
-        renderPinnedArea();
-        updateDesktopLayout();
-    }
-
-    function populateSettingsAccount() {
-        const account = getAccount();
-        if (!account) return;
-        const dn = document.getElementById('set-displayname');
-        const av = document.getElementById('set-avatar-url');
-        if (dn) dn.value = account.name;
-        if (av) av.value = (account.avatar && !account.avatar.startsWith('data:')) ? account.avatar : '';
-    }
+        renderCustomAppList(); renderPinnedArea(); updateDesktopLayout(); }
+    function renderDesktopIconSettings(){ const container=$('desktop-icon-settings'); if(!container) return; container.innerHTML=''; const hidden=getHiddenDesktopApps(); getAllApps().forEach(app=>{ const id=app.id; const label=document.createElement('label'); label.style.display='flex'; label.style.alignItems='center'; label.style.gap='6px'; label.style.padding='4px 6px'; label.style.border='1px solid rgba(255,255,255,0.12)'; label.style.borderRadius='6px'; label.style.background='rgba(255,255,255,0.04)'; const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=!hidden.includes(id); cb.onchange=()=>setDesktopIconVisibility(id, cb.checked); label.append(cb, document.createTextNode(app.name)); container.append(label); }); }
+    function populateSettingsAccount(){ const account=getAccount(); if(!account) return; const dn=$('set-displayname'), av=$('set-avatar-url'); if(dn) dn.value=account.name; if(av) av.value=(account.avatar&&!account.avatar.startsWith('data:'))?account.avatar:''; renderDesktopIconSettings(); }
 
     function updateDesktopLayout() {
         const desktopIcons = document.getElementById('desktop-icons');
@@ -1632,7 +1864,7 @@ body, html {
     function saveAccountSettings() {
         const account = getAccount();
         if (!account) return;
-        
+
         const name = (document.getElementById('set-displayname').value || '').trim() || account.name;
         const avatarUrl = (document.getElementById('set-avatar-url').value || '').trim();
         const avatarFile = document.getElementById('set-avatar-file');
@@ -1702,8 +1934,12 @@ body, html {
         const area = document.getElementById('running-area');
         if (!area) return;
         area.innerHTML = '';
-        // collect visible windows and map to app ids
+        // Only include windows that are actually open or minimized.
+        // Persistent system windows (Settings/Task Manager/App Installer) stay
+        // in the DOM with display:none after being closed, so without this
+        // check they'd keep showing a stale icon in the taskbar forever.
         const wins = Array.from(document.querySelectorAll('.window')).filter(w => {
+            if (w.classList.contains('minimized')) return true;
             try { return window.getComputedStyle(w).display !== 'none'; } catch { return false; }
         });
         const apps = getAllApps();
@@ -1783,6 +2019,45 @@ body, html {
         document.body.style.removeProperty('background-size');
         const input = document.getElementById('wallpaper-input');
         if (input) input.value = '';
+        renderWallpaperGallery();
+    }
+
+    function renderWallpaperGallery() {
+        const grid = document.getElementById('wallpaper-gallery');
+        if (!grid) return;
+        const current = localStorage.getItem('ezier_wallpaper') || '';
+        grid.innerHTML = WALLPAPER_GALLERY.map(w => `
+            <div class="wallpaper-thumb ${current === w.file ? 'selected' : ''}" onclick="setBuiltinWallpaper('${w.file}')" title="${w.name}">
+                <img src="${w.thumb}" alt="${w.name}" loading="lazy">
+                <span>${w.name}</span>
+            </div>
+        `).join('');
+    }
+
+    function setBuiltinWallpaper(path) {
+        const fit = document.getElementById('wallpaper-fit-input')?.value || 'cover';
+        document.body.style.backgroundImage = `url('${path}')`;
+        document.body.style.backgroundSize = fit;
+        localStorage.setItem('ezier_wallpaper', path);
+        localStorage.setItem('ezier_wallpaper_fit', fit);
+        const input = document.getElementById('wallpaper-input');
+        if (input) input.value = path;
+        renderWallpaperGallery();
+    }
+
+    function quickSetAccent(hex) {
+        const input = document.getElementById('accent-color-input');
+        if (input) input.value = hex;
+        applyAppearanceSettings();
+    }
+
+    function applyBootSettings() {
+        const playBoot = !!document.getElementById('play-boot-video-input')?.checked;
+        const playLogin = !!document.getElementById('play-login-video-input')?.checked;
+        const muted = !!document.getElementById('video-muted-input')?.checked;
+        localStorage.setItem('ezier_play_boot_video', playBoot ? '1' : '0');
+        localStorage.setItem('ezier_play_login_video', playLogin ? '1' : '0');
+        localStorage.setItem('ezier_video_muted', muted ? '1' : '0');
     }
 
     function applyAppearanceSettings() {
@@ -1792,6 +2067,7 @@ body, html {
         const themeMode = document.getElementById('theme-mode-input')?.value || 'dark';
         const position = document.getElementById('taskbar-position-input')?.value || 'bottom';
         const reduceMotion = !!document.getElementById('reduce-motion-input')?.checked;
+        const use12h = !!document.getElementById('clock-12h-input')?.checked;
         const ww = Math.min(1200, Math.max(600, parseInt(document.getElementById('window-width-input')?.value || '900')));
         const wh = Math.min(900, Math.max(400, parseInt(document.getElementById('window-height-input')?.value || '600')));
         const isFloating = document.getElementById('floating-taskbar-input')?.checked;
@@ -1823,6 +2099,7 @@ body, html {
         localStorage.setItem('ezier_taskbar_opacity', String(opacity));
         localStorage.setItem('ezier_glass_blur', String(blur));
         localStorage.setItem('ezier_reduce_motion', reduceMotion ? '1' : '0');
+        localStorage.setItem('ezier_clock_12h', use12h ? '1' : '0');
         localStorage.setItem('ezier_theme_mode', themeMode);
         localStorage.setItem('ezier_taskbar_position', position);
         localStorage.setItem('ezier_floating_taskbar', isFloating ? '1' : '0');
@@ -1835,6 +2112,7 @@ body, html {
         document.getElementById('taskbar').classList.toggle('floating', isFloating);
         document.getElementById('start-menu').classList.toggle('compact', isCompact);
         updateDesktopLayout();
+        updateClock();
         renderOS(document.getElementById('app-search')?.value || '');
     }
 
@@ -1854,7 +2132,7 @@ body, html {
             document.body.style.backgroundImage = `url('${savedWall}')`;
             document.body.style.backgroundSize = wallpaperFit;
         }
-        
+
         const accent = localStorage.getItem('ezier_accent_color') || '#1793d1';
         const opacity = parseFloat(localStorage.getItem('ezier_taskbar_opacity') || '0.85');
         const blur = parseInt(localStorage.getItem('ezier_glass_blur') || '20');
@@ -1863,7 +2141,7 @@ body, html {
         const reduceMotion = (localStorage.getItem('ezier_reduce_motion') || '0') === '1';
         const ww = parseInt(localStorage.getItem('ezier_window_width') || '900');
         const wh = parseInt(localStorage.getItem('ezier_window_height') || '600');
-        
+
         const isFloating = localStorage.getItem('ezier_floating_taskbar') === '1';
         const isCompact = localStorage.getItem('ezier_compact_start') === '1';
 
@@ -1889,7 +2167,7 @@ body, html {
 
         const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = String(val); };
         const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
-        
+
         if (savedWall && !savedWall.startsWith('data:')) set('wallpaper-input', savedWall);
         set('wallpaper-fit-input', wallpaperFit);
         set('accent-color-input', accent);
@@ -1898,7 +2176,7 @@ body, html {
         set('theme-mode-input', themeMode);
         set('taskbar-position-input', taskbarPosition);
         set('update-pref-select', localStorage.getItem('update_pref') || 'always');
-        
+
         const rm = document.getElementById('reduce-motion-input'); if (rm) rm.checked = reduceMotion;
         const fl = document.getElementById('floating-taskbar-input'); if (fl) fl.checked = isFloating;
         const cp = document.getElementById('compact-start-input'); if (cp) cp.checked = isCompact;
@@ -1908,10 +2186,23 @@ body, html {
         const desktopIconsInput = document.getElementById('show-desktop-icons-input'); if (desktopIconsInput) desktopIconsInput.checked = showDesktopIcons;
         const watermarkInput = document.getElementById('desktop-watermark-input'); if (watermarkInput) watermarkInput.value = watermark;
         const welcomeInput = document.getElementById('desktop-welcome-input'); if (welcomeInput) welcomeInput.value = welcomeText;
+        renderDesktopIconSettings();
 
         set('window-width-input', String(ww)); setTxt('window-width-value', `${ww}px`);
         set('window-height-input', String(wh)); setTxt('window-height-value', `${wh}px`);
         updateDesktopLayout();
+
+        const use12h = localStorage.getItem('ezier_clock_12h') === '1';
+        const c12 = document.getElementById('clock-12h-input'); if (c12) c12.checked = use12h;
+
+        const playBoot = localStorage.getItem('ezier_play_boot_video') !== '0';
+        const playLogin = localStorage.getItem('ezier_play_login_video') !== '0';
+        const videoMuted = localStorage.getItem('ezier_video_muted') === '1';
+        const pb = document.getElementById('play-boot-video-input'); if (pb) pb.checked = playBoot;
+        const pl = document.getElementById('play-login-video-input'); if (pl) pl.checked = playLogin;
+        const vm = document.getElementById('video-muted-input'); if (vm) vm.checked = videoMuted;
+
+        renderWallpaperGallery();
     }
 
     // ═══════════════════════════════════════════════════════
@@ -1921,7 +2212,15 @@ body, html {
 
     function updateClock() {
         const now = new Date();
-        const timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes());
+        const use12h = localStorage.getItem('ezier_clock_12h') === '1';
+        let timeStr;
+        if (use12h) {
+            let h = now.getHours() % 12;
+            if (h === 0) h = 12;
+            timeStr = h + ':' + pad(now.getMinutes()) + ' ' + (now.getHours() < 12 ? 'AM' : 'PM');
+        } else {
+            timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes());
+        }
         const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
         const mainClock = document.getElementById('clock');
         const trayClock = document.getElementById('tray-clock');
@@ -1932,8 +2231,6 @@ body, html {
         if (lockClock) lockClock.innerText = timeStr;
         if (lockDate) lockDate.innerText = dateStr;
     }
-
-    function updateLockClock() { updateClock(); }
 
     // ═══════════════════════════════════════════════════════
     // KERNEL (ZIP handler)
@@ -1970,5 +2267,9 @@ body, html {
     initOS();
     </script>
     <script src="updatechecker.js"></script>
+    <script src="../hinux/terminal.js"></script>
+    <!-- Console Installer feature: installs apps from .ezstaller packages -->
+    <script src="ezstaller-format.js"></script>
+    <script src="console-installer.js"></script>
 </body>
 </html>

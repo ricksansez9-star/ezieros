@@ -1,0 +1,95 @@
+/* ═══════════════════════════════════════════════════════════════
+ * console-installer.css
+ * ───────────────────────────────────────────────────────────────
+ * Styles the terminal screen inside the Console Installer window.
+ * Window chrome (.window, .title-bar, .win-btn) is inherited from
+ * EZiER OS's own stylesheet — this file only touches the new
+ * #ci-* / .ci-* elements console-installer.js injects.
+ *
+ * Like Task Manager elsewhere in EZiER OS, the console always
+ * renders dark, regardless of the light/dark theme setting —
+ * a terminal screen looks like a terminal screen.
+ * ═══════════════════════════════════════════════════════════════ */
+
+.ci-window {
+    background: #0b0d10 !important;
+}
+
+#ci-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #0b0d10;
+    color: #d7e0e8;
+    font-family: 'Cascadia Code', 'Consolas', 'SFMono-Regular', Menlo, monospace;
+    font-size: 13px;
+    padding: 14px 16px;
+    overflow: hidden;
+    position: relative;
+}
+
+.ci-output {
+    flex: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding-bottom: 8px;
+}
+
+.ci-output::-webkit-scrollbar { width: 8px; }
+.ci-output::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+.ci-output::-webkit-scrollbar-track { background: transparent; }
+
+.ci-line { line-height: 1.55; }
+.ci-line.ci-heading { color: var(--accent, #1793d1); font-weight: 600; }
+.ci-line.ci-success { color: #27ae60; }
+.ci-line.ci-error   { color: #e74c3c; }
+.ci-line.ci-dim      { color: #7c8a99; }
+.ci-line.ci-echo     { color: #9aa7b5; }
+.ci-line.ci-plain    { color: #d7e0e8; }
+
+.ci-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 8px;
+    flex-shrink: 0;
+}
+
+.ci-prompt {
+    color: var(--accent, #1793d1);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ci-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f1f5f9;
+    font-family: inherit;
+    font-size: inherit;
+    caret-color: var(--accent, #1793d1);
+}
+
+/* Full-window drag-and-drop overlay */
+.ci-dropzone {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: rgba(23, 147, 209, 0.12);
+    border: 2px dashed var(--accent, #1793d1);
+    color: var(--accent, #1793d1);
+    font-family: 'Cascadia Code', Consolas, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.ci-window.ci-dragover .ci-dropzone { display: flex; }
