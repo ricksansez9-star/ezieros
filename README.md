@@ -55,4 +55,4 @@ EZiER OS: POSTAL — Built by technical tinkerers, for technical tinkerers.
 
   Distros
 POSTAL: <img width="1907" height="912" alt="image" src="https://github.com/user-attachments/assets/8aa2c149-7ae6-4133-a7c3-4c866d845b35" />
-
+Bare Bones: (In Early Active Development): No Screenshot Available Currently, mainly for old hardware and low end devices, it is a very basic version of EZiER OS, it is not recommended for normal users unless you have old hardware.

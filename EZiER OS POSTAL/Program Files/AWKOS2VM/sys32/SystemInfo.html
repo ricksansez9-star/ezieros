@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWK OS 2 - System Information</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666;
+            flex: 1;
+        }
+
+        .info-value {
+            color: #667eea;
+            font-weight: 700;
+            flex: 1;
+            text-align: right;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .optimization-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .opt-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .opt-item h4 {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .opt-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #333;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+            transform: translateY(-2px);
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .system-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .status-item p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .status-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖥️ AWK OS 2 System Information</h1>
+            <p>Complete System and Performance Details</p>
+        </div>
+
+        <div class="card">
+            <h2>⚡ Performance Status</h2>
+            <div class="system-status">
+                <div class="status-item">
+                    <p>FPS Boost</p>
+                    <div class="status-value">+50%</div>
+                </div>
+                <div class="status-item">
+                    <p>GPU Acceleration</p>
+                    <div class="status-value">ON</div>
+                </div>
+                <div class="status-item">
+                    <p>Cache Size</p>
+                    <div class="status-value">512MB</div>
+                </div>
+                <div class="status-item">
+                    <p>System Health</p>
+                    <div class="status-value">✓ 100%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🖱️ System Information</h2>
+            <div class="info-row">
+                <span class="info-label">Operating System:</span>
+                <span class="info-value">AWK OS 2 (Open Beta) <span class="badge badge-success">v2.1</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">System Name:</span>
+                <span class="info-value">AWK Virtual Machine</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Release Date:</span>
+                <span class="info-value">January 21, 2026</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Beta Ends:</span>
+                <span class="info-value">February 20, 2026</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Kernel:</span>
+                <span class="info-value">Browser-based Virtual Kernel</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Platform:</span>
+                <span class="info-value">Web Technologies (HTML5/CSS3/JavaScript)</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>💻 Hardware & Performance</h2>
+            <div class="info-row">
+                <span class="info-label">CPU Model:</span>
+                <span class="info-value">Multi-core Host Processor</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">System RAM:</span>
+                <span class="info-value" id="system-ram">Detecting...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">GPU Acceleration:</span>
+                <span class="info-value">WebGL 2.0 <span class="badge badge-success">Enabled</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Display Mode:</span>
+                <span class="info-value">Fullscreen / Responsive</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Frame Rate:</span>
+                <span class="info-value">Unlimited (60+ FPS) <span class="badge badge-info">Optimized</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Cache System:</span>
+                <span class="info-value">512MB Intelligent Cache <span class="badge badge-success">Active</span></span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>✨ Active Optimizations</h2>
+            <div class="optimization-grid">
+                <div class="opt-item">
+                    <h4>GPU Rendering</h4>
+                    <div class="opt-value">100%</div>
+                </div>
+                <div class="opt-item">
+                    <h4>Memory Cache</h4>
+                    <div class="opt-value">512MB</div>
+                </div>
+                <div class="opt-item">
+                    <h4>FPS Boost</h4>
+                    <div class="opt-value">+50%</div>
+                </div>
+                <div class="opt-item">
+                    <h4>Performance</h4>
+                    <div class="opt-value">Ultra</div>
+                </div>
+            </div>
+
+            <ul class="feature-list">
+                <li>WebGL 2.0 Hardware Acceleration Enabled</li>
+                <li>GPU-Powered Rendering Pipeline Active</li>
+                <li>Unlimited Frame Rate Mode (No FPS Cap)</li>
+                <li>Intelligent Memory Caching System (512MB)</li>
+                <li>Automatic Garbage Collection Enabled</li>
+                <li>DOM Reflow Optimization Active</li>
+                <li>Batch Operation Processing Enabled</li>
+                <li>Performance Monitoring System Ready</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>🎮 Installed Applications</h2>
+            <div class="info-row">
+                <span class="info-label">Awk Edge (Browser)</span>
+                <span class="info-value"><span class="badge badge-success">Optimized</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Balatro (Game Engine)</span>
+                <span class="info-value"><span class="badge badge-success">+50% Boost</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">OneShot (Game)</span>
+                <span class="info-value"><span class="badge badge-success">GPU Accelerated</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Calculator</span>
+                <span class="info-value"><span class="badge badge-info">Ready</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Performance Monitor</span>
+                <span class="info-value"><span class="badge badge-success">Active</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Task Manager</span>
+                <span class="info-value"><span class="badge badge-success">Monitoring</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Settings</span>
+                <span class="info-value"><span class="badge badge-info">Configurable</span></span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔧 System Features</h2>
+            <ul class="feature-list">
+                <li>Advanced BIOS with performance settings</li>
+                <li>Multi-window desktop environment</li>
+                <li>Taskbar with pinned applications</li>
+                <li>Start menu with full app launcher</li>
+                <li>Real-time performance monitoring</li>
+                <li>Task manager with process control</li>
+                <li>Custom application installation support</li>
+                <li>Smart memory management system</li>
+                <li>GPU acceleration for all games</li>
+                <li>High-performance rendering pipeline</li>
+            </ul>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="openPerformance()">📊 Open Performance Monitor</button>
+                <button class="btn btn-primary" onclick="openTaskManager()">📋 Open Task Manager</button>
+                <button class="btn btn-secondary" onclick="goDesktop()">🏠 Back to Desktop</button>
+            </div>
+        </div>
+
+        <div class="card" style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h2 style="color: white; border-bottom-color: white;">🎉 System Ready</h2>
+            <p style="font-size: 1.1rem; margin: 15px 0;">
+                Your AWK OS 2 system is fully optimized with all performance enhancements active.
+            </p>
+            <p style="opacity: 0.9;">
+                Experience +50% FPS boost in games with GPU acceleration and intelligent memory management.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Detect system memory
+        if (navigator.deviceMemory) {
+            document.getElementById('system-ram').textContent = navigator.deviceMemory + ' GB (Detected)';
+        } else {
+            document.getElementById('system-ram').textContent = '4-8 GB (Estimated)';
+        }
+
+        function openPerformance() {
+            window.location.href = 'Performance.html';
+        }
+
+        function openTaskManager() {
+            window.location.href = 'TaskManager.html';
+        }
+
+        function goDesktop() {
+            window.location.href = 'Desktop.html';
+        }
+    </script>
+</body>
+</html>

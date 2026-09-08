@@ -1,0 +1,75 @@
+/* EZiER OS - Global Performance-safe Animations
+   - Uses only transform and opacity for smooth GPU-accelerated animations
+   - Honors prefers-reduced-motion
+   - Utility classes and gentle keyframes for UI regions
+*/
+
+:root{
+  /* shorter durations to feel snappier while remaining smooth */
+  --anim-fast: 120ms;
+  --anim-medium: 220ms;
+  --anim-slow: 360ms;
+  --easing: cubic-bezier(.22,.9,.35,1);
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0ms !important; animation-duration: 0ms !important; animation-play-state: paused !important; }
+}
+
+/* Base transitions applied where classes are used */
+.anim-fade { transition: opacity var(--anim-medium) var(--easing); }
+.anim-pop { transition: transform var(--anim-fast) var(--easing), opacity var(--anim-fast) var(--easing); }
+.anim-slide { transition: transform var(--anim-medium) var(--easing), opacity var(--anim-medium) var(--easing); }
+.anim-glow { transition: box-shadow var(--anim-medium) var(--easing); }
+
+/* Appear animations (one-shot) */
+@keyframes ez-appear-up { from { transform: translateY(8px) scale(.995); opacity: 0 } to { transform: translateY(0) scale(1); opacity: 1 } }
+@keyframes ez-appear-pop { from { transform: scale(.9); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+
+.animate-appear-up { animation: ez-appear-up var(--anim-medium) var(--easing) both; }
+.animate-appear-pop { animation: ez-appear-pop var(--anim-fast) var(--easing) both; }
+
+/* Subtle idle motion for background orbs or soft elements */
+@keyframes ez-sway-x { 0% { transform: translateX(-6px) } 50% { transform: translateX(6px) } 100% { transform: translateX(-6px) } }
+.animate-sway { animation: ez-sway-x 8s ease-in-out infinite; }
+
+/* Floating subtle elevation for active windows / buttons */
+@keyframes ez-hover-lift { from { transform: translateY(0) scale(1); } to { transform: translateY(-3px) scale(1.004); } }
+.animate-hover-lift:hover { animation: ez-hover-lift var(--anim-fast) var(--easing) forwards; }
+
+/* Directional slide helpers (use transform only) */
+.slide-in-right { transform: translateX(18px); opacity: 0; }
+.slide-in-left { transform: translateX(-18px); opacity: 0; }
+.slide-in-reset { transform: translateX(0); opacity: 1; transition: transform var(--anim-medium) var(--easing), opacity var(--anim-medium) var(--easing); }
+
+/* Utility: focus ring animated */
+.anim-focus { transition: box-shadow var(--anim-medium) var(--easing); }
+.anim-focus:focus { box-shadow: 0 8px 28px rgba(124,92,255,0.18); }
+
+/* Small motion for icons (spin subtle on open) */
+@keyframes ez-tilt { 0% { transform: rotate(-4deg) } 50% { transform: rotate(4deg) } 100% { transform: rotate(-2deg) } }
+.animate-tilt { animation: ez-tilt 900ms ease-in-out 1; }
+
+/* Apply to many UI elements: windows, dialogs, buttons */
+.ez-animated { will-change: transform, opacity; }
+
+/* Cascade delay helper for lists */
+.ez-stagger > * { opacity: 0; transform: translateY(6px); }
+.ez-stagger.ez-stagger-init > * { animation: ez-appear-up var(--anim-medium) var(--easing) both; }
+/* reduce stagger multiplier for snappier cascades */
+.ez-stagger.ez-stagger-init > * { animation-delay: calc(var(--i,0) * 40ms); }
+
+/* Minimal performance note in comments */
+/* Keep animations subtle; avoid layout-affecting properties (top/left/width/height)
+   Use only transform and opacity for smooth GPU-accelerated animations.
+*/
+
+/* Low-performance forced mode: disable animations and heavy paint features */
+.ez-lowperf * {
+  transition: none !important;
+  animation: none !important;
+  will-change: auto !important;
+}
+.ez-lowperf body, .ez-lowperf #taskbar, .ez-lowperf .tray { box-shadow: none !important; }
+

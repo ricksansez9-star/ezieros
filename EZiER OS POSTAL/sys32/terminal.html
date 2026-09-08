@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EZiER Terminal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #0c0d10;
+            color: #33ff00;
+            font-family: 'Cascadia Code', Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #output {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .line {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+            .line.err {
+                color: #ff5555;
+            }
+
+            .line.info {
+                color: #888888;
+            }
+
+            .line.cmd {
+                color: #ffffff;
+            }
+
+        .input-row {
+            display: flex;
+            padding: 8px 12px;
+            background: #121418;
+            border-top: 1px solid #222;
+        }
+
+        .prompt {
+            color: #1793d1;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        #cli-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+        }
+
+        /* --- NOTE EDITOR OVERLAY --- */
+        #note-editor {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #0c0d10;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .editor-header {
+            background: #1793d1;
+            color: #000;
+            padding: 4px 10px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #editor-textarea {
+            flex: 1;
+            background: #0c0d10;
+            color: #33ff00;
+            border: none;
+            padding: 12px;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            resize: none;
+        }
+
+        .editor-footer {
+            background: #121418;
+            color: #888;
+            padding: 6px 12px;
+            border-top: 1px solid #222;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Terminal Output -->
+    <div id="output">
+        <div class="line info">EZiER OS Shell v1.0. Type 'help' for available commands.</div>
+    </div>
+
+    <div class="input-row">
+        <span id="prompt-tag" class="prompt">sys32></span>
+        <input type="text" id="cli-input" autofocus autocomplete="off" spellcheck="false">
+    </div>
+
+    <!-- Micro Text Editor Overlay -->
+    <div id="note-editor">
+        <div class="editor-header">
+            <span id="editor-title">EZiER NOTE - editing...</span>
+            <span>Micro Text Editor</span>
+        </div>
+        <textarea id="editor-textarea" spellcheck="false"></textarea>
+        <div class="editor-footer">
+            <span>[Ctrl + S] Save | [Ctrl + X] Exit</span>
+            <span id="editor-status">Lines: 0</span>
+        </div>
+    </div>
+
+    <script type="module">
+        class TerminalEngine {
+            constructor() {
+                this.output = document.getElementById('output');
+                this.input = document.getElementById('cli-input');
+                this.promptTag = document.getElementById('prompt-tag');
+
+                this.editorOverlay = document.getElementById('note-editor');
+                this.editorTextarea = document.getElementById('editor-textarea');
+                this.editorTitle = document.getElementById('editor-title');
+                this.editorStatus = document.getElementById('editor-status');
+                this.activeEditFile = null;
+
+                this.commandDir = './commandsterm';
+                this.history = [];
+                this.historyIdx = -1;
+
+                // Load VFS from localStorage or fallback to defaults
+                this.vfs = this.loadVFS();
+                this.currentPath = '/sys32';
+
+                this.initListeners();
+                this.initEditorListeners();
+                this.updatePrompt();
+            }
+
+            // Persistence Helpers
+            loadVFS() {
+                const saved = localStorage.getItem('ezier_vfs');
+                if (saved) {
+                    try {
+                        return JSON.parse(saved);
+                    } catch (e) {
+                        console.error('Failed to parse saved VFS, using default:', e);
+                    }
+                }
+                return {
+                    'sys32': {
+                        'commandsterm': { 'cd.js': 'file', 'ls.js': 'file', 'help.js': 'file' },
+                        'EZiEROS.html': 'file',
+                        'terminal.html': 'file',
+                        'config.json': 'file'
+                    },
+                    'apps': {
+                        'calculator': { 'index.html': 'file' },
+                        'taskman': { 'index.html': 'file' }
+                    },
+                    'user': {
+                        'documents': { 'readme.txt': 'Welcome to EZiER OS!\nUse note to edit this file.' },
+                        'downloads': {}
+                    }
+                };
+            }
+
+            saveVFS() {
+                localStorage.setItem('ezier_vfs', JSON.stringify(this.vfs));
+            }
+
+            initListeners() {
+                document.body.addEventListener('click', () => {
+                    if (this.editorOverlay.style.display !== 'flex') {
+                        this.input.focus();
+                    }
+                });
+
+                this.input.addEventListener('keydown', async (e) => {
+                    if (e.key === 'Enter') {
+                        const raw = this.input.value.trim();
+                        this.input.value = '';
+                        if (!raw) return;
+
+                        this.history.push(raw);
+                        this.historyIdx = this.history.length;
+
+                        this.print(`${this.promptTag.textContent} ${raw}`, 'cmd');
+                        await this.exec(raw);
+                        this.updatePrompt();
+                    }
+                    else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (this.historyIdx > 0) {
+                            this.historyIdx--;
+                            this.input.value = this.history[this.historyIdx];
+                        }
+                    }
+                    else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (this.historyIdx < this.history.length - 1) {
+                            this.historyIdx++;
+                            this.input.value = this.history[this.historyIdx];
+                        } else {
+                            this.historyIdx = this.history.length;
+                            this.input.value = '';
+                        }
+                    }
+                });
+            }
+
+            initEditorListeners() {
+                this.editorTextarea.addEventListener('input', () => {
+                    const lines = this.editorTextarea.value.split('\n').length;
+                    this.editorStatus.textContent = `Lines: ${lines}`;
+                });
+
+                this.editorTextarea.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key.toLowerCase() === 's') {
+                        e.preventDefault();
+                        this.saveCurrentNote();
+                    } else if (e.ctrlKey && e.key.toLowerCase() === 'x') {
+                        e.preventDefault();
+                        this.closeNoteEditor();
+                    }
+                });
+            }
+
+            updatePrompt() {
+                const displayDir = this.currentPath.split('/').filter(Boolean).pop() || '/';
+                this.promptTag.textContent = `${displayDir}>`;
+            }
+
+            // Path Resolver Helper
+            resolveAbsolutePath(pathStr) {
+                let target = pathStr.startsWith('/')
+                    ? pathStr
+                    : `${this.currentPath}/${pathStr}`;
+
+                const parts = target.split('/').filter(Boolean);
+                const resolved = [];
+
+                for (const part of parts) {
+                    if (part === '..') {
+                        resolved.pop();
+                    } else if (part !== '.') {
+                        resolved.push(part);
+                    }
+                }
+                return '/' + resolved.join('/');
+            }
+
+            getVFSNode(pathStr) {
+                const absPath = this.resolveAbsolutePath(pathStr);
+                const parts = absPath.split('/').filter(Boolean);
+                let current = this.vfs;
+
+                if (parts.length === 0) return this.vfs;
+
+                for (const part of parts) {
+                    if (current && typeof current === 'object' && part in current) {
+                        current = current[part];
+                    } else {
+                        return null;
+                    }
+                }
+                return current;
+            }
+
+            openNoteEditor(filename) {
+                const currentDir = this.getVFSNode(this.currentPath);
+                if (!currentDir || typeof currentDir !== 'object') {
+                    this.print('note: invalid directory', 'err');
+                    return;
+                }
+
+                this.activeEditFile = filename;
+                const content = typeof currentDir[filename] === 'string' ? currentDir[filename] : '';
+
+                this.editorTitle.textContent = `EZiER NOTE - editing ${filename}`;
+                this.editorTextarea.value = content;
+                this.editorOverlay.style.display = 'flex';
+                this.editorTextarea.focus();
+
+                const lines = content.split('\n').length;
+                this.editorStatus.textContent = `Lines: ${lines}`;
+            }
+
+            saveCurrentNote() {
+                if (!this.activeEditFile) return;
+                const currentDir = this.getVFSNode(this.currentPath);
+                if (currentDir && typeof currentDir === 'object') {
+                    currentDir[this.activeEditFile] = this.editorTextarea.value;
+                    this.saveVFS();
+                    this.print(`Saved ${this.activeEditFile} (${this.editorTextarea.value.length} bytes)`, 'info');
+                }
+            }
+
+            closeNoteEditor() {
+                this.editorOverlay.style.display = 'none';
+                this.activeEditFile = null;
+                this.input.focus();
+            }
+
+            downloadFile(filename, content, type = 'text/plain') {
+                const blob = new Blob([content], { type });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            }
+
+            getSystemSpecs() {
+                const ua = navigator.userAgent;
+                let browser = "Unknown Browser";
+                if (ua.includes("Firefox/")) browser = "Firefox " + ua.split("Firefox/")[1].split(" ")[0];
+                else if (ua.includes("Edg/")) browser = "Edge " + ua.split("Edg/")[1].split(" ")[0];
+                else if (ua.includes("Chrome/")) browser = "Chrome " + ua.split("Chrome/")[1].split(" ")[0];
+                else if (ua.includes("Safari/")) browser = "Safari " + ua.split("Safari/")[1].split(" ")[0];
+
+                let gpu = "Generic WebGL Canvas";
+                try {
+                    const canvas = document.createElement("canvas");
+                    const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+                    if (gl) {
+                        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+                        if (debugInfo) {
+                            gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_STRING);
+                            gpu = gpu.replace(/ANGLE \((.*?), (.*?), (.*?)\)/, "$2 ($1)");
+                        }
+                    }
+                } catch (e) { }
+
+                const cpuCores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Logical Threads` : "Unknown";
+                const memory = navigator.deviceMemory ? `~${navigator.deviceMemory} GB` : "Quota Restricted";
+                const res = `${window.screen.width}x${window.screen.height} (${screen.colorDepth}-bit)`;
+
+                const totalSecs = Math.floor(performance.now() / 1000);
+                const mins = Math.floor(totalSecs / 60);
+                const secs = totalSecs % 60;
+                const uptime = `${mins}m ${secs}s`;
+
+                const vfsBytes = new Blob([JSON.stringify(this.vfs)]).size;
+                const vfsKB = (vfsBytes / 1024).toFixed(2);
+
+                return {
+                    user: "user@AwkOrSoft-OS",
+                    os: "EZiER OS: POSTAL 26h2",
+                    host: navigator.platform || "Web Engine",
+                    browser: browser,
+                    uptime: uptime,
+                    cpu: cpuCores,
+                    gpu: gpu,
+                    ram: memory,
+                    resolution: res,
+                    vfsStorage: `${vfsKB} KB / 5.00 MB (LocalStorage)`
+                };
+            }
+
+            async exec(commandLine) {
+                const [cmd, ...args] = commandLine.trim().split(/\s+/);
+
+                if (cmd === 'clear') {
+                    this.output.innerHTML = '';
+                    return;
+                }
+
+                if (cmd === 'neofetch') {
+                    const specs = this.getSystemSpecs();
+                    const title = specs.user;
+                    const underline = "-".repeat(title.length);
+
+                    const logo = [
+                        "  _        _     ___  ____ ____        _ ",
+                        " /_\\  _ _ | |__ / _ \\|  _ / ___|  ___ | |_ ",
+                        "/ _ \\| ' \\| / /| (_) |  _ \\___ \\ / _ \\|  _|",
+                        "/_/ \\_\\_||_|_\\_\\ \\___/|_|\\_|____/ \\___/ \\__|",
+                        "  ___                   _   _             ___         _ ",
+                        " / _ \\ _ __  ___ _ _ __ _| |_(_)_ _  __ _ / ___|_  _ _| |_ ___ _ __ ",
+                        "| (_) | '_ \\/ -_| '_/ _` |  _| | ' \\/ _` |\\___ \\ || (_-|  _/ -_| '  \\",
+                        " \\___/| .__/\\___|_| \\__,_|\\__|_|_||_\\__, ||____/\\_, /__/\\__\\___|_|_|_|",
+                        "      |_|                           |___/       |__/                 "
+                    ];
+
+                    // Render Logo Banner
+                    logo.forEach(line => this.print(line));
+
+                    // Render System Details
+                    this.print("");
+                    this.print(title);
+                    this.print(underline);
+                    this.print(`OS: ${specs.os}`);
+                    this.print(`Host: ${specs.host}`);
+                    this.print(`Browser: ${specs.browser}`);
+                    this.print(`Uptime: ${specs.uptime}`);
+                    this.print(`Resolution: ${specs.resolution}`);
+                    this.print(`CPU: ${specs.cpu}`);
+                    this.print(`GPU: ${specs.gpu}`);
+                    this.print(`Memory: ${specs.ram}`);
+                    this.print(`VFS Storage: ${specs.vfsStorage}`);
+                    this.print("");
+
+                    // Render ANSI color block bar
+                    this.print("███  ███  ███  ███  ███  ███  ███  ███", 'info');
+                    return;
+                }
+
+                if (cmd === 'ls') {
+                    let targetPath = args[0] || this.currentPath;
+                    const node = this.getVFSNode(targetPath);
+
+                    if (!node || typeof node !== 'object') {
+                        this.print(`ls: cannot access '${targetPath}': No such directory`, 'err');
+                        return;
+                    }
+
+                    const items = Object.keys(node).map(name => {
+                        return typeof node[name] === 'object' ? `${name}/` : name;
+                    });
+
+                    if (items.length === 0) {
+                        this.print('(directory is empty)', 'info');
+                    } else {
+                        this.print(items.join('  '));
+                    }
+                    return;
+                }
+
+                if (cmd === 'cd') {
+                    let target = args[0] || '/';
+                    const newPath = this.resolveAbsolutePath(target);
+                    const node = this.getVFSNode(newPath);
+
+                    if (node && typeof node === 'object') {
+                        this.currentPath = newPath;
+                    } else {
+                        this.print(`cd: no such directory: ${target}`, 'err');
+                    }
+                    return;
+                }
+
+                if (cmd === 'mkdir') {
+                    const makeParents = args.includes('-p');
+                    const targetPath = args.find(arg => !arg.startsWith('-'));
+
+                    if (!targetPath) {
+                        this.print('mkdir: missing operand', 'err');
+                        return;
+                    }
+
+                    const absPath = this.resolveAbsolutePath(targetPath);
+                    const parts = absPath.split('/').filter(Boolean);
+
+                    if (parts.length === 0) {
+                        this.print('mkdir: cannot create root directory', 'err');
+                        return;
+                    }
+
+                    let current = this.vfs;
+
+                    if (makeParents) {
+                        for (let i = 0; i < parts.length; i++) {
+                            const part = parts[i];
+                            if (current[part] === undefined) {
+                                current[part] = {};
+                            } else if (typeof current[part] !== 'object') {
+                                this.print(`mkdir: cannot create directory '${targetPath}': File exists in path`, 'err');
+                                return;
+                            }
+                            current = current[part];
+                        }
+                        this.saveVFS();
+                        this.print(`Created directory structure: ${targetPath}`, 'info');
+                    } else {
+                        const parentParts = parts.slice(0, -1);
+                        const newDirName = parts[parts.length - 1];
+
+                        for (const part of parentParts) {
+                            if (current[part] && typeof current[part] === 'object') {
+                                current = current[part];
+                            } else {
+                                this.print(`mkdir: cannot create directory '${targetPath}': No such file or directory`, 'err');
+                                return;
+                            }
+                        }
+
+                        if (current[newDirName] !== undefined) {
+                            this.print(`mkdir: cannot create directory '${targetPath}': File or directory exists`, 'err');
+                        } else {
+                            current[newDirName] = {};
+                            this.saveVFS();
+                            this.print(`Created directory: ${newDirName}`, 'info');
+                        }
+                    }
+                    return;
+                }
+
+                if (cmd === 'rm') {
+                    const recursive = args.includes('-r') || args.includes('-rf');
+                    const targetPath = args.find(arg => !arg.startsWith('-'));
+
+                    if (!targetPath) {
+                        this.print('rm: missing operand', 'err');
+                        return;
+                    }
+
+                    const absPath = this.resolveAbsolutePath(targetPath);
+                    const parts = absPath.split('/').filter(Boolean);
+
+                    if (parts.length === 0) {
+                        this.print('rm: cannot remove root directory', 'err');
+                        return;
+                    }
+
+                    const targetName = parts.pop();
+                    let current = this.vfs;
+
+                    for (const part of parts) {
+                        if (current[part] && typeof current[part] === 'object') {
+                            current = current[part];
+                        } else {
+                            this.print(`rm: cannot remove '${targetPath}': No such file or directory`, 'err');
+                            return;
+                        }
+                    }
+
+                    const target = current[targetName];
+
+                    if (target === undefined) {
+                        this.print(`rm: cannot remove '${targetPath}': No such file or directory`, 'err');
+                    } else if (typeof target === 'object' && !recursive) {
+                        this.print(`rm: cannot remove '${targetPath}': Is a directory (use -r to remove)`, 'err');
+                    } else {
+                        delete current[targetName];
+                        this.saveVFS();
+                        this.print(`Removed: ${targetPath}`, 'info');
+                    }
+                    return;
+                }
+
+                if (cmd === 'export') {
+                    const filename = args[0];
+                    if (!filename) {
+                        const jsonData = JSON.stringify(this.vfs, null, 2);
+                        this.downloadFile('ezier_vfs_backup.json', jsonData, 'application/json');
+                        this.print('Exported full VFS snapshot as ezier_vfs_backup.json', 'info');
+                        return;
+                    }
+
+                    const currentDir = this.getVFSNode(this.currentPath);
+                    if (!currentDir || typeof currentDir !== 'object') {
+                        this.print('export: invalid directory location', 'err');
+                        return;
+                    }
+
+                    const fileData = currentDir[filename];
+                    if (fileData === undefined) {
+                        this.print(`export: '${filename}': No such file`, 'err');
+                    } else if (typeof fileData === 'object') {
+                        this.print(`export: '${filename}' is a directory. Specify a file or run 'export' with no arguments for full backup.`, 'err');
+                    } else {
+                        this.downloadFile(filename, fileData, 'text/plain');
+                        this.print(`Exported file: ${filename}`, 'info');
+                    }
+                    return;
+                }
+
+                if (cmd === 'import') {
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.style.display = 'none';
+
+                    fileInput.addEventListener('change', (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const content = event.target.result;
+
+                            if (file.name.endsWith('.json')) {
+                                try {
+                                    const parsed = JSON.parse(content);
+                                    this.vfs = parsed;
+                                    this.saveVFS();
+                                    this.print(`Successfully imported system snapshot: ${file.name}`, 'info');
+                                    return;
+                                } catch (e) { }
+                            }
+
+                            const currentDir = this.getVFSNode(this.currentPath);
+                            if (currentDir && typeof currentDir === 'object') {
+                                currentDir[file.name] = content;
+                                this.saveVFS();
+                                this.print(`Imported file '${file.name}' into ${this.currentPath}`, 'info');
+                            } else {
+                                this.print('import: cannot save file, invalid path', 'err');
+                            }
+                        };
+                        reader.readAsText(file);
+                    });
+
+                    fileInput.click();
+                    return;
+                }
+
+                if (cmd === 'touch') {
+                    const filename = args[0];
+                    if (!filename) {
+                        this.print('touch: missing file operand', 'err');
+                        return;
+                    }
+
+                    const currentDir = this.getVFSNode(this.currentPath);
+                    if (currentDir && typeof currentDir === 'object') {
+                        if (currentDir[filename] === undefined) {
+                            currentDir[filename] = '';
+                            this.saveVFS();
+                            this.print(`Created file: ${filename}`, 'info');
+                        } else {
+                            this.print(`touch: ${filename} already exists`, 'info');
+                        }
+                    } else {
+                        this.print('touch: cannot create file, directory invalid', 'err');
+                    }
+                    return;
+                }
+
+                if (cmd === 'read' || cmd === 'cat') {
+                    const filename = args[0];
+                    if (!filename) {
+                        this.print(`${cmd}: missing file operand`, 'err');
+                        return;
+                    }
+
+                    const currentDir = this.getVFSNode(this.currentPath);
+                    if (!currentDir || typeof currentDir !== 'object') {
+                        this.print(`${cmd}: invalid directory`, 'err');
+                        return;
+                    }
+
+                    const fileData = currentDir[filename];
+
+                    if (fileData === undefined) {
+                        this.print(`${cmd}: ${filename}: No such file`, 'err');
+                    } else if (typeof fileData === 'object') {
+                        this.print(`${cmd}: ${filename}: Is a directory`, 'err');
+                    } else {
+                        this.print(fileData.length === 0 ? '(file is empty)' : fileData);
+                    }
+                    return;
+                }
+
+                if (cmd === 'note') {
+                    const filename = args[0];
+                    if (!filename) {
+                        this.print('usage: note <filename>', 'err');
+                        return;
+                    }
+                    this.openNoteEditor(filename);
+                    return;
+                }
+
+                // Fallback to commandsterm/ external module imports
+                const scriptPath = `${this.commandDir}/${cmd}.js`;
+
+                try {
+                    const module = await import(scriptPath);
+                    if (typeof module.run === 'function') await module.run(args, this);
+                    else if (typeof module.default === 'function') await module.default(args, this);
+                    else if (typeof module.execute === 'function') await module.execute(args, this);
+                } catch (err) {
+                    if (cmd === 'help') {
+                        this.print('EZiER OS Shell - Built-in Commands:');
+                        this.print('  help              - Show available commands');
+                        this.print('  neofetch          - Show system stats & architecture');
+                        this.print('  clear             - Clear terminal buffer');
+                        this.print('  cd [dir]          - Navigate VFS directories');
+                        this.print('  ls [dir]          - List directory contents');
+                        this.print('  mkdir [-p] <path> - Create directory (use -p for subfolders)');
+                        this.print('  rm [-r] <target>  - Delete a file or directory (-r for dir)');
+                        this.print('  import            - Import a local file or VFS JSON snapshot');
+                        this.print('  export [file]     - Export specific file or full system backup');
+                        this.print('  touch <file>      - Create an empty file');
+                        this.print('  read <file>       - Read file contents');
+                        this.print('  note <file>       - Open interactive text editor');
+                    } else {
+                        this.print(`Command not found or failed to load: ${cmd}`, 'err');
+                    }
+                }
+            }
+
+            print(text, type = 'out') {
+                const line = document.createElement('div');
+                line.className = `line ${type}`;
+                line.textContent = text;
+                this.output.appendChild(line);
+                this.output.scrollTop = this.output.scrollHeight;
+            }
+        }
+
+        const term = new TerminalEngine();
+    </script>
+</body>
+</html>

@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./animations.css">
     <style>
         :root {
             --taskbar-bg: rgba(12, 12, 20, 0.78);
@@ -1015,8 +1016,8 @@ body, html {
 </div>
 
 <script>
-    const OS_TYPE = 'POSTAL Developer Edition';
-    const CURRENT_VERSION = '0.1.5';
+    const OS_TYPE = 'POSTAL';
+    const CURRENT_VERSION = '1.2';
 
     async function populateAbout() {
         // Simple data
@@ -1040,8 +1041,7 @@ body, html {
 
     populateAbout();
 </script>
-
-<div id="installer-ui" class="settings-panel">
+ <div id="about-sysinfo">
     <h2>About EZiER OS</h2>
     <div class="developer-section">
         <h3>Developer</h3>
@@ -1161,24 +1161,25 @@ body, html {
     let setupData = {};
     const $ = id => document.getElementById(id);
 
-    const BUILT_IN_APPS = [
-        { id: 'AE', name: 'Awk Edge', icon: '../sys64/icons/AE.png', file: '../Program Files/Games/Awk Edge.html' },
-        { id: 'bal', name: 'Balatro', icon: '../sys64/icons/Bal.jpg', file: '../Program Files/Games/Balatro.html' },
-        { id: 'osh', name: 'OneShot', icon: '../sys64/icons/oneshot.png', file: '../Program Files/Games/Oneshot.html' },
-        { id: 'calc', name: 'Calculator', icon: 'https://img.icons8.com/color/48/calculator.png', file: '../Program Files/Games/Calc.html' },
-        { id: 'cc', name: 'Case Clicker', icon: 'https://internet.medialities.org/wp-content/uploads/2024/02/7a767-csgo-operation-10-details.jpg?w=810&h=580&crop=1', file: 'https://mtsl.dk/csgo/' },
-        { id: 'Gaz', name: 'Gaz Launcher', icon: '../sys64/icons/GazAppICO.png', file: 'https://ricksansez9-star.github.io/ezierosgaming' },
-        { id: 'taskman', name: 'Task Manager', icon: '', isSys: true, sysId: 'win-taskmanager' },
-        { id: 'set', name: 'Settings', icon: 'https://img.icons8.com/color/48/settings.png', isSys: true, sysId: 'win-settings' },
-        { id: 'installer', name: 'App Installer', icon: 'https://img.icons8.com/color/48/installing-updates.png', isSys: true, sysId: 'win-appinstaller' },
-        {id: 'aos2', name: 'Awk OS 2 VM', icon: 'https://imgs.search.brave.com/TBm2g9uyRRdKyVrZkLH1P0Ucfj8SwdpGZn5W7weDi9Y/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9wcmV2/aWV3LnJlZGQuaXQv/N2gxY204eG03NjY4/MS5naWY_d2lkdGg9/MTkyMCZhdXRvPXdl/YnAmcz01YTlmOGMy/NGNhMTU1ZGY1YzRm/MWUwZGM4ZTE1ZTc3/YWM0NDUxMDk0.gif', file: 'https://ricksansez9-star.github.io/awkos2vm/(BOOT%20THIS%20FIRST)%20BIOS.html'},
-        {id: 'ee', name: 'Ezier Explorer', icon: '../sys64/icons/ezierosstarticon.png', file: 'ezierexplore.html'},
-    ];
+        const BUILT_IN_APPS = [
+            { id: 'AE', name: 'Awk Edge', icon: '../sys64/icons/AE.png', file: '../Program Files/Awk Edge.html' },
+            { id: 'calc', name: 'Calculator', icon: 'https://img.icons8.com/color/48/calculator.png', file: '../Program Files/Calc.html' },
+            { id: 'cc', name: 'Case Clicker', icon: 'https://internet.medialities.org/wp-content/uploads/2024/02/7a767-csgo-operation-10-details.jpg?w=810&h=580&crop=1', file: 'https://mtsl.dk/csgo/' },
+            { id: 'Gaz', name: 'Gaz Launcher', icon: '../sys64/icons/GazAppICO.png', file: 'https://ricksansez9-star.github.io/ezierosgaming' },
+            { id: 'taskman', name: 'Task Manager', icon: '', isSys: true, sysId: 'win-taskmanager' },
+            { id: 'set', name: 'Settings', icon: 'https://img.icons8.com/color/48/settings.png', isSys: true, sysId: 'win-settings' },
+            { id: 'installer', name: 'App Installer', icon: 'https://img.icons8.com/color/48/installing-updates.png', isSys: true, sysId: 'win-appinstaller' },
+            { id: 'aos2', name: 'Awk OS 2 VM', icon: 'https://imgs.search.brave.com/TBm2g9uyRRdKyVrZkLH1P0Ucfj8SwdpGZn5W7weDi9Y/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9wcmV2/aWV3LnJlZGQuaXQv/N2gxY204eG03NjY4/MS5naWY_d2lkdGg9/MTkyMCZhdXRvPXdl/YnAmcz01YTlmOGMy/NGNhMTU1ZGY1YzRm/MWUwZGM4ZTE1ZTc3/YWM0NDUxMDk0.gif', file: 'https://ricksansez9-star.github.io/awkos2vm/(BOOT%20THIS%20FIRST)%20BIOS.html' },
+            { id: 'ee', name: 'Ezier Explorer', icon: '../sys64/icons/ezierosstarticon.png', file: 'ezierexplore.html' },
+            { id: 'term', name: 'Terminal', icon: '../sys64/icons/terminal.png', file: 'terminal.html' }
+        ];
+        //  This is the wallpaper shit, I'd like to mention if you are potentially reading this, the Mac OS 23-42 are NOT made by Awkwarrrdd, they are made by Apple and downloaded from The Frutiger Aero Archive 
+        // Also some wallpapers ARE made by Awkwarrrdd, Awk is getting into phototogerphy, e.g. thelake.png, lake.png.
         const WALLPAPER_GALLERY = [
-            { name: 'EZiER OS: Postal', file: '../sys64/wallpapers/EZIER_POSTAL.png', thumb: '../sys64/wallpapers/EZIER_POSTAL.jpg' },
-            { name: 'Aero', file: '../sys64/wallpapers/areo.png', thumb: '../sys64/wallpapers/areo.jpg' },
-            { name: 'Asadal', file: '../sys64/wallpapers/asadal.png', thumb: '../sys64/wallpapers/asadal.jpg' },
-            { name: 'Classic', file: '../sys64/wallpapers/imag.jpg', thumb: '../sys64/wallpapers/imag.jpg' },
+            { name: 'EZiER OS: Postal', file: '../sys64/wallpapers/EZIER_POSTAL.png', thumb: '../sys64/wallpapers/EZIER_POSTAL.png' },
+            { name: 'Aero', file: '../sys64/wallpapers/areo.png', thumb: '../sys64/wallpapers/areo.png' },
+            { name: 'Asadal', file: '../sys64/wallpapers/asadal.png', thumb: '../sys64/wallpapers/asadal.png' },
+            { name: 'WTFD', file: '../sys64/wallpapers/imag.png', thumb: '../sys64/wallpapers/imag.jpg' },
             { name: 'macOS 23', file: '../sys64/wallpapers/mac_os_23.jpg', thumb: '../sys64/wallpapers/mac_os_23.jpg' },
             { name: 'macOS 24', file: '../sys64/wallpapers/mac_os_24.jpg', thumb: '../sys64/wallpapers/mac_os_24.jpg' },
             { name: 'macOS 35', file: '../sys64/wallpapers/mac_os_35.jpg', thumb: '../sys64/wallpapers/mac_os_35.jpg' },
@@ -1190,7 +1191,10 @@ body, html {
             { name: 'macOS 41', file: '../sys64/wallpapers/mac_os_41.jpg', thumb: '../sys64/wallpapers/mac_os_41.jpg' },
             { name: 'macOS 42', file: '../sys64/wallpapers/mac_os_42.jpg', thumb: '../sys64/wallpapers/mac_os_42.jpg' },
             { name: 'Default Wallpaper', file: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.png', thumb: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.png' },
-            { name: '90s', file: '../sys64/wallpapers/90s.png', thumb: '../sys64/wallpapers/90s.png' }
+            { name: '90s', file: '../sys64/wallpapers/90s.jpg', thumb: '../sys64/wallpapers/90s.jpg' },
+            { name: 'lake.png', file: '../sys64/wallpapers/lake.png', thumb: '../sys64/wallpapers/lake.png' },
+            { name: 'The Lake ', file: '../sys64/wallpapers/the_lake.png', thumb: '../sys64/wallpapers/the_lake.png' },
+            { name: 'Aero Sorta', file: '../sys64/wallpapers/Areosorta.png', thumb: '../sys64/wallpapers/Areosorta.png' },
         ];
     // ═══════════════════════════════════════════════════════
     function getAccount() {
@@ -1221,13 +1225,13 @@ body, html {
     function setupNext(n){ if(n===3){ const name=$('setup-name').value.trim(); const username=$('setup-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,''); const pass=$('setup-pass').value; const pass2=$('setup-pass2').value; const err=$('setup-error-account'); if(!name){err.textContent='Display name is required.';return;} if(!username||username.length<2){err.textContent='Username must be at least 2 characters.';return;} if(pass.length<4){err.textContent='Password must be at least 4 characters.';return;} if(pass!==pass2){err.textContent='Passwords do not match.';return;} err.textContent=''; setupData.name=name; setupData.username=username; setupData.password=pass; $('setup-avatar-initials').textContent=name[0].toUpperCase(); } gotoSetupStep(n); }
 
     // ── TERMS OF SERVICE GATE ──
-    const TOS_FALLBACK_TEXT = `TERMS OF SERVICE FOR EZiER OS
-Last Updated: June 30, 2026
+    const TOS_FALLBACK_TEXT = `TERMS OF SERVICE FOR EZiER OS Postal
+Last Updated: September 7th, 2026
 
 Please read these Terms of Service ("Terms") carefully before using EZiER OS (including all versions, sub-editions, and updates, specifically "POSTAL Developer Edition"). By accessing or utilizing this web-based operating system environment, you agree to be bound by these Terms. If you do not agree to these Terms, do not use the software.
 
 1. ACKNOWLEDGMENT OF NON-PROFIT & HOBBYIST NATURE
-EZiER OS is an open-source, non-profit, educational, and hobbyist web application project developed by Awkwarrrdd (ricksansez9-star). It is designed strictly for personal entertainment, customization experiments, and educational demonstration purposes. No commercial monetization, premium tiers, or paid distribution structures exist under official development.
+EZiER OS is an open-source, non-profit, educational, and hobbyist web application project created by Awkwarrrdd (ricksansez9-star). It is designed strictly for personal entertainment, customization experiments, and educational demonstration purposes. No commercial monetization, premium tiers, or paid distribution structures exist under official development.
 
 2. OWNERSHIP OF ORIGINAL TITLES & INTERNAL GAMES
 - The software includes original creative projects developed natively by the creator. Specifically, the game "ZSA" is an original work entirely created and developed by Awkwarrrdd. All rights, intellectual property, and creative assets associated with ZSA belong exclusively to the developer.
@@ -1242,7 +1246,7 @@ The software includes a built-in wallpaper gallery containing various digital ba
 4. "AS-IS" SOFTWARE & LIMITATION OF LIABILITY
 EZiER OS RUNS ENTIRELY WITHIN THE USER'S WEB BROWSER AND UTILIZES LOCAL STORAGE (LOCALSTORAGE) AND CLIENT-SIDE RUNTIMES.
 - THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
-- IN NO EVENT SHALL THE DEVELOPER (AWKWARRRDD / RICKSANSEZ9-STAR) BE LIABLE FOR ANY CLAIM, DAMAGES, LOSS OF DATA (INCLUDING RESET LOCALSTORAGE OR BACKUP FILE CORRUPTION), HARDWARE DAMAGE, SYSTEM CRASHES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- IN NO EVENT SHALL AwkOrSoft BE LIABLE FOR ANY CLAIM, DAMAGES, LOSS OF DATA (INCLUDING RESET LOCALSTORAGE OR BACKUP FILE CORRUPTION), HARDWARE DAMAGE, SYSTEM CRASHES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 5. USER-INSTALLED CUSTOM APPLICATIONS & SANDBOXING
 EZiER OS features an App Installer mechanism capable of processing custom web applications via raw URLs, HTML files, or compressed ZIP structures.
@@ -1253,6 +1257,7 @@ EZiER OS features an App Installer mechanism capable of processing custom web ap
 - EZiER OS operates locally within your browser sandbox. Your account credentials (passwords, usernames, display names) and customization preferences are saved directly to your local web storage.
 - The developer does not host central databases tracking your personal data, unencrypted passwords, or telemetry logs.
 - You are solely responsible for managing your recovery vectors by utilizing the "Export Backup (.ezierbackupfile)" feature. If your browser cache or web database is cleared, the developer cannot recover your account.
+To avoid this it is strongly recommended to export a backup file and store it in a secure location, like a NAS , external drive, we do not promote cloud based solutions.
 
 7. ACCEPTABLE USE
 You agree not to modify or use EZiER OS to host, link to, or propagate malicious software, perform denial-of-service attempts against external web frames via internal app views, or violate any local, state, or international laws.
@@ -1261,7 +1266,7 @@ You agree not to modify or use EZiER OS to host, link to, or propagate malicious
 The developer reserves the complete right to update, modify, suspend, or discontinue any branch, platform repository, or feature of EZiER OS at any time without prior notification or liability.
 
 -------------------------------------------------------------------------------
-EZiER OS: POSTAL — Built by technical tinkerers, for technical tinkerers.`;
+EZiER OS: POSTAL — Built by developers, for developers.`;
 
     function loadTermsOfService(){
         const box = $('setup-tos-box');
@@ -1510,7 +1515,7 @@ EZiER OS: POSTAL — Built by technical tinkerers, for technical tinkerers.`;
             file: fileUrl,
             custom: true
         });
-        saveCustomApps(apps);
+        saveCustomApps(apps);e
 
         document.getElementById('new-app-name').value = '';
         document.getElementById('new-app-url').value = '';
@@ -2267,9 +2272,66 @@ EZiER OS: POSTAL — Built by technical tinkerers, for technical tinkerers.`;
     initOS();
     </script>
     <script src="updatechecker.js"></script>
-    <script src="../hinux/terminal.js"></script>
-    <!-- Console Installer feature: installs apps from .ezstaller packages -->
+        <!-- Console Installer feature: installs apps from .ezstaller packages -->
     <script src="ezstaller-format.js"></script>
     <script src="console-installer.js"></script>
+    <script src="controller.js"></script>
+    <script src="debugkey.js" defer></script>
+
+  
 </body>
 </html>
+
+<!-- animations init: add classes to common regions for subtle animations -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    // Respect system reduced motion
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // Quick performance probe: measure frames over ~500ms
+    const perfProbe = async () => new Promise(resolve => {
+      const start = performance.now();
+      let frames = 0;
+      let rafId = null;
+      const step = (t) => { frames++; if (t - start < 520) rafId = requestAnimationFrame(step); else { cancelAnimationFrame(rafId); const elapsed = t - start; const fps = (frames / elapsed) * 1000; resolve({ fps, frames, elapsed }); } };
+      rafId = requestAnimationFrame(step);
+    });
+
+    const stats = await perfProbe();
+    const hwC = navigator.hardwareConcurrency || 1;
+    const mem = navigator.deviceMemory || 1;
+    const lowPerf = (stats.fps < 35) || hwC <= 1 || mem <= 1;
+    if (lowPerf) {
+      console.log('Adjusting to specs');
+      document.documentElement.classList.add('ez-lowperf');
+      // Minimal animation: only subtle fades on essential UI
+      document.querySelectorAll('#taskbar, .taskbar, .tray').forEach(el => el.classList.add('anim-fade'));
+      return; // skip further animation setup
+    }
+
+    const addIf = (sel, cls) => { document.querySelectorAll(sel).forEach(el => { el.classList.add('ez-animated'); el.classList.add(cls); }); };
+    // Apply to taskbar, windows, dialogs, buttons, inputs, menus
+    // Taskbar should not be translated; use a fade-only class to avoid layout shift
+    addIf('#taskbar, .taskbar, .tray', 'anim-fade');
+    addIf('.window, .ez-window, .app-window', 'animate-appear-up');
+    addIf('.modal, .dialog, #lock-screen, #setup-screen', 'animate-appear-pop');
+    addIf('button, .btn, .menu-item', 'anim-pop');
+    addIf('input, textarea, select', 'anim-fade');
+    // Add hover lift to interactive controls
+    document.querySelectorAll('button, .btn, .window').forEach(el => el.classList.add('animate-hover-lift'));
+    // Stagger lists where present
+    document.querySelectorAll('.list, .menu-list, .grid').forEach(container => {
+      container.classList.add('ez-stagger');
+      // mark children with CSS variable index to stagger nicely
+      Array.from(container.children).forEach((c,i) => c.style.setProperty('--i', String(i)));
+      // trigger the init class on the next animation frame to avoid layout thrash
+      requestAnimationFrame(() => {
+        // force style flush then add class so animations start immediately and smoothly
+        void container.offsetWidth;
+        container.classList.add('ez-stagger-init');
+      });
+    });
+  } catch (e) { console.warn('Animations init failed:', e); }
+});
+</script>
