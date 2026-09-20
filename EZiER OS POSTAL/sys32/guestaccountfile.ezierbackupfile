@@ -1,0 +1,26 @@
+{
+  "format": "ezierbackupfile",
+  "app": "EZIER OS",
+  "osType": "POSTAL",
+  "version": "2.1",
+  "exportedAt": "2026-09-18T20:45:01.186Z",
+  "data": {
+    "ezier_accent_color": "#e67e22",
+    "ezier_clock_12h": "1",
+    "ezier_reduce_motion": "0",
+    "ezier_wallpaper": "../sys64/wallpapers/gacc.png",
+    "ezier_desktop_welcome_text": "Welcome To the Guest Account.",
+    "ezier_desktop_watermark": "WARNING: Progress will not be saved, please make an account to save your data",
+    "ezieros_account": "{\"name\":\"Guest\",\"username\":\"guest\",\"password\":\"    \",\"avatar\":\"\",\"created\":1789763620525}",
+    "ezier_theme_mode": "dark",
+    "ezier_glass_blur": "20",
+    "ezier_taskbar_opacity": "0.85",
+    "ezier_compact_start": "0",
+    "ezier_show_desktop_icons": "1",
+    "ezier_wallpaper_fit": "cover",
+    "ezier_floating_taskbar": "0",
+    "ezier_taskbar_position": "bottom",
+    "update_pref": "always",
+    "ezieros_pinned_apps": "[\"AE\",\"calc\",\"taskman\"]"
+  }
+}

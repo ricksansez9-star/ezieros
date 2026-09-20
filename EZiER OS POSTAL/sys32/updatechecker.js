@@ -1,11 +1,9 @@
 // --- CONFIGURATION ---
 const OS_TYPE = "POSTAL"; // Clear, exact identifier
-const CURRENT_VERSION = "2.0"; // Standard SemVer tag matching your new naming scheme
+const CURRENT_VERSION = "2.1"; // Standard SemVer tag matching your new naming scheme
 
-// If OS_TYPE includes "DEV", grab the dev file; otherwise grab the stable one
-const VERSION_URL = OS_TYPE.includes("DEV") 
-    ? "https://raw.githubusercontent.com/ricksansez9-star/ezierosdownloadpage/refs/heads/main/osfiles/postaldevversion.json"
-    : "https://raw.githubusercontent.com/ricksansez9-star/ezierosdownloadpage/refs/heads/main/osfiles/postalversion.json";
+/* Grabs Update URL to compare */
+const VERSION_URL = "https://raw.githubusercontent.com/ricksansez9-star/ezierosdownloadpage/refs/heads/main/osfiles/postalversion.json";
 
 async function checkForUpdates() {
     // 1. Check if user permanently muted updates

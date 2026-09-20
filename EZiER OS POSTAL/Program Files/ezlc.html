@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EZiER Media Player</title>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --panel-bg: #2d2d2d;
+            --accent-color: #e67e22;
+            --text-color: #ffffff;
+            --text-secondary: #aaaaaa;
+            --border-color: #3f3f3f;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Main Player Container */
+        .player-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+            position: relative;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        /* Playlist Sidebar */
+        .playlist-sidebar {
+            width: 300px;
+            background-color: var(--panel-bg);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .playlist {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .playlist-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background 0.2s;
+        }
+
+        .playlist-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .playlist-item.active {
+            background-color: var(--accent-color);
+            color: #fff;
+            font-weight: 500;
+        }
+
+        /* Controls Overlay */
+        .controls-bar {
+            padding: 12px 16px;
+            background-color: var(--panel-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        button {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .track-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            background: var(--panel-bg);
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Video/Audio Display Area -->
+    <div class="player-container">
+        <video id="mediaPlayer" controls></video>
+        <div class="track-info" id="trackInfo">No media loaded</div>
+    </div>
+
+    <!-- Playlist Sidebar -->
+    <div class="playlist-sidebar">
+        <div class="sidebar-header">
+            <span>Media Library</span>
+            <button onclick="scanMediaDirectory()">Scan Dir</button>
+        </div>
+        <ul class="playlist" id="playlist">
+            <!-- Populated via script -->
+        </ul>
+    </div>
+
+    <script>
+        // Target media directory based on EZiER OS file paths
+        const MEDIA_PATH = "../sys32/media/";
+
+        // Pre-configured list or discovered files. 
+        // (Note: Browsers restrict direct folder scraping via fetch() unless served via a backend index or predefined manifest json)
+        let mediaFiles = [
+            { name: "Sample Video.mp4", url: MEDIA_PATH + "sample.mp4" },
+            { name: "Startup Theme.ogg", url: MEDIA_PATH + "startup.ogg" },
+            { name: "Test Audio Track.mp3", url: MEDIA_PATH + "test.mp3" }
+        ];
+
+        let currentIndex = 0;
+        const player = document.getElementById('mediaPlayer');
+        const playlistElement = document.getElementById('playlist');
+        const trackInfo = document.getElementById('trackInfo');
+
+        function initPlaylist() {
+            playlistElement.innerHTML = "";
+            mediaFiles.forEach((file, index) => {
+                const li = document.createElement('li');
+                li.className = `playlist-item ${index === currentIndex ? 'active' : ''}`;
+                li.innerText = file.name;
+                li.onclick = () => loadAndPlay(index);
+                playlistElement.appendChild(li);
+            });
+        }
+
+        function loadAndPlay(index) {
+            if (index < 0 || index >= mediaFiles.length) return;
+            currentIndex = index;
+            const currentFile = mediaFiles[currentIndex];
+
+            player.src = currentFile.url;
+            player.play().catch(e => console.log("Autoplay blocked or file missing:", e));
+            
+            trackInfo.innerText = `Now Playing: ${currentFile.name}`;
+            
+            // Update active styles in DOM
+            document.querySelectorAll('.playlist-item').forEach((el, idx) => {
+                el.classList.toggle('active', idx === currentIndex);
+            });
+        }
+
+        // Auto-advance when media finishes
+        player.onended = () => {
+            if (currentIndex < mediaFiles.length - 1) {
+                loadAndPlay(currentIndex + 1);
+            }
+        };
+
+        // Simulated directory scan (fetches manifest or directory index if available)
+        async function scanMediaDirectory() {
+            try {
+                // If you host a JSON index file of the media folder (e.g., media.json)
+                const response = await fetch(MEDIA_PATH + "media_index.json");
+                if (response.ok) {
+                    const data = await response.json();
+                    mediaFiles = data.files;
+                    initPlaylist();
+                    alert("Media directory scanned successfully!");
+                } else {
+                    throw new Error("No index found");
+                }
+            } catch (e) {
+                // Fallback: reload default array if no index file is detected
+                initPlaylist();
+                console.log("Using built-in playlist manifest.");
+            }
+        }
+
+        // Initialize on load
+        initPlaylist();
+    </script>
+</body>
+</html>

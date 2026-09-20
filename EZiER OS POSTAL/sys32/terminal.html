@@ -566,6 +566,50 @@
                     return;
                 }
 
+                if (cmd === 'lsync') {
+    const action = args[0]; // 'save' or 'load'
+    const key = args[1] || 'ezier_media_files';
+
+    if (action === 'export') {
+        const data = localStorage.getItem(key);
+        if (!data) {
+            this.print(`lsync: no data found in localStorage under key '${key}'`, 'err');
+            return;
+        }
+        const blob = new Blob([data], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${key}_backup.json`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        this.print(`Exported localStorage key '${key}' to file.`, 'info');
+    } 
+    else if (action === 'import') {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.json';
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    localStorage.setItem(key, event.target.result);
+                    this.print(`Successfully imported data into localStorage key '${key}'.`, 'info');
+                } catch (err) {
+                    this.print(`lsync import failed: ${err.message}`, 'err');
+                }
+            };
+            reader.readAsText(file);
+        });
+        fileInput.click();
+    } 
+    else {
+        this.print('usage: lsync <export|import> [storage_key]', 'err');
+    }
+    return;
+}
+
                 if (cmd === 'export') {
                     const filename = args[0];
                     if (!filename) {
