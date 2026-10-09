@@ -1,6 +1,6 @@
 // --- CONFIGURATION ---
 const OS_TYPE = "POSTAL"; // Clear, exact identifier
-const CURRENT_VERSION = "2.1"; // Standard SemVer tag matching your new naming scheme
+const CURRENT_VERSION = "2.2"; // Standard SemVer tag matching your new naming scheme
 
 /* Grabs Update URL to compare */
 const VERSION_URL = "https://raw.githubusercontent.com/ricksansez9-star/ezierosdownloadpage/refs/heads/main/osfiles/postalversion.json";

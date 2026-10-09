@@ -79,7 +79,7 @@
             margin: 0; padding: 0; height: 100%;
             font-family: var(--font-ui);
             font-size: 14px;
-            background: #0b0b14 url('../sys64/icons/EZIEROSDEFAULTPAPER.png') center/cover;
+            background: #0b0b14 url('../sys64/icons/EZIEROSDEFAULTPAPER.jpg') center/cover;
             background-attachment: fixed;
             overflow: hidden;
             cursor: default;
@@ -1515,27 +1515,31 @@
 
     //  This is the wallpaper shit, I'd like to mention if you are potentially reading this, the Mac OS 23-42 are NOT made by Awkwarrrdd, they are made by Apple and downloaded from The Frutiger Aero Archive
     //  Also some wallpapers ARE made by Awkwarrrdd, Awk is getting into phototogerphy, e.g. thelake.png, lake.png.
-    const WALLPAPER_GALLERY = [
-        { name: 'EZiER OS: Postal', file: '../sys64/wallpapers/EZIER_POSTAL.png', thumb: '../sys64/wallpapers/EZIER_POSTAL.png' },
-        { name: 'Aero', file: '../sys64/wallpapers/areo.png', thumb: '../sys64/wallpapers/areo.png' },
-        { name: 'Asadal', file: '../sys64/wallpapers/asadal.png', thumb: '../sys64/wallpapers/asadal.png' },
-        { name: 'WTFD', file: '../sys64/wallpapers/imag.png', thumb: '../sys64/wallpapers/imag.jpg' },
-        { name: 'macOS 23', file: '../sys64/wallpapers/mac_os_23.jpg', thumb: '../sys64/wallpapers/mac_os_23.jpg' },
-        { name: 'macOS 24', file: '../sys64/wallpapers/mac_os_24.jpg', thumb: '../sys64/wallpapers/mac_os_24.jpg' },
-        { name: 'macOS 35', file: '../sys64/wallpapers/mac_os_35.jpg', thumb: '../sys64/wallpapers/mac_os_35.jpg' },
-        { name: 'macOS 36', file: '../sys64/wallpapers/mac_os_36.jpg', thumb: '../sys64/wallpapers/mac_os_36.jpg' },
-        { name: 'macOS 37', file: '../sys64/wallpapers/mac_os_37.jpg', thumb: '../sys64/wallpapers/mac_os_37.jpg' },
-        { name: 'macOS 38', file: '../sys64/wallpapers/mac_os_38.jpg', thumb: '../sys64/wallpapers/mac_os_38.jpg' },
-        { name: 'macOS 39', file: '../sys64/wallpapers/mac_os_39.jpg', thumb: '../sys64/wallpapers/mac_os_39.jpg' },
-        { name: 'macOS 40', file: '../sys64/wallpapers/mac_os_40.jpg', thumb: '../sys64/wallpapers/mac_os_40.jpg' },
-        { name: 'macOS 41', file: '../sys64/wallpapers/mac_os_41.jpg', thumb: '../sys64/wallpapers/mac_os_41.jpg' },
-        { name: 'macOS 42', file: '../sys64/wallpapers/mac_os_42.jpg', thumb: '../sys64/wallpapers/mac_os_42.jpg' },
-        { name: 'Default Wallpaper', file: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.png', thumb: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.png' },
-        { name: '90s', file: '../sys64/wallpapers/90s.jpg', thumb: '../sys64/wallpapers/90s.jpg' },
-        { name: 'lake.png', file: '../sys64/wallpapers/lake.png', thumb: '../sys64/wallpapers/lake.png' },
-        { name: 'The Lake ', file: '../sys64/wallpapers/the_lake.png', thumb: '../sys64/wallpapers/the_lake.png' },
-        { name: 'Aero Sorta', file: '../sys64/wallpapers/Areosorta.png', thumb: '../sys64/wallpapers/Areosorta.png' },
-    ];
+    //Note from update 2.2: Changed all .png to .jpg for optimization.
+const WALLPAPER_GALLERY = [
+    { name: 'EZiER OS: Postal', file: '../sys64/wallpapers/EZIER_POSTAL.jpg', thumb: '../sys64/wallpapers/EZIER_POSTAL.jpg' },
+    { name: 'Aero', file: '../sys64/wallpapers/areo.jpg', thumb: '../sys64/wallpapers/areo.jpg' },
+    { name: 'Asadal', file: '../sys64/wallpapers/asadal.jpg', thumb: '../sys64/wallpapers/asadal.jpg' },
+    { name: 'WTFD', file: '../sys64/wallpapers/imag.jpg', thumb: '../sys64/wallpapers/imag.jpg' },
+    { name: 'macOS 23', file: '../sys64/wallpapers/mac_os_23.jpg', thumb: '../sys64/wallpapers/mac_os_23.jpg' },
+    { name: 'macOS 24', file: '../sys64/wallpapers/mac_os_24.jpg', thumb: '../sys64/wallpapers/mac_os_24.jpg' },
+    { name: 'macOS 35', file: '../sys64/wallpapers/mac_os_35.jpg', thumb: '../sys64/wallpapers/mac_os_35.jpg' },
+    { name: 'macOS 36', file: '../sys64/wallpapers/mac_os_36.jpg', thumb: '../sys64/wallpapers/mac_os_36.jpg' },
+    { name: 'macOS 37', file: '../sys64/wallpapers/mac_os_37.jpg', thumb: '../sys64/wallpapers/mac_os_37.jpg' },
+    { name: 'macOS 38', file: '../sys64/wallpapers/mac_os_38.jpg', thumb: '../sys64/wallpapers/mac_os_38.jpg' },
+    { name: 'macOS 39', file: '../sys64/wallpapers/mac_os_39.jpg', thumb: '../sys64/wallpapers/mac_os_39.jpg' },
+    { name: 'macOS 40', file: '../sys64/wallpapers/mac_os_40.jpg', thumb: '../sys64/wallpapers/mac_os_40.jpg' },
+    { name: 'macOS 41', file: '../sys64/wallpapers/mac_os_41.jpg', thumb: '../sys64/wallpapers/mac_os_41.jpg' },
+    { name: 'macOS 42', file: '../sys64/wallpapers/mac_os_42.jpg', thumb: '../sys64/wallpapers/mac_os_42.jpg' },
+    { name: 'Default Wallpaper', file: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.jpg', thumb: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.jpg' },
+    { name: '90s', file: '../sys64/wallpapers/90s.jpg', thumb: '../sys64/wallpapers/90s.jpg' },
+    { name: 'lake', file: '../sys64/wallpapers/lake.jpg', thumb: '../sys64/wallpapers/lake.jpg' },
+    { name: 'The Lake ', file: '../sys64/wallpapers/the_lake.jpg', thumb: '../sys64/wallpapers/the_lake.jpg' },
+    { name: 'Aero Sorta', file: '../sys64/wallpapers/Areosorta.jpg', thumb: '../sys64/wallpapers/Areosorta.jpg' },
+    { name: 'STREET PASS!', file: '../sys64/wallpapers/streetpass.jpg', thumb: '../sys64/wallpapers/streetpass.jpg' },
+    { name:'CPurpleKat', file: '../sys64/wallpapers/cpurplecat.jpg', thumb: '../sys64/wallpapers/cpurplecat.jpg' },
+    { name: 'You', file: '../sys64/wallpapers/you.jpg', thumb: '../sys64/wallpapers/you.jpg' },
+]
 
     // ERROR_POOL may be supplied by one of the add-on scripts loaded at the end of the
     // page. Never declare that name here — fall back to this list when it's missing.
