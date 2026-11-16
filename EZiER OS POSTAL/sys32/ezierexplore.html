@@ -1,0 +1,45 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ezier Explorer</title><script src="ezrive.js"></script>
+<style>
+body{display:flex;flex-direction:column}#path{flex:1;min-width:60px}#main{flex:1;display:flex;min-height:0}
+#side{width:170px;padding:8px;border-right:1px solid #ffffff17;overflow:auto}
+.drv{padding:8px;border-radius:6px;cursor:pointer}.drv:hover,.drv.on{background:#ffffff14}.drv small{display:block;opacity:.55}
+#files{flex:1;display:grid;grid-template-columns:repeat(auto-fill,96px);grid-auto-rows:104px;gap:6px;padding:10px;overflow:auto;align-content:start}
+.it{text-align:center;padding:6px;border-radius:6px;overflow:hidden}.it:hover{background:#ffffff10}.it.sel{background:#4cc2ff33}
+.ic{height:56px;font-size:40px;line-height:56px}.ic img{max-width:100%;max-height:56px;border-radius:4px}
+.nm{font-size:12px;word-break:break-all;max-height:30px;overflow:hidden}
+#info{padding:6px 12px;border-top:1px solid #ffffff17;font-size:12px;opacity:.75}
+body.drop #files{outline:2px dashed #4cc2ff;outline-offset:-6px}.empty{grid-column:1/-1;opacity:.5;padding:10px}
+</style></head><body>
+<div id="bar"><button id="up" title="Up">↑</button><input id="path" readonly><button id="mk">New folder</button><button id="nf">New file</button><button id="del">Delete</button><button id="imp" class="pri">Import</button><input type="file" id="fi" multiple hidden></div>
+<div id="main"><div id="side"></div><div id="files"></div></div><div id="info"></div>
+<script>
+const $=id=>document.getElementById(id),IMG=/\.(png|jpe?g|gif|webp|svg)$/i;let cwd='C:/',sel=null;
+const ico=it=>it.dir?'📁':/\.app$/i.test(it.name)?'🧩':IMG.test(it.name)?'🖼️':/\.(mp3|wav|ogg|m4a)$/i.test(it.name)?'🎵':/\.(mp4|webm|mov)$/i.test(it.name)?'🎬':/\.(html?|js|css|json|md)$/i.test(it.name)?'📜':'📄';
+function go(p){cwd=p.replace(/\/+$/,'')+'/';render()}
+function render(){
+  const items=EZRIVE.ls(cwd)||[];sel=null;$('path').value=cwd;
+  $('side').innerHTML=EZRIVE.drives().map(d=>`<div class="drv ${cwd.startsWith(d.id)?'on':''}" data-d="${d.id}">💽 ${d.label} (${d.id})<small>${(d.used/1024).toFixed(1)} KB used</small></div>`).join('');
+  $('files').innerHTML=items.length?'':'<div class="empty">Empty folder. Drop files here to import.</div>';
+  items.forEach(it=>{
+    const full=cwd+it.name,src=IMG.test(it.name)&&EZRIVE.read(full),d=document.createElement('div');d.className='it';
+    d.innerHTML=`<div class="ic">${src&&src.startsWith('data:image/')?`<img src="${src}">`:ico(it)}</div><div class="nm"></div>`;
+    d.lastChild.textContent=it.name;
+    d.onclick=()=>{sel=it;[...$('files').children].forEach(c=>c.classList.remove('sel'));d.classList.add('sel');$('info').textContent=`${it.name} · ${it.dir?'Folder':'File'} · ${it.size.toLocaleString()} bytes · ${full}`};
+    d.ondblclick=()=>it.dir?go(full):EZRIVE.open(full);$('files').appendChild(d);
+  });
+  $('info').textContent=`${items.length} item${items.length==1?'':'s'}`;
+}
+$('side').onclick=e=>{const d=e.target.closest('.drv');if(d)go(d.dataset.d+'/')};
+$('up').onclick=()=>{const m=cwd.replace(/\/$/,'').split('/');if(m.length>1)m.pop();go(m.join('/')||cwd.slice(0,2))};
+$('mk').onclick=()=>{const n=prompt('Folder name');if(n){EZRIVE.mkdir(cwd+n);render()}};
+$('nf').onclick=()=>{const n=prompt('File name','new.txt');if(n){EZRIVE.write(cwd+n,'');render()}};
+$('del').onclick=()=>{if(sel&&confirm(`Delete "${sel.name}"?`)){EZRIVE.rm(cwd+sel.name);render()}};
+$('imp').onclick=()=>$('fi').click();$('fi').onchange=e=>{importFiles(e.target.files);e.target.value=''};
+function importFiles(files){[...files].forEach(f=>{const r=new FileReader(),txt=f.type.startsWith('text/')||/\.(txt|md|html?|js|css|json|xml)$/i.test(f.name);
+  r.onload=()=>{try{EZRIVE.write(cwd+f.name,r.result);render()}catch{alert('Drive is full (browser storage limit) — could not import '+f.name)}};
+  txt?r.readAsText(f):r.readAsDataURL(f)})}
+addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('drop')});
+addEventListener('dragleave',e=>{if(!e.relatedTarget)document.body.classList.remove('drop')});
+addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('drop');importFiles(e.dataTransfer.files)});
+addEventListener('keydown',e=>{if(e.key==='Delete')$('del').click()});render();addEventListener('storage',e=>{if(e.key==='ezier_vfs')render()});
+</script></body></html>

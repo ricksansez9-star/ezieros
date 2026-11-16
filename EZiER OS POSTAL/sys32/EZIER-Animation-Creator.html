@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EZIER Animation Creator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root { --bg:#1e1e1e; --panel:#292929; --panel2:#323232; --line:rgba(255,255,255,.1); --text:#fff; --dim:rgba(255,255,255,.6); --accent:#4cc2ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px 'Segoe UI',Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:14px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px; }
+  header h1 { font-size:17px; margin:0; font-weight:600; }
+  header span { color:var(--dim); font-size:12.5px; }
+  main { display:grid; grid-template-columns:340px 1fr 300px; gap:14px; padding:14px; height:calc(100vh - 53px); }
+  @media (max-width:1000px){ main{ grid-template-columns:1fr; height:auto; } }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; overflow:auto; }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.8px; color:var(--dim); margin:16px 0 8px; font-weight:600; }
+  h2:first-child { margin-top:0; }
+  select, input[type=text] { width:100%; padding:8px; background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:5px; font:inherit; }
+  .presets { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  button { font:inherit; color:var(--text); background:var(--panel2); border:1px solid var(--line); border-radius:5px; padding:8px; cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  button.primary { background:var(--accent); color:#00263a; border-color:var(--accent); font-weight:600; }
+  button.on { border-color:var(--accent); background:rgba(76,194,255,.15); }
+  .row { display:grid; grid-template-columns:90px 1fr 56px; align-items:center; gap:8px; margin:7px 0; }
+  .row label { color:var(--dim); font-size:12.5px; }
+  .row output { text-align:right; font-variant-numeric:tabular-nums; font-size:12.5px; }
+  input[type=range] { width:100%; accent-color:var(--accent); }
+  .stage { position:relative; height:calc(100% - 52px); min-height:320px; border-radius:8px; overflow:hidden;
+           background:linear-gradient(135deg,#0b1a3a,#2a0f4a 60%,#0b2a3a); border:1px solid var(--line); }
+  .taskbar { position:absolute; left:0; right:0; bottom:0; height:34px; background:rgba(20,20,20,.85); }
+  #box { position:absolute; left:50%; top:46%; width:300px; height:190px; margin:-95px 0 0 -150px; border-radius:8px;
+         background:#2b2b2b; border:1px solid rgba(255,255,255,.2); box-shadow:0 20px 50px rgba(0,0,0,.5); overflow:hidden; }
+  #box .tb { height:30px; background:#323232; font-size:12px; padding:8px 12px; border-bottom:1px solid rgba(255,255,255,.1); }
+  #box .ct { padding:14px; color:var(--dim); font-size:12.5px; }
+  .bar { display:flex; gap:8px; margin-top:10px; }
+  .bar button { flex:1; }
+  .bind { display:flex; align-items:center; gap:8px; padding:8px; background:var(--panel2); border:1px solid var(--line); border-radius:6px; margin-bottom:6px; font-size:12.5px; }
+  .bind b { display:block; } .bind small { color:var(--dim); }
+  .bind div { flex:1; min-width:0; } .bind button { padding:4px 8px; }
+  pre { background:#151515; border:1px solid var(--line); border-radius:6px; padding:10px; font-size:11.5px; overflow:auto; max-height:200px; margin:6px 0; }
+  .hint { color:var(--dim); font-size:12px; line-height:1.5; }
+</style>
+</head>
+<body>
+<header><h1>EZIER Animation Creator</h1><span>Pick where · pick a look · tweak · add · export → drop the files next to EZIEROS.html</span></header>
+<main>
+  <!-- LEFT: controls -->
+  <section>
+    <h2>1 · Where should it play?</h2>
+    <select id="target"></select>
+
+    <h2>2 · Pick a style</h2>
+    <div class="presets" id="presets"></div>
+
+    <h2>3 · Tweak (optional)</h2>
+    <div id="sliders"></div>
+    <div class="row"><label>Easing</label>
+      <select id="easing" style="grid-column:2 / 4">
+        <option value="ease">Smooth</option>
+        <option value="cubic-bezier(0.16,1,0.3,1)">Fluent (Win 11)</option>
+        <option value="cubic-bezier(0.34,1.56,0.64,1)">Bouncy overshoot</option>
+        <option value="ease-in">Ease in</option>
+        <option value="ease-out">Ease out</option>
+        <option value="linear">Linear</option>
+        <option value="steps(6)">Steppy</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- MIDDLE: preview -->
+  <section>
+    <div class="stage"><div id="box"><div class="tb">Preview window</div><div class="ct">This is how it will look.</div></div><div class="taskbar"></div></div>
+    <div class="bar">
+      <button class="primary" id="play">▶ Play</button>
+      <button id="loop">Loop: off</button>
+      <button class="primary" id="add">＋ Add to my animations</button>
+    </div>
+    <p class="hint">Heads up: the preview is always a window; the real thing is applied to whatever you chose in step 1.</p>
+  </section>
+
+  <!-- RIGHT: bindings + export -->
+  <section>
+    <h2>My animations</h2>
+    <div id="binds"><p class="hint">Nothing yet. Press “Add to my animations”.</p></div>
+    <button id="import">Open existing animations.js</button>
+    <input type="file" id="importFile" accept=".js,.json" hidden>
+
+    <h2>Export</h2>
+    <button class="primary" id="zip" style="width:100%">⬇ Download everything (.zip)</button>
+    <div class="bar"><button id="dlJson">animations.js</button><button id="dlCss">CSS files</button></div>
+    <p class="hint">Unzip into the same folder as <b>EZIEROS.html</b>. You’ll get <code>animations.js</code> and an <code>animations/</code> folder.</p>
+    <h2>animations.js preview</h2>
+    <pre id="jsonView">{}</pre>
+  </section>
+</main>
+
+<script>
+/* ---------- Where animations can go (matches ez-animations-loader.js) ---------- */
+const TARGETS = {
+  'window-open':     { label: 'Window opens',        dir: 'in'  },
+  'window-close':    { label: 'Window closes',       dir: 'out' },
+  'start-menu-open': { label: 'Start menu opens',    dir: 'in'  },
+  'start-menu-apps': { label: 'Start menu app icons',dir: 'in'  },
+  'user-menu-open':  { label: 'User menu opens',     dir: 'in'  },
+  'error-dialog':    { label: 'Error pop-up appears',dir: 'in'  },
+  'lock-screen':     { label: 'Login box appears',   dir: 'in'  },
+  'desktop-icons':   { label: 'Desktop icons appear',dir: 'in'  }
+};
+/* ---------- Presets: the "hidden" state the animation starts from (or ends at for close) ---------- */
+const PRESETS = {
+  'Fade':        { x:0,  y:0,   scale:1,   rotate:0,   opacity:0, blur:0,  dur:.25, easing:'ease' },
+  'Pop':         { x:0,  y:20,  scale:.8,  rotate:0,   opacity:0, blur:0,  dur:.28, easing:'cubic-bezier(0.34,1.56,0.64,1)' },
+  'Slide up':    { x:0,  y:60,  scale:1,   rotate:0,   opacity:0, blur:0,  dur:.3,  easing:'cubic-bezier(0.16,1,0.3,1)' },
+  'Slide down':  { x:0,  y:-60, scale:1,   rotate:0,   opacity:0, blur:0,  dur:.3,  easing:'cubic-bezier(0.16,1,0.3,1)' },
+  'Slide left':  { x:-80, y:0,  scale:1,   rotate:0,   opacity:0, blur:0,  dur:.3,  easing:'cubic-bezier(0.16,1,0.3,1)' },
+  'Slide right': { x:80,  y:0,  scale:1,   rotate:0,   opacity:0, blur:0,  dur:.3,  easing:'cubic-bezier(0.16,1,0.3,1)' },
+  'Zoom':        { x:0,  y:0,   scale:.4,  rotate:0,   opacity:0, blur:0,  dur:.3,  easing:'cubic-bezier(0.16,1,0.3,1)' },
+  'Spin':        { x:0,  y:0,   scale:.5,  rotate:-180,opacity:0, blur:0,  dur:.5,  easing:'cubic-bezier(0.16,1,0.3,1)' },
+  'Blur':        { x:0,  y:0,   scale:1.05,rotate:0,   opacity:0, blur:14, dur:.35, easing:'ease-out' },
+  'Drop':        { x:0,  y:-200,scale:1,   rotate:0,   opacity:0, blur:0,  dur:.5,  easing:'cubic-bezier(0.34,1.56,0.64,1)' },
+  'Wobble':      { x:0,  y:0,   scale:.9,  rotate:8,   opacity:0, blur:0,  dur:.45, easing:'cubic-bezier(0.34,1.56,0.64,1)' },
+  'Instant':     { x:0,  y:0,   scale:1,   rotate:0,   opacity:1, blur:0,  dur:.01, easing:'linear' }
+};
+const SLIDERS = [
+  ['dur',     'Speed (sec)', 0.05, 1.5, 0.01, 's'],
+  ['delay',   'Delay (sec)', 0,    1,   0.01, 's'],
+  ['opacity', 'Start fade',  0,    1,   0.05, ''],
+  ['x',       'Move left/right', -300, 300, 5, 'px'],
+  ['y',       'Move up/down',    -300, 300, 5, 'px'],
+  ['scale',   'Size',        0.1,  1.5, 0.05, '×'],
+  ['rotate',  'Spin',        -360, 360, 5, '°'],
+  ['blur',    'Blur',        0,    30,  1, 'px']
+];
+
+let state = { ...PRESETS['Pop'], delay: 0, preset: 'Pop' };
+let bindings = [];   // [{target, preset, name, file, css, duration, easing, delay, fill}]
+const $ = id => document.getElementById(id);
+
+/* ---------- UI setup ---------- */
+Object.entries(TARGETS).forEach(([k,v]) => $('target').add(new Option(v.label, k)));
+Object.keys(PRESETS).forEach(p => {
+  const b = document.createElement('button'); b.textContent = p; b.dataset.p = p;
+  b.onclick = () => { state = { ...PRESETS[p], delay: state.delay, preset: p }; syncUI(); play(); };
+  $('presets').appendChild(b);
+});
+SLIDERS.forEach(([key,label,min,max,step,unit]) => {
+  const r = document.createElement('div'); r.className = 'row';
+  r.innerHTML = `<label>${label}</label><input type="range" id="s_${key}" min="${min}" max="${max}" step="${step}"><output id="o_${key}"></output>`;
+  $('sliders').appendChild(r);
+  r.querySelector('input').oninput = e => { state[key] = parseFloat(e.target.value); state.preset = 'custom'; syncUI(true); };
+  r.querySelector('input').onchange = play;
+});
+$('easing').onchange = e => { state.easing = e.target.value; play(); };
+$('target').onchange = () => { play(); };
+
+function syncUI(noPlay) {
+  SLIDERS.forEach(([key,,, , ,unit]) => {
+    $('s_'+key).value = state[key]; $('o_'+key).textContent = state[key] + unit;
+  });
+  $('easing').value = [...$('easing').options].some(o => o.value === state.easing) ? state.easing : 'ease';
+  document.querySelectorAll('#presets button').forEach(b => b.classList.toggle('on', b.dataset.p === state.preset));
+}
+
+/* ---------- CSS generation ---------- */
+function slug(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+function frame(s) {
+  // Uses individual properties (translate/scale/rotate) so it never fights an element's own transform.
+  let o = `opacity: ${s.opacity}; translate: ${s.x}px ${s.y}px; scale: ${s.scale}; rotate: ${s.rotate}deg;`;
+  if (s.blur) o += ` filter: blur(${s.blur}px);`;
+  return o;
+}
+function rest(s) {
+  let o = 'opacity: 1; translate: 0px 0px; scale: 1; rotate: 0deg;';
+  if (s.blur) o += ' filter: blur(0px);';
+  return o;
+}
+function makeCss(name, s, dir) {
+  const [a, b] = dir === 'out' ? [rest(s), frame(s)] : [frame(s), rest(s)];
+  return `/* ${name} — made with EZIER Animation Creator */\n@keyframes ${name} {\n  from { ${a} }\n  to   { ${b} }\n}\n`;
+}
+function currentBinding() {
+  const t = $('target').value, dir = TARGETS[t].dir;
+  const base = slug(state.preset === 'custom' ? 'custom' : state.preset);
+  const name = `ez-${base}-${dir}-${t}`;
+  return {
+    target: t, preset: state.preset, name,
+    file: `animations/${name}.css`,
+    css: makeCss(name, state, dir),
+    duration: state.dur + 's', easing: state.easing, delay: (state.delay||0) + 's', fill: 'both'
+  };
+}
+
+/* ---------- Preview ---------- */
+let loopOn = false, previewStyle = document.createElement('style');
+document.head.appendChild(previewStyle);
+function play() {
+  const b = currentBinding(), box = $('box');
+  previewStyle.textContent = b.css;
+  box.style.animation = 'none'; void box.offsetWidth;
+  box.style.animation = `${b.name} ${b.duration} ${b.easing} ${b.delay} ${loopOn ? 'infinite alternate' : 'both'}`;
+}
+$('play').onclick = play;
+$('loop').onclick = () => { loopOn = !loopOn; $('loop').textContent = 'Loop: ' + (loopOn ? 'on' : 'off'); $('loop').classList.toggle('on', loopOn); play(); };
+
+/* ---------- Bindings list ---------- */
+function renderBinds() {
+  const el = $('binds');
+  el.innerHTML = bindings.length ? '' : '<p class="hint">Nothing yet. Press “Add to my animations”.</p>';
+  bindings.forEach((b,i) => {
+    const d = document.createElement('div'); d.className = 'bind';
+    d.innerHTML = `<div><b>${TARGETS[b.target].label}</b><small>${b.preset} · ${b.duration}</small></div><button title="Preview">▶</button><button title="Remove">✕</button>`;
+    const [pv, rm] = d.querySelectorAll('button');
+    pv.onclick = () => { $('target').value = b.target; loadFromBinding(b); };
+    rm.onclick = () => { bindings.splice(i,1); renderBinds(); };
+    el.appendChild(d);
+  });
+  $('jsonView').textContent = jsText();
+}
+function loadFromBinding(b) {
+  if (PRESETS[b.preset]) state = { ...PRESETS[b.preset], preset: b.preset };
+  state.dur = parseFloat(b.duration); state.delay = parseFloat(b.delay); state.easing = b.easing;
+  // recover custom values from the stored CSS when possible
+  const m = b.css.match(/(?:from|to)\s*\{([^}]*)\}/g);
+  if (m) { const src = (b.css.includes('from { opacity: 1') ? m[1] : m[0]); const g = r => (src.match(r)||[])[1];
+    const op = g(/opacity:\s*([\d.]+)/), tr = src.match(/translate:\s*(-?[\d.]+)px\s+(-?[\d.]+)px/), sc = g(/scale:\s*([\d.]+)/), ro = g(/rotate:\s*(-?[\d.]+)deg/), bl = g(/blur\(([\d.]+)px/);
+    if (op) state.opacity = +op; if (tr) { state.x = +tr[1]; state.y = +tr[2]; } if (sc) state.scale = +sc; if (ro) state.rotate = +ro; state.blur = bl ? +bl : 0; }
+  syncUI(); play();
+}
+$('add').onclick = () => {
+  const b = currentBinding();
+  const i = bindings.findIndex(x => x.target === b.target);   // one animation per target
+  if (i >= 0) bindings[i] = b; else bindings.push(b);
+  renderBinds();
+};
+
+/* ---------- Export ---------- */
+function jsText() { return 'window.EZ_ANIMATIONS = ' + JSON.stringify(jsonOut(), null, 2) + ';\n'; }
+function jsonOut() {
+  return { bindings: bindings.map(({ target, name, file, duration, easing, delay, fill }) => ({ target, file, name, duration, easing, delay, fill })) };
+}
+function save(name, text) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$('dlJson').onclick = () => bindings.length && save('animations.js', jsText());
+$('dlCss').onclick = () => bindings.forEach((b,i) => setTimeout(() => save(b.name + '.css', b.css), i * 250));
+$('zip').onclick = async () => {
+  if (!bindings.length) return alert('Add at least one animation first.');
+  if (typeof JSZip === 'undefined') return alert('ZIP library could not load (offline?). Use the separate download buttons instead.');
+  const z = new JSZip();
+  z.file('animations.js', jsText());
+  bindings.forEach(b => z.file(b.file, b.css));
+  const blob = await z.generateAsync({ type: 'blob' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ezier-animations.zip'; a.click();
+};
+
+/* ---------- Import an existing animations.js (CSS is rebuilt from the preset names when possible) ---------- */
+$('import').onclick = () => $('importFile').click();
+$('importFile').onchange = async e => {
+  try {
+    const txt = await e.target.files[0].text();
+    const data = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+    (data.bindings || data).forEach(b => {
+      if (!TARGETS[b.target]) return;
+      const m = (b.name || '').match(/^ez-(.+?)-(in|out)-/);
+      const preset = m ? Object.keys(PRESETS).find(p => slug(p) === m[1]) : null;
+      const s = preset ? { ...PRESETS[preset], preset } : { ...PRESETS['Fade'], preset: 'custom' };
+      s.dur = parseFloat(b.duration) || s.dur; s.delay = parseFloat(b.delay) || 0; s.easing = b.easing || s.easing;
+      const dir = TARGETS[b.target].dir;
+      const i = bindings.findIndex(x => x.target === b.target);
+      const nb = { target: b.target, preset: s.preset, name: b.name, file: b.file, css: makeCss(b.name, s, dir),
+                   duration: b.duration, easing: s.easing, delay: b.delay || '0s', fill: b.fill || 'both' };
+      if (i >= 0) bindings[i] = nb; else bindings.push(nb);
+    });
+    renderBinds();
+  } catch (err) { alert('That file isn’t a valid animations.js file'); }
+  e.target.value = '';
+};
+
+syncUI(); renderBinds(); play();
+</script>
+</body>
+</html>

@@ -550,6 +550,24 @@
             top: 0 !important; left: 0 !important; border-radius: 0; border: none;
         }
         #taskbar.top ~ .window.maximized { top: var(--taskbar-height) !important; }
+
+        /* ── Aero Snap ── */
+        #snap-preview {
+            position: fixed; z-index: 99990; pointer-events: none; opacity: 0;
+            border-radius: calc(var(--win-radius) + 2px);
+            border: 2px solid var(--accent);
+            background: color-mix(in srgb, var(--accent) 16%, transparent);
+            -webkit-backdrop-filter: blur(12px) saturate(140%); backdrop-filter: blur(12px) saturate(140%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 12px 40px rgba(0,0,0,0.28);
+            transition: left .14s ease, top .14s ease, width .14s ease, height .14s ease, opacity .12s ease;
+        }
+        #snap-preview.show { opacity: 1; }
+        .window.snap-anim {
+            transition: left .18s cubic-bezier(0.16,1,0.3,1), top .18s cubic-bezier(0.16,1,0.3,1),
+                        width .18s cubic-bezier(0.16,1,0.3,1), height .18s cubic-bezier(0.16,1,0.3,1);
+        }
+        body.win-dragging { user-select: none; }
+        body.win-dragging iframe { pointer-events: none; }
         .title-bar {
             background: var(--surface-2); color: var(--text);
             padding: 0 6px 0 14px; min-height: 40px;
@@ -682,25 +700,36 @@
         .ar-action.danger:hover { background: rgba(220,60,50,0.16); }
 
         /* ── WALLPAPERS & ACCENTS ── */
-        .wallpaper-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; margin-top: 6px; }
+        .wallpaper-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px 10px; margin-top: 6px; }
+        .wallpaper-item {
+            display: flex; flex-direction: column; align-items: center; min-width: 0;
+            padding: 6px 6px 8px; border-radius: var(--ctl-radius); cursor: pointer;
+            text-align: center; transition: background 0.12s;
+        }
+        .wallpaper-item:hover { background: var(--control); }
+        .wallpaper-item.selected { background: var(--control-hover); }
         .wallpaper-thumb {
-            position: relative; border-radius: 6px; overflow: hidden; cursor: pointer;
-            border: 2px solid transparent; aspect-ratio: 8/5; background: var(--control);
+            position: relative; width: 100%; border-radius: 6px; overflow: hidden;
+            border: 2px solid transparent; aspect-ratio: 16/9; background: var(--control);
             transition: 0.15s;
         }
-        .wallpaper-thumb:hover { transform: translateY(-2px); }
-        .wallpaper-thumb.selected { border-color: var(--accent); }
+        .wallpaper-item:hover .wallpaper-thumb { transform: translateY(-1px); }
+        .wallpaper-item.selected .wallpaper-thumb { border-color: var(--accent); }
         .wallpaper-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .wallpaper-thumb span {
-            position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 6px;
-            font-size: 10.5px; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,0.72));
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .wallpaper-thumb.selected::after {
-            content: '✓'; position: absolute; top: 4px; right: 4px;
+        .wallpaper-item.selected .wallpaper-thumb::after {
+            content: '\2713'; position: absolute; top: 4px; right: 4px;
             width: 16px; height: 16px; border-radius: 50%; background: var(--accent);
             color: #000; font-size: 10px; display: flex; align-items: center; justify-content: center;
         }
+        .wp-name {
+            margin-top: 7px; max-width: 100%; font-size: 12.5px; color: var(--text);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .wp-author {
+            max-width: 100%; font-size: 11px; color: var(--text-3);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .wallpaper-item.selected .wp-name, .wallpaper-item.selected .wp-author { font-weight: 700; }
         .accent-swatches { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
         .accent-swatch {
             width: 28px; height: 28px; border-radius: 4px; cursor: pointer;
@@ -868,6 +897,764 @@
             .settings-nav .nav-label, .settings-nav-head > div:last-child { display: none; }
             .settings-pages { padding: 18px; }
         }
+
+        /* ══════════════════════════════════════════════════════
+           macOS · LIQUID GLASS SHELL
+           Opt-in: body.shell-macos (Settings ▸ Personalization ▸ Interface style)
+           Everything below is scoped, so the Fluent look is untouched.
+           ══════════════════════════════════════════════════════ */
+        #menubar { display: none; }
+
+        body.shell-macos {
+            --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', Inter, system-ui, sans-serif;
+            --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Inter, system-ui, sans-serif;
+
+            --mb-h: 30px;
+            --taskbar-height: 70px;
+            --win-radius: 20px;
+            --ctl-radius: 9px;
+            --card-radius: 16px;
+
+            --surface:        rgba(34,34,38,0.72);
+            --surface-2:      rgba(46,46,52,0.70);
+            --surface-3:      rgba(62,62,70,0.70);
+            --card:           rgba(255,255,255,0.075);
+            --card-hover:     rgba(255,255,255,0.13);
+            --stroke:         rgba(255,255,255,0.13);
+            --stroke-strong:  rgba(255,255,255,0.22);
+            --text:           rgba(255,255,255,0.94);
+            --text-2:         rgba(235,235,245,0.64);
+            --text-3:         rgba(235,235,245,0.38);
+            --control:        rgba(255,255,255,0.10);
+            --control-hover:  rgba(255,255,255,0.17);
+
+            --mac-win-bg:     rgba(28,28,32,0.60);
+            --mac-title-bg:   linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.03));
+            --mac-sidebar:    rgba(255,255,255,0.07);
+            --mac-rim-a:      rgba(255,255,255,0.70);
+            --mac-rim-b:      rgba(255,255,255,0.06);
+            --shadow-flyout:  0 24px 60px rgba(0,0,0,0.40), 0 0 0 0.5px rgba(0,0,0,0.35);
+            --shadow-window:  0 32px 90px rgba(0,0,0,0.48), 0 8px 24px rgba(0,0,0,0.26), 0 0 0 0.5px rgba(0,0,0,0.55);
+        }
+        body.shell-macos.theme-light {
+            --surface:        rgba(246,246,249,0.74);
+            --surface-2:      rgba(255,255,255,0.70);
+            --surface-3:      rgba(255,255,255,0.84);
+            --card:           rgba(255,255,255,0.58);
+            --card-hover:     rgba(255,255,255,0.86);
+            --stroke:         rgba(0,0,0,0.08);
+            --stroke-strong:  rgba(0,0,0,0.15);
+            --text:           rgba(0,0,0,0.88);
+            --text-2:         rgba(60,60,67,0.68);
+            --text-3:         rgba(60,60,67,0.40);
+            --control:        rgba(120,120,128,0.12);
+            --control-hover:  rgba(120,120,128,0.21);
+
+            --mac-win-bg:     rgba(247,247,250,0.50);
+            --mac-title-bg:   linear-gradient(180deg, rgba(255,255,255,0.62), rgba(255,255,255,0.18));
+            --mac-sidebar:    rgba(255,255,255,0.40);
+            --mac-rim-a:      rgba(255,255,255,0.95);
+            --mac-rim-b:      rgba(255,255,255,0.35);
+            --shadow-flyout:  0 24px 60px rgba(0,0,0,0.24), 0 0 0 0.5px rgba(0,0,0,0.18);
+            --shadow-window:  0 32px 90px rgba(0,0,0,0.30), 0 8px 24px rgba(0,0,0,0.14), 0 0 0 0.5px rgba(0,0,0,0.28);
+        }
+
+        /* ── Shared liquid-glass edge: a 1px specular rim, bright top-left / bottom-right ── */
+        body.shell-macos #taskbar::before,
+        body.shell-macos #menubar::before,
+        body.shell-macos #user-menu::before,
+        body.shell-macos .window::before,
+        body.shell-macos #error-dialog::before,
+        body.shell-macos #av-modal::before,
+        body.shell-macos #setup-box::before,
+        body.shell-macos .settings-nav::before {
+            content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+            background: linear-gradient(135deg, var(--mac-rim-a) 0%, var(--mac-rim-b) 30%, var(--mac-rim-b) 70%, var(--mac-rim-a) 100%);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+            pointer-events: none; z-index: 5;
+        }
+        body.shell-macos .settings-nav { position: relative; }
+        body.shell-macos #error-dialog, body.shell-macos #av-modal, body.shell-macos #user-menu { overflow: visible; }
+
+        /* ── Menu bar (top) ── */
+        body.shell-macos #menubar {
+            display: flex; align-items: center; justify-content: space-between;
+            position: fixed; top: 0; left: 0; right: 0; height: var(--mb-h);
+            padding: 0 10px; z-index: 1000001;
+            background: var(--taskbar-bg);
+            background: color-mix(in srgb, var(--taskbar-bg) 70%, transparent);
+            -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+            color: var(--text); font-size: 13px; font-weight: 500;
+            box-shadow: 0 1px 0 var(--stroke);
+        }
+        body.shell-macos #menubar::before { border-radius: 0; padding: 0 0 1px 0; background: linear-gradient(90deg, transparent, var(--mac-rim-b), transparent); }
+        #mb-left, #mb-right { display: flex; align-items: center; gap: 2px; height: 100%; }
+        #mb-logo {
+            width: 22px; height: 22px; padding: 3px; margin-right: 4px; object-fit: contain;
+            border-radius: 7px; cursor: pointer; transition: background 0.12s;
+        }
+        #mb-logo:hover { background: var(--control-hover); }
+        #mb-app { font-weight: 700; padding: 0 10px; letter-spacing: -0.1px; white-space: nowrap; }
+        body.shell-macos #mb-right #tray-right { position: static; height: 100%; right: auto; gap: 0; }
+        body.shell-macos #mb-right .tray-glyph { height: 22px; padding: 0 8px; border-radius: 7px; font-size: 13px; }
+        body.shell-macos #mb-right #tray-clock {
+            height: 22px; padding: 0 8px; border-radius: 7px; font-size: 13px; font-weight: 500;
+            flex-direction: row-reverse; align-items: center; gap: 8px;
+        }
+        body.shell-macos #mb-right #tray-date { font-size: 13px; color: var(--text); }
+        body.shell-macos #mb-right #tray-user { width: 20px; height: 20px; font-size: 10px; margin-left: 6px; }
+
+        /* ── Dock ── */
+        body.shell-macos #taskbar,
+        body.shell-macos #taskbar.top,
+        body.shell-macos #taskbar.floating,
+        body.shell-macos #taskbar.top.floating {
+            left: 50%; right: auto; top: auto; bottom: 10px; transform: translateX(-50%);
+            width: auto; max-width: calc(100vw - 24px); height: var(--taskbar-height);
+            padding: 0 12px; gap: 6px; border: none; border-radius: 26px;
+            background: var(--taskbar-bg);
+            -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+            box-shadow: 0 22px 50px rgba(0,0,0,0.34), 0 2px 8px rgba(0,0,0,0.18),
+                        inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(255,255,255,0.06),
+                        inset 0 0 24px rgba(255,255,255,0.06);
+        }
+        body.shell-macos #taskbar::after {
+            content: ''; position: absolute; inset: 0; border-radius: inherit; z-index: -1; pointer-events: none;
+            background: linear-gradient(115deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0) 36%,
+                                        rgba(255,255,255,0) 64%, rgba(255,255,255,0.12) 100%);
+        }
+        body.shell-macos #taskbar-center { gap: 6px; height: 100%; align-items: center; }
+        body.shell-macos #pinned-area, body.shell-macos #running-area { gap: 6px; }
+        body.shell-macos #running-area:not(:empty) { margin-left: 4px; padding-left: 10px; border-left: 1px solid var(--stroke-strong); }
+
+        body.shell-macos .start-icon,
+        body.shell-macos .taskbar-btn {
+            width: 52px; height: 52px; padding: 0; border-radius: 13px; background: transparent;
+            transform-origin: 50% 100%;
+            transition: transform 0.18s cubic-bezier(0.3, 1.5, 0.5, 1), margin 0.18s cubic-bezier(0.3, 1.5, 0.5, 1);
+        }
+        body.shell-macos .start-icon { padding: 5px; }
+        body.shell-macos .taskbar-btn img { border-radius: 13px; filter: drop-shadow(0 3px 5px rgba(0,0,0,0.30)); }
+        body.shell-macos .start-icon:hover, body.shell-macos .taskbar-btn:hover { background: transparent; }
+        body.shell-macos .start-icon:active, body.shell-macos .taskbar-btn:active { transform: scale(0.94); }
+        /* magnification: hovered icon grows, neighbours follow */
+        body.shell-macos .start-icon:hover, body.shell-macos .taskbar-btn:hover { transform: translateY(-8px) scale(1.42); margin: 0 9px; z-index: 2; }
+        body.shell-macos .taskbar-btn:hover + .taskbar-btn,
+        body.shell-macos .taskbar-btn:has(+ .taskbar-btn:hover) { transform: translateY(-3px) scale(1.17); margin: 0 3px; }
+        /* running indicator: dot under the icon */
+        body.shell-macos .taskbar-btn::after {
+            width: 5px; height: 5px; bottom: -7px; border-radius: 50%; background: var(--text);
+        }
+        body.shell-macos .taskbar-btn.hidden-win::after { width: 5px; opacity: 0.45; }
+
+        /* ── Desktop ── */
+        body.shell-macos #desktop { padding-top: calc(var(--mb-h) + 14px); }
+        body.shell-macos #desktop-icons { flex-wrap: wrap-reverse; align-content: flex-start; height: calc(100% - var(--mb-h) - var(--taskbar-height) - 24px); }
+        body.shell-macos .desktop-icon { border-radius: 12px; padding: 8px 4px 6px; }
+        body.shell-macos .desktop-icon:hover { background: rgba(255,255,255,0.16); }
+        body.shell-macos .desktop-icon img { width: 52px; height: 52px; border-radius: 13px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.35)); }
+
+        /* ── Windows ── */
+        body.shell-macos .window {
+            background: var(--mac-win-bg);
+            -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+            border: 1px solid transparent;
+        }
+        body.shell-macos .window.maximized,
+        body.shell-macos #taskbar ~ .window.maximized {
+            top: calc(var(--mb-h) + 6px) !important; left: 8px !important;
+            width: calc(100% - 16px) !important;
+            height: calc(100% - var(--mb-h) - var(--taskbar-height) - 22px) !important;
+            border-radius: var(--win-radius); border: 1px solid transparent;
+        }
+        body.shell-macos .title-bar {
+            position: relative; min-height: 46px; padding: 0 16px;
+            background: var(--mac-title-bg); border-bottom: 1px solid var(--stroke);
+            justify-content: flex-start; font-size: 13px; font-weight: 600; letter-spacing: -0.1px;
+        }
+        body.shell-macos .title-bar > span {
+            position: absolute; left: 90px; right: 90px; text-align: center; pointer-events: none;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        body.shell-macos .title-bar > div { gap: 8px; }
+        body.shell-macos .win-btn {
+            position: relative; width: 13px; height: 13px; padding: 0; border-radius: 50%;
+            font-size: 0; line-height: 0; color: transparent;
+            background: #ff5f57; box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.45);
+        }
+        body.shell-macos .win-btn:nth-child(3) { order: 1; background: #ff5f57; }
+        body.shell-macos .win-btn:nth-child(1) { order: 2; background: #febc2e; }
+        body.shell-macos .win-btn:nth-child(2) { order: 3; background: #28c840; }
+        body.shell-macos .win-btn:hover, body.shell-macos .win-btn:last-child:hover { color: transparent; filter: brightness(1.08); }
+        body.shell-macos .win-btn:nth-child(3):hover { background: #ff5f57; }
+        body.shell-macos .win-btn:nth-child(1):hover { background: #febc2e; }
+        body.shell-macos .win-btn:nth-child(2):hover { background: #28c840; }
+        body.shell-macos .win-btn::after {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            font-size: 9px; font-weight: 800; line-height: 1; color: rgba(0,0,0,0.55); opacity: 0; transition: opacity 0.1s;
+        }
+        body.shell-macos .win-btn:nth-child(3)::after { content: '✕'; font-size: 8px; }
+        body.shell-macos .win-btn:nth-child(1)::after { content: '–'; font-size: 12px; }
+        body.shell-macos .win-btn:nth-child(2)::after { content: '+'; font-size: 12px; }
+        body.shell-macos .title-bar > div:hover .win-btn::after { opacity: 1; }
+        body.shell-macos .win-body, body.shell-macos #tm-list, body.shell-macos .settings-shell { background: transparent; }
+        body.shell-macos .tm-toolbar { background: var(--card); }
+
+        /* ── Settings: floating glass sidebar ── */
+        body.shell-macos .settings-nav {
+            width: 224px; margin: 8px 0 12px 12px; padding: 8px;
+            background: var(--mac-sidebar); border: none; border-radius: 18px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+        }
+        body.shell-macos .settings-nav-item { border-radius: 10px; }
+        body.shell-macos .settings-nav-item.active {
+            background: color-mix(in srgb, var(--accent) 30%, transparent);
+        }
+        body.shell-macos .settings-nav-item.active::before { display: none; }
+        body.shell-macos .installer-ui, body.shell-macos .settings-card {
+            border-radius: var(--card-radius);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 1px 3px rgba(0,0,0,0.10);
+        }
+        body.shell-macos .settings-page h2 { font-weight: 700; letter-spacing: -0.4px; }
+
+        /* ── Controls ── */
+        body.shell-macos .input-group input[type=text],
+        body.shell-macos .input-group input[type=password],
+        body.shell-macos .input-group input[type=url],
+        body.shell-macos .input-group input[type=file],
+        body.shell-macos .input-group select,
+        body.shell-macos .win-body input[type=text],
+        body.shell-macos .win-body input[type=url],
+        body.shell-macos .win-body select { border-radius: 10px; border-color: var(--stroke); box-shadow: inset 0 1px 2px rgba(0,0,0,0.12); }
+        body.shell-macos .input-group input:focus,
+        body.shell-macos .input-group select:focus {
+            border: 1px solid var(--accent);
+            box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--accent) 38%, transparent);
+        }
+        body.shell-macos .btn-install, body.shell-macos .btn-secondary, body.shell-macos .btn-danger,
+        body.shell-macos .lock-btn, body.shell-macos .err-btn { border-radius: 999px; }
+        body.shell-macos .btn-install, body.shell-macos .lock-btn:not(.secondary):not(.danger), body.shell-macos .err-btn.primary {
+            background: var(--accent-deep);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, #fff), var(--accent-deep));
+            border: none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 1px 3px rgba(0,0,0,0.25);
+        }
+        body.shell-macos .btn-secondary, body.shell-macos .err-btn:not(.primary), body.shell-macos .lock-btn.secondary {
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+        }
+        body.shell-macos .accent-swatch { border-radius: 50%; }
+        body.shell-macos .wallpaper-thumb { border-radius: 12px; }
+        body.shell-macos .toggle-row input[type=checkbox] {
+            -webkit-appearance: none; appearance: none; position: relative; flex-shrink: 0;
+            width: 40px; height: 24px; border-radius: 999px; background: rgba(120,120,128,0.34);
+            transition: background 0.2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+        }
+        body.shell-macos .toggle-row input[type=checkbox]::after {
+            content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+            background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: transform 0.22s cubic-bezier(0.3, 1.4, 0.5, 1);
+        }
+        body.shell-macos .toggle-row input[type=checkbox]:checked { background: #30d158; }
+        body.shell-macos .toggle-row input[type=checkbox]:checked::after { transform: translateX(16px); }
+        body.shell-macos ::-webkit-scrollbar { width: 10px; height: 10px; }
+        body.shell-macos ::-webkit-scrollbar-thumb { background: rgba(120,120,128,0.5); border: 3px solid transparent; background-clip: padding-box; border-radius: 10px; }
+
+        /* ── Popovers, menus & dialogs ── */
+        body.shell-macos #user-menu {
+            top: calc(var(--mb-h) + 6px); bottom: auto; right: 8px; width: 260px;
+            border-radius: 16px; border: none; padding: 6px;
+            -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+        }
+        body.shell-macos .um-btn { border-radius: 8px; padding: 7px 10px; }
+        body.shell-macos .um-btn:hover { background: var(--accent-deep); color: #fff; }
+        body.shell-macos .um-btn.danger:hover { background: #ff453a; color: #fff; }
+        body.shell-macos #error-overlay, body.shell-macos #av-overlay {
+            background: rgba(0,0,0,0.28); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+        }
+        body.shell-macos #error-dialog, body.shell-macos #av-modal, body.shell-macos .modal-content {
+            border: none; border-radius: 22px;
+            -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+        }
+        body.shell-macos #error-footer { background: transparent; }
+        body.shell-macos #error-code { border-radius: 10px; }
+        body.shell-macos .err-close { border-radius: 50%; }
+
+        /* ── Start → Launchpad ── */
+        body.shell-macos #start-menu,
+        body.shell-macos #start-menu.compact {
+            top: 0; left: 0; bottom: auto; width: 100vw; max-width: none; height: 100%; max-height: none;
+            transform: scale(1.08); opacity: 0; visibility: hidden; pointer-events: none;
+            border: none; border-radius: 0; box-shadow: none;
+            padding: calc(var(--mb-h) + 34px) max(6vw, 24px) calc(var(--taskbar-height) + 26px);
+            background: rgba(10,12,20,0.40);
+            -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+            transition: opacity 0.28s ease, transform 0.34s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.34s;
+        }
+        body.shell-macos #start-menu.open,
+        body.shell-macos #start-menu.compact.open,
+        body.shell-macos #taskbar.floating ~ #start-menu.open {
+            transform: none; opacity: 1; visibility: visible; pointer-events: auto;
+            top: 0; bottom: auto; transition-delay: 0s;
+        }
+        body.shell-macos #app-search {
+            width: min(280px, 100%); margin: 0 auto 36px; text-align: center; color: #fff;
+            border-radius: 999px; padding: 8px 16px; border-color: rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.14);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.28);
+        }
+        body.shell-macos #app-search::placeholder { color: rgba(255,255,255,0.6); }
+        body.shell-macos #app-search:focus { background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--accent) 40%, transparent); }
+        body.shell-macos .start-section-head { display: none; }
+        body.shell-macos .app-grid,
+        body.shell-macos #start-menu.compact .app-grid {
+            display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; gap: 22px 10px;
+            max-width: 1100px; width: 100%; margin: 0 auto;
+        }
+        body.shell-macos .app-item { width: 124px; padding: 8px 4px; border-radius: 16px; }
+        body.shell-macos .app-item:hover { background: rgba(255,255,255,0.10); }
+        body.shell-macos .app-item img {
+            width: 68px; height: 68px; border-radius: 16px; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.38));
+            transition: transform 0.18s cubic-bezier(0.3, 1.5, 0.5, 1);
+        }
+        body.shell-macos .app-item:hover img { transform: scale(1.08); }
+        body.shell-macos .app-item span { color: #fff; font-size: 12.5px; margin-top: 10px; text-shadow: 0 1px 4px rgba(0,0,0,0.55); }
+        body.shell-macos .pin-btn { color: #fff; }
+        body.shell-macos #start-footer,
+        body.shell-macos #start-menu.compact #start-footer {
+            margin: 0 auto; padding: 6px 8px; width: auto; gap: 18px; justify-content: center;
+            border: none; border-radius: 999px; background: rgba(255,255,255,0.12);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.24);
+        }
+        body.shell-macos #start-user, body.shell-macos .start-foot-btn { color: #fff; border-radius: 999px; }
+        body.shell-macos .start-foot-btn:hover, body.shell-macos #start-user:hover { background: rgba(255,255,255,0.16); }
+
+        /* ── Lock screen ── */
+        body.shell-macos #lock-bg { filter: blur(22px) brightness(0.62) saturate(1.25); }
+        body.shell-macos #lock-content { gap: 10px; }
+        body.shell-macos #lock-date { order: -2; margin: 4px 0 -6px; font-size: 21px; font-weight: 600; opacity: 0.92; letter-spacing: -0.2px; }
+        body.shell-macos #lock-clock-big { order: -1; font-size: 112px; font-weight: 700; letter-spacing: -4px; margin-bottom: 34px;
+            text-shadow: 0 6px 30px rgba(0,0,0,0.35); }
+        body.shell-macos #lock-avatar { border: 2px solid rgba(255,255,255,0.55); background: rgba(255,255,255,0.18);
+            -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); box-shadow: 0 10px 34px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.5); }
+        body.shell-macos .lock-input {
+            border-radius: 999px; padding: 11px 46px 11px 20px; color: #fff; text-align: center;
+            background: rgba(255,255,255,0.20); border: 1px solid rgba(255,255,255,0.35);
+            -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 20px rgba(0,0,0,0.18);
+        }
+        body.shell-macos .lock-input::placeholder { color: rgba(255,255,255,0.72); }
+        body.shell-macos .lock-input:focus { border: 1px solid rgba(255,255,255,0.7); box-shadow: 0 0 0 3.5px rgba(255,255,255,0.25), inset 0 1px 0 rgba(255,255,255,0.45); }
+        body.shell-macos #lock-submit { color: #fff; border-radius: 50%; right: 6px; top: 6px; bottom: 6px; width: 30px; background: rgba(255,255,255,0.22); }
+        body.shell-macos .lock-btn.secondary { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.28); }
+        body.shell-macos .lock-user-tile { border-radius: 16px; }
+        body.shell-macos .lock-icon-btn { border-radius: 50%; background: rgba(255,255,255,0.12); }
+        body.shell-macos #setup-box {
+            border: none; border-radius: 28px; background: rgba(34,34,40,0.50);
+            -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+        }
+        body.shell-macos .setup-input { border-radius: 12px; }
+        body.shell-macos .setup-input:focus { border: 1px solid var(--accent); box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--accent) 38%, transparent); }
+        body.shell-macos #setup-tos-box { border-radius: 14px; }
+
+        @media (max-width: 720px) {
+            body.shell-macos #start-menu { padding-left: 16px; padding-right: 16px; }
+            body.shell-macos .app-item { width: 92px; }
+            body.shell-macos #mb-app { display: none; }
+            body.shell-macos #mb-right #tray-date { display: none; }
+            body.shell-macos .settings-nav { width: 64px; }
+        }
+
+        /* ── Menu bar menus ── */
+        body.shell-macos .mb-item { padding: 0 9px; height: 22px; line-height: 22px; border-radius: 6px; cursor: default; white-space: nowrap; font-weight: 500; }
+        body.shell-macos #mb-app { font-weight: 700; }
+        body.shell-macos .mb-item:hover, body.shell-macos .mb-item.open, body.shell-macos #mb-logo.open { background: var(--control-hover); }
+        #mb-dropdown { display: none; }
+        body.shell-macos #mb-dropdown {
+            position: fixed; top: calc(var(--mb-h) + 2px); min-width: 230px; padding: 5px; z-index: 1000002;
+            border-radius: 12px; background: var(--menu-bg); color: var(--text);
+            -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+            box-shadow: var(--shadow-flyout), inset 0 1px 0 rgba(255,255,255,0.22); font-size: 13px;
+        }
+        body.shell-macos #mb-dropdown.show { display: block; }
+        body.shell-macos .mbd-row { display: flex; justify-content: space-between; gap: 28px; padding: 4px 10px; border-radius: 6px; cursor: default; }
+        body.shell-macos .mbd-row:hover:not(.disabled) { background: var(--accent-deep); color: #fff; }
+        body.shell-macos .mbd-row.disabled { opacity: 0.38; }
+        body.shell-macos .mbd-key { opacity: 0.6; }
+        body.shell-macos .mbd-sep { height: 1px; margin: 5px 8px; background: var(--stroke-strong); }
+
+        /* ══════════════════════════════════════════════════════
+           EXP · WINDOWS XP (LUNA) SHELL
+           Opt-in: body.shell-xp (Settings ▸ Personalization ▸ Interface style)
+           ══════════════════════════════════════════════════════ */
+        body.shell-xp {
+            --font-ui: Tahoma, 'Segoe UI', Verdana, Geneva, sans-serif;
+            --font-display: Tahoma, 'Segoe UI', Verdana, Geneva, sans-serif;
+            --taskbar-height: 30px;
+            --win-radius: 8px;
+            --ctl-radius: 3px;
+            --card-radius: 4px;
+
+            --surface:        #ece9d8;
+            --surface-2:      #ece9d8;
+            --surface-3:      #ffffff;
+            --card:           #ffffff;
+            --card-hover:     #e1ebfb;
+            --stroke:         #d4d0c8;
+            --stroke-strong:  #7f9db9;
+            --text:           #000000;
+            --text-2:         #3f3f3f;
+            --text-3:         #7a7a7a;
+            --control:        #ffffff;
+            --control-hover:  #e3ecfa;
+            --menu-bg:        #ffffff;
+            --shadow-flyout:  2px 3px 6px rgba(0,0,0,0.45);
+            --shadow-window:  3px 4px 10px rgba(0,0,0,0.50);
+            font-size: 13px;
+        }
+        body.shell-xp ::-webkit-scrollbar { width: 16px; height: 16px; }
+        body.shell-xp ::-webkit-scrollbar-track { background: #f3f1e8; }
+        body.shell-xp ::-webkit-scrollbar-thumb {
+            background: linear-gradient(90deg, #c4d6fb, #a3baf1 60%, #8aa6ea);
+            border: 1px solid #fff; border-radius: 3px; background-clip: border-box;
+            box-shadow: 0 0 0 1px #8aa6ea;
+        }
+
+        /* ── Taskbar ── */
+        body.shell-xp #taskbar,
+        body.shell-xp #taskbar.floating {
+            left: 0; right: 0; top: auto; bottom: 0; transform: none;
+            width: 100%; max-width: none; height: var(--taskbar-height);
+            padding: 0; gap: 0; justify-content: flex-start; border-radius: 0;
+            border: none; border-top: 1px solid #0c59b9; box-shadow: none;
+            background: linear-gradient(180deg, #3168d5 0%, #4993e6 4%, #2a6ce0 9%, #245edb 50%, #2157d7 88%, #1941a5 100%);
+            -webkit-backdrop-filter: none; backdrop-filter: none;
+        }
+        body.shell-xp #taskbar.top, body.shell-xp #taskbar.top.floating {
+            top: 0; bottom: auto; border-top: none; border-bottom: 1px solid #0c59b9;
+        }
+        body.shell-xp #taskbar-center { position: relative; width: 100%; height: 100%; justify-content: flex-start; gap: 4px; }
+        body.shell-xp #taskbar-center::before {
+            content: 'start'; position: absolute; left: 34px; top: 0; height: 100%;
+            display: flex; align-items: center; pointer-events: none; z-index: 2;
+            font: italic 700 19px/1 'Franklin Gothic Medium', Tahoma, 'Segoe UI', sans-serif;
+            color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.65); letter-spacing: -0.5px;
+        }
+        body.shell-xp .start-icon {
+            width: 104px; height: 100%; padding: 4px 76px 4px 8px; margin-right: 8px;
+            border-radius: 0 14px 14px 0; object-fit: contain; object-position: left center;
+            background: linear-gradient(180deg, #5fc25a 0%, #3e9f3b 12%, #379635 55%, #2c862c 90%, #256f26 100%);
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.45), inset -2px 0 3px rgba(0,0,0,0.30), 2px 0 3px rgba(0,0,0,0.35);
+        }
+        body.shell-xp .start-icon:hover { background: linear-gradient(180deg, #74d36e 0%, #4dae49 12%, #45a643 55%, #38933a 90%, #2f7d30 100%); }
+        body.shell-xp .start-icon:active { transform: none; filter: brightness(0.9); }
+        body.shell-xp #pinned-area, body.shell-xp #running-area { gap: 3px; }
+        body.shell-xp #running-area:not(:empty) { margin-left: 8px; padding-left: 8px; border-left: 1px solid rgba(0,0,0,0.25); box-shadow: -1px 0 0 rgba(255,255,255,0.18); }
+        body.shell-xp .taskbar-btn {
+            width: 44px; height: 24px; padding: 2px 4px; border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.28);
+            background: linear-gradient(180deg, #3f87f3 0%, #3a7be6 60%, #2d68d0 100%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+        }
+        body.shell-xp .taskbar-btn:hover { background: linear-gradient(180deg, #5b9bf6 0%, #4d8cee 60%, #3b78dc 100%); }
+        body.shell-xp .taskbar-btn.running { background: linear-gradient(180deg, #1e52b7 0%, #2a62c8 100%); box-shadow: inset 1px 1px 3px rgba(0,0,0,0.45); }
+        body.shell-xp .taskbar-btn.hidden-win { background: linear-gradient(180deg, #3f87f3 0%, #3a7be6 60%, #2d68d0 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35); }
+        body.shell-xp .taskbar-btn::after { display: none; }
+        body.shell-xp .taskbar-btn img { border-radius: 2px; }
+
+        body.shell-xp #tray-right, body.shell-xp #taskbar.floating #tray-right {
+            right: 0; height: 100%; padding: 0 12px 0 10px; gap: 6px;
+            background: linear-gradient(180deg, #0c59b9 0%, #139ee9 6%, #18b5f2 50%, #139ee9 90%, #0c59b9 100%);
+            border-left: 1px solid #1042af; box-shadow: inset 1px 0 1px #19b9f7;
+        }
+        body.shell-xp .tray-glyph { height: 100%; color: #fff; border-radius: 0; padding: 0 4px; }
+        body.shell-xp .tray-glyph:hover, body.shell-xp #tray-clock:hover { background: rgba(255,255,255,0.18); }
+        body.shell-xp #tray-clock { height: 100%; color: #fff; font-size: 12px; border-radius: 0; padding: 0 4px; justify-content: center; }
+        body.shell-xp #tray-date { display: none; }
+        body.shell-xp #tray-user { width: 22px; height: 22px; margin-left: 0; font-size: 10px; color: #fff; background: rgba(255,255,255,0.22); border: 1px solid #fff; border-radius: 3px; }
+
+        /* ── Windows ── */
+        body.shell-xp .window {
+            background: #ece9d8; border: 3px solid #0831d9; border-top: none;
+            border-radius: 8px 8px 0 0; resize: both;
+        }
+        body.shell-xp .window.maximized, body.shell-xp #taskbar ~ .window.maximized { border-radius: 0; border: none; }
+        body.shell-xp .title-bar {
+            min-height: 30px; padding: 0 4px 0 8px; border-bottom: none; border-radius: 6px 6px 0 0;
+            background: linear-gradient(180deg, #0997ff 0%, #0053ee 8%, #0050ee 40%, #0066ff 88%, #0066ff 93%, #005bff 95%, #003dd7 96%, #003dd7 100%);
+            color: #fff; font-size: 13px; font-weight: 700; text-shadow: 1px 1px 0 #0f1089;
+        }
+        body.shell-xp .title-bar > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        body.shell-xp .title-bar > div { gap: 2px; }
+        body.shell-xp .win-btn {
+            position: relative; width: 21px; height: 21px; padding: 0; border-radius: 3px;
+            font-size: 0; line-height: 0; color: #fff; text-shadow: none;
+            border: 1px solid #fff;
+            background: radial-gradient(circle at 90% 90%, #0054e9 0%, #2263d5 55%, #4479e4 75%, #a3bbec 100%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+        }
+        body.shell-xp .win-btn:hover { background: radial-gradient(circle at 90% 90%, #0a63ff 0%, #3a78e8 55%, #6b94ee 75%, #c4d6f6 100%); color: #fff; }
+        body.shell-xp .win-btn:last-child, body.shell-xp .win-btn:last-child:hover {
+            background: radial-gradient(circle at 90% 90%, #cc4600 0%, #dc6527 55%, #cd7546 75%, #ffccb2 100%); color: #fff;
+        }
+        body.shell-xp .win-btn:last-child:hover { filter: brightness(1.1); }
+        body.shell-xp .win-btn::after { content: ''; position: absolute; display: block; box-sizing: border-box; }
+        body.shell-xp .win-btn:nth-child(1)::after { left: 5px; bottom: 4px; width: 8px; height: 3px; background: #fff; }
+        body.shell-xp .win-btn:nth-child(2)::after { left: 5px; top: 4px; width: 10px; height: 10px; border: 1px solid #fff; border-top-width: 3px; }
+        body.shell-xp .win-btn:nth-child(3)::after {
+            content: '\2715'; inset: 0; display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; line-height: 1; color: #fff;
+        }
+        body.shell-xp .win-body { background: #ece9d8; }
+
+        /* ── Controls ── */
+        body.shell-xp .input-group input[type=text],
+        body.shell-xp .input-group input[type=password],
+        body.shell-xp .input-group input[type=url],
+        body.shell-xp .input-group input[type=file],
+        body.shell-xp .input-group select,
+        body.shell-xp .win-body input[type=text],
+        body.shell-xp .win-body input[type=url],
+        body.shell-xp .win-body select { border: 1px solid #7f9db9; border-radius: 0; background: #fff; color: #000; }
+        body.shell-xp .input-group input:focus, body.shell-xp .input-group select:focus { border: 1px solid #316ac5; background: #fff; }
+        body.shell-xp .btn-install, body.shell-xp .btn-secondary, body.shell-xp .btn-danger {
+            background: linear-gradient(180deg, #ffffff 0%, #ecebe5 85%, #d8d0c4 100%);
+            color: #000; border: 1px solid #003c74; border-radius: 3px; font-weight: 400;
+        }
+        body.shell-xp .btn-install:hover, body.shell-xp .btn-secondary:hover, body.shell-xp .btn-danger:hover {
+            filter: none; box-shadow: inset 0 0 0 2px #f9c56e; background: linear-gradient(180deg, #fffdf6 0%, #f4f0e0 85%, #e6dcc2 100%);
+        }
+        body.shell-xp .btn-install:active, body.shell-xp .btn-secondary:active, body.shell-xp .btn-danger:active { background: #e3dfcf; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3); }
+        body.shell-xp .installer-ui, body.shell-xp .settings-card { background: #fff; border: 1px solid #aca899; border-radius: 4px; box-shadow: none; }
+        body.shell-xp .settings-page h2 { font-weight: 700; color: #1e3f8f; }
+        body.shell-xp .accent-swatch { border-radius: 2px; }
+        body.shell-xp .wallpaper-thumb { border-radius: 2px; }
+        body.shell-xp .wallpaper-item.selected { background: #316ac5; }
+        body.shell-xp .wallpaper-item.selected .wp-name, body.shell-xp .wallpaper-item.selected .wp-author { color: #fff; }
+        body.shell-xp .wallpaper-item.selected .wallpaper-thumb { border-color: #fff; }
+
+        /* ── Settings sidebar: the blue Control Panel task pane ── */
+        body.shell-xp .settings-nav { background: linear-gradient(180deg, #7ba2e7 0%, #6375d6 100%); border-right: 1px solid #fff; color: #fff; }
+        body.shell-xp #settings-nav-name { color: #fff; }
+        body.shell-xp #settings-nav-handle { color: rgba(255,255,255,0.8); }
+        body.shell-xp .settings-nav-item { color: #fff; border-radius: 3px; }
+        body.shell-xp .settings-nav-item:hover { background: rgba(255,255,255,0.22); }
+        body.shell-xp .settings-nav-item.active { background: #fff; color: #215dc6; font-weight: 700; }
+        body.shell-xp .settings-nav-item.active::before { display: none; }
+
+        /* ── Start menu ── */
+        body.shell-xp #start-menu, body.shell-xp #start-menu.compact {
+            left: 0; transform: none; width: 400px; height: 540px; max-height: calc(100vh - 40px); padding: 0;
+            background: #fff; border: 1px solid #0831d9; border-bottom: none; border-radius: 8px 8px 0 0;
+            -webkit-backdrop-filter: none; backdrop-filter: none; overflow: hidden;
+            box-shadow: 3px -2px 8px rgba(0,0,0,0.45);
+        }
+        body.shell-xp #start-menu.open, body.shell-xp #start-menu.compact.open,
+        body.shell-xp #taskbar.floating ~ #start-menu.open { bottom: var(--taskbar-height); }
+        body.shell-xp #start-menu::after { content: ''; flex-shrink: 0; height: 10px; background: linear-gradient(180deg, #4a8be8, #2557c9); }
+        body.shell-xp #start-footer, body.shell-xp #start-menu.compact #start-footer {
+            order: -1; margin: 0; padding: 10px 12px; border: none; border-radius: 0; flex-shrink: 0;
+            background: linear-gradient(180deg, #1868ce 0%, #0f55c8 30%, #1561d6 100%);
+            border-bottom: 2px solid #f09a3c;
+        }
+        body.shell-xp #start-user { color: #fff; font-size: 16px; font-weight: 700; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
+        body.shell-xp #start-user:hover { background: transparent; }
+        body.shell-xp #start-user-av { width: 44px; height: 44px; border: 2px solid #fff; border-radius: 4px; background: #5e7fc4; color: #fff; }
+        body.shell-xp .start-foot-btn { color: #fff; border-radius: 3px; }
+        body.shell-xp .start-foot-btn:hover { background: rgba(255,255,255,0.22); }
+        body.shell-xp #app-search { margin: 8px 8px 4px; width: calc(100% - 16px); border-radius: 0; border: 1px solid #7f9db9; background: #fff; color: #000; }
+        body.shell-xp #app-search:focus { border: 1px solid #316ac5; background: #fff; }
+        body.shell-xp .start-section-head { margin: 0 8px; padding: 4px 4px 6px; color: #1e3f8f; font-weight: 700; border-bottom: 1px solid #d4d0c8; }
+        body.shell-xp .app-grid, body.shell-xp #start-menu.compact .app-grid { grid-template-columns: repeat(4, 1fr); padding: 8px; }
+        body.shell-xp .app-item { border-radius: 2px; }
+        body.shell-xp .app-item:hover { background: #316ac5; }
+        body.shell-xp .app-item:hover span { color: #fff; }
+        body.shell-xp .pin-btn { color: #444; }
+        body.shell-xp .app-item:hover .pin-btn { color: #fff; }
+
+        /* ── User menu ── */
+        body.shell-xp #user-menu { background: #fff; border: 1px solid #0831d9; border-radius: 4px; bottom: calc(var(--taskbar-height) + 4px); -webkit-backdrop-filter: none; backdrop-filter: none; }
+        body.shell-xp .um-btn { border-radius: 0; }
+        body.shell-xp .um-btn:hover { background: #316ac5; color: #fff; }
+        body.shell-xp .um-btn.danger:hover { background: #316ac5; color: #fff; }
+        body.shell-xp .desktop-icon { border-radius: 0; }
+        body.shell-xp .desktop-icon:hover { background: rgba(49,106,197,0.55); }
+        body.shell-xp .desktop-icon img { border-radius: 0; }
+
+        /* ══════════════════════════════════════════════════════
+           EZPLASMA · KDE PLASMA (BREEZE) SHELL
+           Opt-in: body.shell-plasma (Settings ▸ Personalization ▸ Interface style)
+           ══════════════════════════════════════════════════════ */
+        body.shell-plasma {
+            --font-ui: 'Noto Sans', 'Open Sans', Inter, system-ui, sans-serif;
+            --font-display: 'Noto Sans', 'Open Sans', Inter, system-ui, sans-serif;
+            --taskbar-height: 46px;
+            --win-radius: 7px;
+            --ctl-radius: 5px;
+            --card-radius: 6px;
+
+            --surface:        #394150;
+            --surface-2:      #323946;
+            --surface-3:      #444c5c;
+            --card:           rgba(255,255,255,0.035);
+            --card-hover:     rgba(255,255,255,0.07);
+            --stroke:         rgba(255,255,255,0.09);
+            --stroke-strong:  rgba(255,255,255,0.17);
+            --text:           #eff0f1;
+            --text-2:         rgba(239,240,241,0.68);
+            --text-3:         rgba(239,240,241,0.42);
+            --control:        rgba(255,255,255,0.06);
+            --control-hover:  rgba(255,255,255,0.11);
+            --shadow-flyout:  0 8px 26px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.25);
+            --shadow-window:  0 10px 34px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.30);
+        }
+        body.shell-plasma.theme-light {
+            --surface:        #eff0f1;
+            --surface-2:      #e3e5e7;
+            --surface-3:      #fcfcfc;
+            --card:           rgba(255,255,255,0.65);
+            --card-hover:     rgba(0,0,0,0.05);
+            --stroke:         rgba(0,0,0,0.12);
+            --stroke-strong:  rgba(0,0,0,0.22);
+            --text:           #232627;
+            --text-2:         rgba(35,38,39,0.70);
+            --text-3:         rgba(35,38,39,0.45);
+            --control:        rgba(0,0,0,0.04);
+            --control-hover:  rgba(0,0,0,0.08);
+            --shadow-flyout:  0 8px 26px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.12);
+            --shadow-window:  0 10px 34px rgba(0,0,0,0.32), 0 0 0 1px rgba(0,0,0,0.16);
+        }
+        body.shell-plasma ::-webkit-scrollbar { width: 10px; height: 10px; }
+        body.shell-plasma ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.28); border: 3px solid transparent; background-clip: padding-box; border-radius: 8px; }
+        body.shell-plasma.theme-light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.30); background-clip: padding-box; }
+
+        /* ── Floating panel ── */
+        body.shell-plasma #taskbar,
+        body.shell-plasma #taskbar.floating {
+            left: 50%; right: auto; top: auto; bottom: 8px; transform: translateX(-50%);
+            width: 84%; max-width: none; height: var(--taskbar-height);
+            padding: 0 8px; gap: 4px; border-radius: 8px;
+            border: 1px solid var(--stroke);
+            background: var(--taskbar-bg);
+            -webkit-backdrop-filter: var(--glass); backdrop-filter: var(--glass);
+            box-shadow: 0 4px 18px rgba(0,0,0,0.40);
+        }
+        body.shell-plasma #taskbar.top, body.shell-plasma #taskbar.top.floating { top: 8px; bottom: auto; }
+        body.shell-plasma #taskbar-center { position: static; gap: 4px; }
+        body.shell-plasma .start-icon {
+            position: absolute; left: 10px; top: 50%; width: 34px; height: 34px; padding: 5px;
+            transform: translateY(-50%); border-radius: 6px;
+        }
+        body.shell-plasma .start-icon:active { transform: translateY(-50%) scale(0.92); }
+        body.shell-plasma .taskbar-btn { width: 40px; height: 38px; border-radius: 6px; padding: 5px; }
+        body.shell-plasma .taskbar-btn.running { background: rgba(255,255,255,0.10); }
+        body.shell-plasma.theme-light .taskbar-btn.running { background: rgba(0,0,0,0.08); }
+        body.shell-plasma .taskbar-btn::after { bottom: 0; width: 22px; height: 2px; border-radius: 2px; }
+        body.shell-plasma .taskbar-btn.hidden-win::after { width: 8px; }
+        body.shell-plasma #tray-right, body.shell-plasma #taskbar.floating #tray-right { right: 8px; }
+        body.shell-plasma .tray-glyph { border-radius: 6px; }
+        body.shell-plasma #tray-clock { font-size: 13px; border-radius: 6px; align-items: center; text-align: center; }
+        body.shell-plasma #tray-date { font-size: 11.5px; color: var(--text); }
+        body.shell-plasma #tray-user { border-radius: 50%; }
+        body.shell-plasma #desktop-watermark { bottom: calc(var(--taskbar-height) + 24px); }
+
+        /* ── Windows ── */
+        body.shell-plasma .window { background: var(--surface); border: 1px solid var(--stroke-strong); }
+        body.shell-plasma .window.maximized, body.shell-plasma #taskbar ~ .window.maximized {
+            height: calc(100% - var(--taskbar-height) - 16px) !important; border-radius: 0; border: none;
+        }
+        body.shell-plasma #taskbar.top ~ .window.maximized { top: calc(var(--taskbar-height) + 16px) !important; }
+        body.shell-plasma .title-bar {
+            position: relative; min-height: 34px; padding: 0 8px; justify-content: flex-end;
+            background: var(--surface-2); border-bottom: 1px solid var(--stroke);
+            font-weight: 400; font-size: 13px;
+        }
+        body.shell-plasma .title-bar > span {
+            position: absolute; left: 110px; right: 110px; text-align: center; pointer-events: none;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        body.shell-plasma .title-bar > div { gap: 4px; position: relative; z-index: 1; }
+        body.shell-plasma .win-btn {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            width: 26px; height: 26px; padding: 0; border-radius: 6px; font-size: 0; line-height: 0; color: var(--text);
+        }
+        body.shell-plasma .win-btn::after {
+            content: ''; display: block; box-sizing: border-box; width: 7px; height: 7px;
+            border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor;
+        }
+        body.shell-plasma .win-btn:nth-child(1)::after { transform: rotate(45deg); margin-top: -3px; }
+        body.shell-plasma .win-btn:nth-child(2)::after { transform: rotate(-135deg); margin-top: 3px; }
+        body.shell-plasma .win-btn:nth-child(3)::after {
+            content: '\2715'; width: auto; height: auto; border: 0; font-size: 13px; line-height: 1; margin: 0; transform: none;
+        }
+        body.shell-plasma .win-btn:hover { background: var(--control-hover); color: var(--text); }
+        body.shell-plasma .win-btn:last-child:hover { background: #da4453; color: #fff; }
+
+        /* ── Settings (System Settings look) ── */
+        body.shell-plasma .settings-nav { background: var(--surface); border-right: 1px solid var(--stroke); }
+        body.shell-plasma .settings-nav-item { border-radius: 5px; padding: 9px 11px; }
+        body.shell-plasma .settings-nav-item.active { background: var(--accent); color: #1b1e20; }
+        body.shell-plasma .settings-nav-item.active::before { display: none; }
+        body.shell-plasma .settings-page h2 { font-weight: 400; font-size: 24px; }
+        body.shell-plasma .installer-ui, body.shell-plasma .settings-card { background: var(--surface-2); border-radius: 6px; }
+        body.shell-plasma .input-group input[type=text],
+        body.shell-plasma .input-group input[type=password],
+        body.shell-plasma .input-group input[type=url],
+        body.shell-plasma .input-group input[type=file],
+        body.shell-plasma .input-group select,
+        body.shell-plasma .win-body input[type=text],
+        body.shell-plasma .win-body input[type=url],
+        body.shell-plasma .win-body select { border-radius: 5px; border: 1px solid var(--stroke-strong); background: var(--surface-3); }
+        body.shell-plasma .input-group input:focus, body.shell-plasma .input-group select:focus {
+            border: 1px solid var(--accent); box-shadow: 0 0 0 1px var(--accent); background: var(--surface-3);
+        }
+        body.shell-plasma .btn-install, body.shell-plasma .btn-secondary {
+            background: var(--surface-3); color: var(--text); border: 1px solid var(--stroke-strong); border-radius: 5px; font-weight: 400;
+        }
+        body.shell-plasma .btn-install:hover, body.shell-plasma .btn-secondary:hover { filter: none; border-color: var(--accent); background: var(--control-hover); }
+        body.shell-plasma .btn-danger { border-radius: 5px; font-weight: 400; background: #da4453; }
+        body.shell-plasma .toggle-row input[type=checkbox] {
+            -webkit-appearance: none; appearance: none; position: relative; flex-shrink: 0;
+            width: 38px; height: 20px; border-radius: 10px; background: var(--control-hover);
+            border: 1px solid var(--stroke-strong); transition: background 0.15s;
+        }
+        body.shell-plasma .toggle-row input[type=checkbox]::after {
+            content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%;
+            background: var(--text-2); transition: transform 0.15s, background 0.15s;
+        }
+        body.shell-plasma .toggle-row input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
+        body.shell-plasma .toggle-row input[type=checkbox]:checked::after { background: #1b1e20; transform: translateX(18px); }
+        body.shell-plasma .accent-swatch { border-radius: 50%; }
+
+        /* Wallpaper listing — framed thumbnail, name and author underneath */
+        body.shell-plasma .wallpaper-item { padding: 8px 6px 8px; border-radius: 6px; }
+        body.shell-plasma .wallpaper-item:hover, body.shell-plasma .wallpaper-item.selected { background: transparent; }
+        body.shell-plasma .wallpaper-thumb {
+            padding: 4px; border-radius: 4px; border: 2px solid transparent;
+            background: rgba(0,0,0,0.22); box-shadow: 0 2px 6px rgba(0,0,0,0.40);
+        }
+        body.shell-plasma .wallpaper-thumb img { border-radius: 2px; }
+        body.shell-plasma .wallpaper-item:hover .wallpaper-thumb { transform: none; border-color: var(--stroke-strong); }
+        body.shell-plasma .wallpaper-item.selected .wallpaper-thumb { border-color: var(--accent); background: rgba(0,0,0,0.22); }
+        body.shell-plasma .wallpaper-item.selected .wallpaper-thumb::after { display: none; }
+        body.shell-plasma .wp-author { color: var(--text-3); }
+
+        /* ── Kickoff-style launcher ── */
+        body.shell-plasma #start-menu, body.shell-plasma #start-menu.compact {
+            left: 8%; transform: none; width: 580px; height: 540px; padding: 18px 22px 0;
+            border-radius: 8px; border: 1px solid var(--stroke-strong);
+        }
+        body.shell-plasma #start-menu.open, body.shell-plasma #start-menu.compact.open,
+        body.shell-plasma #taskbar.floating ~ #start-menu.open { bottom: calc(var(--taskbar-height) + 20px); }
+        body.shell-plasma #start-footer, body.shell-plasma #start-menu.compact #start-footer { margin: 0 -22px; padding: 10px 22px; border-radius: 0 0 8px 8px; }
+        body.shell-plasma #app-search { border-radius: 5px; background: var(--surface-3); margin-bottom: 14px; }
+        body.shell-plasma #app-search:focus { border: 1px solid var(--accent); box-shadow: 0 0 0 1px var(--accent); background: var(--surface-3); }
+        body.shell-plasma .app-grid, body.shell-plasma #start-menu.compact .app-grid { grid-template-columns: repeat(5, 1fr); }
+        body.shell-plasma .app-item { border-radius: 6px; }
+        body.shell-plasma .app-item:hover { background: var(--control-hover); }
+        body.shell-plasma #user-menu { bottom: calc(var(--taskbar-height) + 20px); right: 9%; }
+        body.shell-plasma .um-btn { border-radius: 5px; }
+        body.shell-plasma .um-btn:hover { background: var(--accent); color: #1b1e20; }
+        body.shell-plasma .um-btn.danger:hover { background: #da4453; color: #fff; }
     </style>
     <!-- Console Installer feature: terminal styling -->
     <link rel="stylesheet" href="console-installer.css">
@@ -997,6 +1784,22 @@
         <div id="desktop-watermark">EZIER OS</div>
     </div>
 
+    <!-- ══════════════ MENU BAR (macOS style only) ══════════════ -->
+    <div id="menubar">
+        <div id="mb-left">
+            <img id="mb-logo" src="../sys64/icons/ezierosstarticon.png" title="EZIER OS" data-menu="apple"
+                 onerror="this.src='../sys64/icons/MISSING_ICON.png'">
+            <span id="mb-app" class="mb-item" data-menu="app">EZIER OS</span>
+            <span class="mb-item" data-menu="file">File</span>
+            <span class="mb-item" data-menu="edit">Edit</span>
+            <span class="mb-item" data-menu="view">View</span>
+            <span class="mb-item" data-menu="window">Window</span>
+            <span class="mb-item" data-menu="help">Help</span>
+        </div>
+        <div id="mb-dropdown"></div>
+        <div id="mb-right"></div>
+    </div>
+
     <!-- ══════════════ TASKBAR ══════════════ -->
     <div id="taskbar">
         <div id="taskbar-center">
@@ -1007,6 +1810,9 @@
         </div>
         <div id="tray-right">
             <div class="tray-glyph" onclick="openSysWin('win-settings')" title="Settings"><span>⚙</span></div>
+            <div class="tray-glyph" id="tray-net" title="Network"><span>📶</span></div>
+            <div class="tray-glyph" id="tray-bat" title="Battery" style="display:none"><span></span></div>
+            <div class="tray-glyph" id="tray-bell" onclick="toggleActionCenter(event)" title="Action Center"><span>🔔</span></div>
             <div id="tray-clock" onclick="openSysWin('win-taskmanager')" title="Task Manager">
                 <span id="tray-time">00:00</span>
                 <span id="tray-date">—</span>
@@ -1166,6 +1972,7 @@
                             <input type="color" id="accent-color-input" style="width:60px;height:34px;border:1px solid var(--stroke-strong);border-radius:4px;background:var(--control);">
                             <div class="accent-swatches">
                                 <div class="accent-swatch" style="background:#4cc2ff" onclick="quickSetAccent('#4cc2ff')" title="Windows Blue"></div>
+                                <div class="accent-swatch" style="background:#0a84ff" onclick="quickSetAccent('#0a84ff')" title="macOS Blue"></div>
                                 <div class="accent-swatch" style="background:#1793d1" onclick="quickSetAccent('#1793d1')" title="EZiER Blue"></div>
                                 <div class="accent-swatch" style="background:#9b59b6" onclick="quickSetAccent('#9b59b6')" title="Violet"></div>
                                 <div class="accent-swatch" style="background:#e67e22" onclick="quickSetAccent('#e67e22')" title="Amber"></div>
@@ -1174,6 +1981,15 @@
                                 <div class="accent-swatch" style="background:#16a085" onclick="quickSetAccent('#16a085')" title="Teal"></div>
                                 <div class="accent-swatch" style="background:#ff5da2" onclick="quickSetAccent('#ff5da2')" title="Bubblegum"></div>
                             </div>
+                        </div>
+                        <div class="input-group" style="margin-top:16px;">
+                            <label>Interface style</label>
+                            <select id="shell-style-input">
+                                <option value="macos">macOS (Liquid Glass)</option>
+                                <option value="fluent">Windows (Fluent)</option>
+                                <option value="xp">EXP (Windows XP)</option>
+                                <option value="plasma">EZPlasma (KDE Plasma)</option>
+                            </select>
                         </div>
                         <div class="input-group" style="margin-top:16px;">
                             <label>Theme mode</label>
@@ -1371,12 +2187,22 @@
                         </div>
                     </div>
                     <div class="installer-ui">
-                        <h3>Made by Awkwarrrdd</h3>
+                        <h3 id="about-credits-title" style="user-select:none">Made by Awkwarrrdd</h3>
                         <div class="social-links">
                             <button onclick="window.open('https://discord.com/users/awkwarrrdd', '_blank')">Discord (main)</button>
                             <button onclick="window.open('https://discord.com/users/awkwarrrddother', '_blank')">Discord (alt)</button>
                             <button onclick="window.open('https://www.youtube.com/@Awkwarrrdd', '_blank')">YouTube</button>
                             <button onclick="window.open('https://awkwarrrdd.itch.io', '_blank')">Itch.io</button>
+                        </div>
+                    </div>
+                    <div class="installer-ui" id="restrictions-card" style="display:none;">
+                        <h3>Restrictions</h3>
+                        <div class="toggle-row">
+                            <div>
+                                <div class="tr-text">Restrictions</div>
+                                <div class="tr-sub">Disables Gaz Launcher, Case Clicker and Awk OS 2 VM</div>
+                            </div>
+                            <input type="checkbox" id="restrictions-input" onchange="setRestrictions(this.checked)">
                         </div>
                     </div>
                 </section>
@@ -1396,6 +2222,7 @@
             </div>
         </div>
         <div class="tm-toolbar"><span>Running apps</span><span id="tm-count">0 running</span></div>
+        <canvas id="tm-graph" width="600" height="110" style="width:100%;height:110px;display:block;border-bottom:1px solid var(--stroke)"></canvas>
         <div id="tm-list"></div>
     </div>
 
@@ -1498,7 +2325,7 @@
     const GUEST_BACKUP_PATH = 'guestaccountfile.ezierbackupfile';
     const $ = id => document.getElementById(id);
 
-    const CURRENT_VERSION = '2.1';
+    const CURRENT_VERSION = '3.0';
 
     const BUILT_IN_APPS = [
         { id: 'AE', name: 'Awk Edge', icon: '../sys64/icons/AE.png', file: '../Program Files/Awk Edge.html' },
@@ -1517,29 +2344,29 @@
     //  Also some wallpapers ARE made by Awkwarrrdd, Awk is getting into phototogerphy, e.g. thelake.png, lake.png.
     //Note from update 2.2: Changed all .png to .jpg for optimization.
 const WALLPAPER_GALLERY = [
-    { name: 'EZiER OS: Postal', file: '../sys64/wallpapers/EZIER_POSTAL.jpg', thumb: '../sys64/wallpapers/EZIER_POSTAL.jpg' },
-    { name: 'Aero', file: '../sys64/wallpapers/areo.jpg', thumb: '../sys64/wallpapers/areo.jpg' },
-    { name: 'Asadal', file: '../sys64/wallpapers/asadal.jpg', thumb: '../sys64/wallpapers/asadal.jpg' },
-    { name: 'WTFD', file: '../sys64/wallpapers/imag.jpg', thumb: '../sys64/wallpapers/imag.jpg' },
-    { name: 'macOS 23', file: '../sys64/wallpapers/mac_os_23.jpg', thumb: '../sys64/wallpapers/mac_os_23.jpg' },
-    { name: 'macOS 24', file: '../sys64/wallpapers/mac_os_24.jpg', thumb: '../sys64/wallpapers/mac_os_24.jpg' },
-    { name: 'macOS 35', file: '../sys64/wallpapers/mac_os_35.jpg', thumb: '../sys64/wallpapers/mac_os_35.jpg' },
-    { name: 'macOS 36', file: '../sys64/wallpapers/mac_os_36.jpg', thumb: '../sys64/wallpapers/mac_os_36.jpg' },
-    { name: 'macOS 37', file: '../sys64/wallpapers/mac_os_37.jpg', thumb: '../sys64/wallpapers/mac_os_37.jpg' },
-    { name: 'macOS 38', file: '../sys64/wallpapers/mac_os_38.jpg', thumb: '../sys64/wallpapers/mac_os_38.jpg' },
-    { name: 'macOS 39', file: '../sys64/wallpapers/mac_os_39.jpg', thumb: '../sys64/wallpapers/mac_os_39.jpg' },
-    { name: 'macOS 40', file: '../sys64/wallpapers/mac_os_40.jpg', thumb: '../sys64/wallpapers/mac_os_40.jpg' },
-    { name: 'macOS 41', file: '../sys64/wallpapers/mac_os_41.jpg', thumb: '../sys64/wallpapers/mac_os_41.jpg' },
-    { name: 'macOS 42', file: '../sys64/wallpapers/mac_os_42.jpg', thumb: '../sys64/wallpapers/mac_os_42.jpg' },
-    { name: 'Default Wallpaper', file: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.jpg', thumb: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.jpg' },
-    { name: '90s', file: '../sys64/wallpapers/90s.jpg', thumb: '../sys64/wallpapers/90s.jpg' },
-    { name: 'lake', file: '../sys64/wallpapers/lake.jpg', thumb: '../sys64/wallpapers/lake.jpg' },
-    { name: 'The Lake ', file: '../sys64/wallpapers/the_lake.jpg', thumb: '../sys64/wallpapers/the_lake.jpg' },
-    { name: 'Aero Sorta', file: '../sys64/wallpapers/Areosorta.jpg', thumb: '../sys64/wallpapers/Areosorta.jpg' },
-    { name: 'STREET PASS!', file: '../sys64/wallpapers/streetpass.jpg', thumb: '../sys64/wallpapers/streetpass.jpg' },
-    { name:'CPurpleKat', file: '../sys64/wallpapers/cpurplecat.jpg', thumb: '../sys64/wallpapers/cpurplecat.jpg' },
-    { name: 'You', file: '../sys64/wallpapers/you.jpg', thumb: '../sys64/wallpapers/you.jpg' },
-]
+    { name: 'EZiER OS: Postal', file: '../sys64/wallpapers/EZIER_POSTAL.jpg', author: 'Awkwarrrdd', thumb: '../sys64/wallpapers/EZIER_POSTAL.jpg' },
+    { name: 'Aero', file: '../sys64/wallpapers/areo.jpg', author: 'Awkwarrrdd (Awk Studios)', thumb: '../sys64/wallpapers/areo.jpg' },
+    { name: 'Asadal', file: '../sys64/wallpapers/asadal.jpg', author: 'Awkwarrrdd (Awk Studios)', thumb: '../sys64/wallpapers/asadal.jpg' },
+    { name: 'WTFD', file: '../sys64/wallpapers/imag.jpg', author: 'Awkwarrrdd (Awk Studios)', thumb: '../sys64/wallpapers/imag.jpg' },
+    { name: 'macOS 23', file: '../sys64/wallpapers/mac_os_23.jpg', author: 'Apple', thumb: '../sys64/wallpapers/mac_os_23.jpg' },
+    { name: 'macOS 24', file: '../sys64/wallpapers/mac_os_24.jpg', author: 'Apple', thumb: '../sys64/wallpapers/mac_os_24.jpg' },
+    { name: 'macOS 35', file: '../sys64/wallpapers/mac_os_35.jpg', author: 'Apple', thumb: '../sys64/wallpapers/mac_os_35.jpg' },
+    { name: 'macOS 36', file: '../sys64/wallpapers/mac_os_36.jpg', author: 'Apple', thumb: '../sys64/wallpapers/mac_os_36.jpg' },
+    { name: 'macOS 37', file: '../sys64/wallpapers/mac_os_37.jpg', author: 'Apple', thumb: '../sys64/wallpapers/mac_os_37.jpg' },
+    { name: 'macOS 38', file: '../sys64/wallpapers/mac_os_38.jpg', author: 'Apple', thumb: '../sys64/wallpapers/mac_os_38.jpg' },
+    { name: 'macOS 39', file: '../sys64/wallpapers/mac_os_39.jpg', author: 'Apple', thumb: '../sys64/wallpapers/mac_os_39.jpg' },
+    { name: 'macOS 40', file: '../sys64/wallpapers/mac_os_40.jpg', author: 'Apple', thumb: '../sys64/wallpapers/mac_os_40.jpg' },
+    { name: 'macOS 41', file: '../sys64/wallpapers/mac_os_41.jpg', author: 'Apple', thumb: '../sys64/wallpapers/mac_os_41.jpg' },
+    { name: 'macOS 42', file: '../sys64/wallpapers/mac_os_42.jpg', author: 'Apple', thumb: '../sys64/wallpapers/mac_os_42.jpg' },
+    { name: 'Default Wallpaper', file: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.jpg', author: 'Awkwarrrdd', thumb: '../sys64/wallpapers/EZIEROSDEFAULTPAPER.jpg' },
+    { name: '90s', file: '../sys64/wallpapers/90s.jpg', author: 'Awkwarrrdd (Awk Studios)', thumb: '../sys64/wallpapers/90s.jpg' },
+    { name: 'lake', file: '../sys64/wallpapers/lake.jpg', author: 'Awkwarrrdd (Awk Studios)', thumb: '../sys64/wallpapers/lake.jpg' },
+    { name: 'The Lake ', file: '../sys64/wallpapers/the_lake.jpg', author: 'Awkwarrrdd (Awk Studios)', thumb: '../sys64/wallpapers/the_lake.jpg' },
+    { name: 'Aero Sorta', file: '../sys64/wallpapers/Areosorta.jpg', author: 'Awkwarrrdd (Awk Studios)', thumb: '../sys64/wallpapers/Areosorta.jpg' },
+    { name: 'STREET PASS!', file: '../sys64/wallpapers/streetpass.jpg', author: 'Awkwarrrdd (Awk Studios)', thumb: '../sys64/wallpapers/streetpass.jpg' },
+    { name:'CPurpleKat', file: '../sys64/wallpapers/cpurplecat.jpg', author: 'Awkwarrrdd (Awk Studios)', thumb: '../sys64/wallpapers/cpurplecat.jpg' },
+    { name: 'You', file: '../sys64/wallpapers/you.jpg', author: 'Awkwarrrdd (Awk Studios)', thumb: '../sys64/wallpapers/you.jpg' }
+];
 
     // ERROR_POOL may be supplied by one of the add-on scripts loaded at the end of the
     // page. Never declare that name here — fall back to this list when it's missing.
@@ -2528,6 +3355,7 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
     // WINDOW SYSTEM
     // ═══════════════════════════════════════════════════════
     function launchApp(app) {
+        if (restrictionsOn() && RESTRICTED_APP_IDS.includes(app.id)) return;
         const baseId = app.isSys ? (app.sysId || app.id) : (app.id + '-' + Date.now());
         const winId = 'win-' + baseId;
         if (app.isSys && $(winId)) { focusWin($(winId)); return; }
@@ -2593,7 +3421,37 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
         if (page === 'accounts') renderAccountManager();
     }
 
-    function getAllApps() { return [...BUILT_IN_APPS, ...getCustomApps()]; }
+    const RESTRICTED_APP_IDS = ['Gaz', 'cc', 'aos2'];
+    function restrictionsOn() { return storeGet('ezier_restrictions') === '1'; }
+    function getAllApps() {
+        const all = [...BUILT_IN_APPS, ...getCustomApps()];
+        return restrictionsOn() ? all.filter(a => !RESTRICTED_APP_IDS.includes(a.id)) : all;
+    }
+    function setRestrictions(on) {
+        storeSet('ezier_restrictions', on ? '1' : '0');
+        if (on) {
+            document.querySelectorAll('.window').forEach(w => {
+                const id = (w.dataset.appId || '');
+                if (RESTRICTED_APP_IDS.includes(id)) closeWin(w.id);
+            });
+        }
+        renderOS($('app-search')?.value || '');
+        updateRunningArea();
+    }
+    // Hidden: click the "Made by" heading in About 7 times to reveal the Restrictions card.
+    (function () {
+        let taps = 0, timer = null;
+        const h = document.getElementById('about-credits-title');
+        if (!h) return;
+        h.addEventListener('click', () => {
+            taps++; clearTimeout(timer); timer = setTimeout(() => taps = 0, 2500);
+            if (taps >= 7) {
+                taps = 0;
+                const card = document.getElementById('restrictions-card');
+                if (card) card.style.display = 'block';
+            }
+        });
+    })();
 
     function applyThemeMode(mode) {
         let dark = mode !== 'light';
@@ -2840,7 +3698,13 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
         if (win) focusWin(win);
     }
 
-    function maximizeWin(id) { $(id).classList.toggle('maximized'); }
+    function maximizeWin(id) {
+        const win = $(id);
+        if (!win) return;
+        if (win.dataset.snap) { restoreWin(win, false); win.classList.add('maximized'); return; }
+        if (!win.classList.contains('maximized')) saveRestore(win);
+        win.classList.toggle('maximized');
+    }
     function toggleStart() { $('start-menu').classList.toggle('open'); }
 
     function minimizeWin(id) {
@@ -2895,20 +3759,197 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
         });
     }
 
+    // ═══════════════════════════════════════════════════════
+    // WINDOW DRAGGING + AERO SNAP
+    //   Drag a title bar to the left/right edge (half), a corner (quarter)
+    //   or the top edge (maximize). Keyboard: Win+Arrows or Ctrl+Alt+Arrows.
+    // ═══════════════════════════════════════════════════════
+    const SNAP_EDGE = 10, SNAP_CORNER = 48;
+    let snapPreviewEl = null, snapZone = null;
+
+    function snapWorkArea() {
+        const vw = window.innerWidth, vh = window.innerHeight;
+        let top = 0, bottom = vh;
+        const tb = $('taskbar');
+        if (tb) {
+            const r = tb.getBoundingClientRect();
+            if (r.height) {
+                if (tb.classList.contains('top')) top = Math.max(top, r.bottom);
+                else bottom = Math.min(bottom, r.top);
+            }
+        }
+        if (document.body.classList.contains('shell-macos')) {
+            top = Math.max(top, parseFloat(getComputedStyle(document.body).getPropertyValue('--mb-h')) || 0);
+        }
+        return { left: 0, top, width: vw, height: Math.max(120, bottom - top) };
+    }
+
+    function snapRect(zone, wa) {
+        const hw = Math.round(wa.width / 2), hh = Math.round(wa.height / 2);
+        const L = wa.left, R = wa.left + hw, T = wa.top, B = wa.top + hh;
+        const rw = wa.width - hw, rh = wa.height - hh;
+        switch (zone) {
+            case 'left':  return { l: L, t: T, w: hw, h: wa.height };
+            case 'right': return { l: R, t: T, w: rw, h: wa.height };
+            case 'tl':    return { l: L, t: T, w: hw, h: hh };
+            case 'tr':    return { l: R, t: T, w: rw, h: hh };
+            case 'bl':    return { l: L, t: B, w: hw, h: rh };
+            case 'br':    return { l: R, t: B, w: rw, h: rh };
+            default:      return { l: L, t: T, w: wa.width, h: wa.height };
+        }
+    }
+
+    function snapZoneAt(x, y, wa) {
+        const left = x <= SNAP_EDGE, right = x >= window.innerWidth - SNAP_EDGE;
+        if (left || right) {
+            if (y <= wa.top + SNAP_CORNER) return left ? 'tl' : 'tr';
+            if (y >= wa.top + wa.height - SNAP_CORNER) return left ? 'bl' : 'br';
+            return left ? 'left' : 'right';
+        }
+        return y <= SNAP_EDGE ? 'max' : null;
+    }
+
+    function showSnapPreview(zone) {
+        if (!snapPreviewEl) {
+            snapPreviewEl = document.createElement('div');
+            snapPreviewEl.id = 'snap-preview';
+            document.body.appendChild(snapPreviewEl);
+        }
+        if (!zone) { snapPreviewEl.classList.remove('show'); return; }
+        const r = snapRect(zone, snapWorkArea()), pad = 6;
+        const wasHidden = !snapPreviewEl.classList.contains('show');
+        if (wasHidden) snapPreviewEl.style.transition = 'none';
+        snapPreviewEl.style.left = (r.l + pad) + 'px';
+        snapPreviewEl.style.top = (r.t + pad) + 'px';
+        snapPreviewEl.style.width = (r.w - pad * 2) + 'px';
+        snapPreviewEl.style.height = (r.h - pad * 2) + 'px';
+        if (wasHidden) { void snapPreviewEl.offsetWidth; snapPreviewEl.style.transition = ''; }
+        snapPreviewEl.classList.add('show');
+    }
+
+    function saveRestore(win) {
+        if (win.dataset.snap || win.classList.contains('maximized')) return;
+        win._restore = { w: win.offsetWidth, h: win.offsetHeight, l: win.offsetLeft, t: win.offsetTop };
+    }
+
+    function animateSnap(win) {
+        win.classList.add('snap-anim');
+        clearTimeout(win._snapT);
+        win._snapT = setTimeout(() => win.classList.remove('snap-anim'), 240);
+    }
+
+    function restoreWin(win, animate = true) {
+        const rs = win._restore;
+        if (animate) animateSnap(win);
+        win.classList.remove('maximized');
+        delete win.dataset.snap;
+        if (rs) {
+            win.style.width = rs.w + 'px'; win.style.height = rs.h + 'px';
+            win.style.left = rs.l + 'px'; win.style.top = rs.t + 'px';
+        }
+    }
+
+    function applySnap(win, zone, animate = true) {
+        if (animate) animateSnap(win);
+        if (zone === 'max') {
+            delete win.dataset.snap;
+            const rs = win._restore;
+            if (rs) {
+                win.style.width = rs.w + 'px'; win.style.height = rs.h + 'px';
+                win.style.left = rs.l + 'px'; win.style.top = rs.t + 'px';
+            }
+            win.classList.add('maximized');
+            return;
+        }
+        const r = snapRect(zone, snapWorkArea());
+        win.classList.remove('maximized');
+        win.style.left = r.l + 'px'; win.style.top = r.t + 'px';
+        win.style.width = r.w + 'px'; win.style.height = r.h + 'px';
+        win.dataset.snap = zone;
+    }
+
+    function startWinDrag(e, win) {
+        if (e.button !== 0 || e.target.closest('.win-btn')) return;
+        const startX = e.clientX, startY = e.clientY;
+        let dragging = false, offX = 0, offY = 0;
+        saveRestore(win);
+        const wa0 = snapWorkArea();   // measured once per drag (no layout thrash on every mouse move)
+
+        const move = ev => {
+            if (!dragging) {
+                if (Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY) < 4) return;
+                dragging = true;
+                document.body.classList.add('win-dragging');
+                if (win.dataset.snap || win.classList.contains('maximized')) {
+                    // Pull a snapped / maximized window back to its normal size under the cursor.
+                    const rs = win._restore || {
+                        w: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--window-width')) || 900,
+                        h: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--window-height')) || 600
+                    };
+                    const rect = win.getBoundingClientRect();
+                    const ratio = rect.width ? (startX - rect.left) / rect.width : 0.5;
+                    win.classList.remove('maximized'); delete win.dataset.snap;
+                    win.style.width = rs.w + 'px'; win.style.height = rs.h + 'px';
+                    win.style.left = Math.max(0, Math.min(startX - rs.w * ratio, window.innerWidth - rs.w)) + 'px';
+                    win.style.top = Math.max(0, startY - 20) + 'px';
+                }
+                offX = startX - win.offsetLeft;
+                offY = startY - win.offsetTop;
+            }
+            win.style.left = (ev.clientX - offX) + 'px';
+            win.style.top = Math.max(0, ev.clientY - offY) + 'px';
+            const zone = snapZoneAt(ev.clientX, ev.clientY, wa0);
+            if (zone !== snapZone) { snapZone = zone; showSnapPreview(zone); }
+        };
+        const up = () => {
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
+            document.body.classList.remove('win-dragging');
+            if (dragging && snapZone) applySnap(win, snapZone);
+            snapZone = null;
+            showSnapPreview(null);
+        };
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', up);
+    }
+
     function dragWin(el) {
         const win = el.parentElement;
-        if (win.classList.contains('maximized')) return;
-        let p1 = 0, p2 = 0, p3 = 0, p4 = 0;
-        el.onmousedown = e => {
-            p3 = e.clientX; p4 = e.clientY;
-            document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; };
-            document.onmousemove = e => {
-                p1 = p3 - e.clientX; p2 = p4 - e.clientY; p3 = e.clientX; p4 = e.clientY;
-                win.style.top = (win.offsetTop - p2) + 'px';
-                win.style.left = (win.offsetLeft - p1) + 'px';
-            };
-        };
+        if (!el._snapBound) {
+            el._snapBound = true;
+            el.onmousedown = e => startWinDrag(e, win);   // replaces the inline attribute handler
+        }
+        if (window.event) startWinDrag(window.event, win); // handle the click that got us here
     }
+
+    function snapTopWindow() {
+        let top = null, z = -1;
+        document.querySelectorAll('.window').forEach(w => {
+            if (w.classList.contains('minimized') || getComputedStyle(w).display === 'none') return;
+            const zi = parseInt(w.style.zIndex) || 0;
+            if (zi >= z) { z = zi; top = w; }
+        });
+        return top;
+    }
+
+    document.addEventListener('keydown', e => {
+        if (!(e.metaKey || (e.ctrlKey && e.altKey)) || !e.key.startsWith('Arrow')) return;
+        const win = snapTopWindow();
+        if (!win) return;
+        e.preventDefault();
+        const cur = win.dataset.snap || (win.classList.contains('maximized') ? 'max' : '');
+        saveRestore(win);
+        if (e.key === 'ArrowLeft')       cur === 'right' ? restoreWin(win) : applySnap(win, 'left');
+        else if (e.key === 'ArrowRight') cur === 'left'  ? restoreWin(win) : applySnap(win, 'right');
+        else if (e.key === 'ArrowUp')    { if (cur !== 'max') applySnap(win, 'max'); }
+        else if (e.key === 'ArrowDown')  cur ? restoreWin(win) : minimizeWin(win.id);
+    });
+
+    let resizeRaf = 0;
+    window.addEventListener('resize', () => {
+        cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(() => document.querySelectorAll('.window[data-snap]').forEach(w => applySnap(w, w.dataset.snap, false)));
+    });
 
     // ═══════════════════════════════════════════════════════
     // SETTINGS
@@ -2953,11 +3994,16 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
         const grid = $('wallpaper-gallery');
         if (!grid) return;
         const current = storeGet('ezier_wallpaper') || '';
-        grid.innerHTML = WALLPAPER_GALLERY.map(w => `
-            <div class="wallpaper-thumb ${current === w.file ? 'selected' : ''}" onclick="setBuiltinWallpaper('${w.file}')" title="${w.name}">
-                <img src="${w.thumb}" alt="${w.name}" loading="lazy">
-                <span>${w.name}</span>
-            </div>`).join('');
+        grid.innerHTML = WALLPAPER_GALLERY.map(w => {
+            const name = (w.name || '').trim();
+            const author = (w.author || 'Unknown').trim();
+            return `
+            <div class="wallpaper-item ${current === w.file ? 'selected' : ''}" onclick="setBuiltinWallpaper('${w.file}')" title="${name} — ${author}">
+                <div class="wallpaper-thumb"><img src="${w.thumb}" alt="${name}" loading="lazy"></div>
+                <div class="wp-name">${name}</div>
+                <div class="wp-author">${author}</div>
+            </div>`;
+        }).join('');
     }
 
     function setBuiltinWallpaper(path) {
@@ -2988,11 +4034,144 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
         const op = Math.min(1, Math.max(0.2, parseFloat(opacity)));
         let light = themeMode === 'light';
         if (themeMode === 'auto') light = !window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const base = light ? '243, 243, 243' : '28, 28, 28';
-        const menuBase = light ? '249, 249, 249' : '40, 40, 40';
-        document.documentElement.style.setProperty('--taskbar-bg', `rgba(${base}, ${op})`);
-        document.documentElement.style.setProperty('--menu-bg', `rgba(${menuBase}, ${Math.min(1, op + 0.06)})`);
+        let base = light ? '243, 243, 243' : '28, 28, 28';
+        let menuBase = light ? '249, 249, 249' : '40, 40, 40';
+        let barAlpha = op, menuAlpha = Math.min(1, op + 0.06);
+        if (document.body.classList.contains('shell-plasma')) {
+            // Breeze panel: a solid-ish slate (dark) or pale grey (light) bar.
+            base = light ? '239, 240, 241' : '38, 43, 51';
+            menuBase = light ? '252, 252, 252' : '41, 46, 55';
+            barAlpha = Math.min(1, op + 0.05);
+            menuAlpha = Math.min(1, op + 0.10);
+        } else if (document.body.classList.contains('shell-macos')) {
+            // Liquid glass wants far more see-through surfaces than Fluent acrylic.
+            base = light ? '255, 255, 255' : '24, 24, 28';
+            menuBase = light ? '255, 255, 255' : '30, 30, 34';
+            barAlpha = op * 0.54;
+            menuAlpha = Math.min(0.9, op * 0.54 + 0.22);
+        }
+        document.documentElement.style.setProperty('--taskbar-bg', `rgba(${base}, ${barAlpha.toFixed(3)})`);
+        document.documentElement.style.setProperty('--menu-bg', `rgba(${menuBase}, ${menuAlpha.toFixed(3)})`);
     }
+
+    // ═══════════════════════════════════════════════════════
+    // INTERFACE STYLE (Fluent / macOS Liquid Glass)
+    // ═══════════════════════════════════════════════════════
+    var menubarTimer = null;
+
+    // Menu bar menus
+    function mbTopWin() {
+        let top = null, topZ = -1;
+        document.querySelectorAll('.window').forEach(w => {
+            if (w.classList.contains('minimized') || w.classList.contains('closing')) return;
+            if (window.getComputedStyle(w).display === 'none') return;
+            const z = parseInt(w.style.zIndex || window.getComputedStyle(w).zIndex, 10) || 0;
+            if (z >= topZ) { topZ = z; top = w; }
+        });
+        return top;
+    }
+    function mbMenus() {
+        const w = mbTopWin(), id = w ? w.id : null;
+        const name = $('mb-app').textContent;
+        const act = fn => () => { if (id) fn(id); };
+        const D = null;
+        return {
+            apple: [['About EZIER OS', () => openSettingsPage('about') || openSysWin('win-settings')], '-',
+                    ['System Settings…', () => openSysWin('win-settings')], ['Task Manager…', () => openSysWin('win-taskmanager')], '-',
+                    ['Lock Screen', () => lockScreen()], ['Switch User…', () => switchUser()], ['Sign Out…', () => signOut()], '-',
+                    ['Restart…', () => location.reload()]],
+            app:   [['About ' + name, () => openSettingsPage('about') || openSysWin('win-settings')], '-',
+                    ['Settings…', () => openSysWin('win-settings')], '-',
+                    ['Hide ' + name, id ? act(minimizeWin) : D, '⌘H'], ['Quit ' + name, id ? act(closeWin) : D, '⌘Q']],
+            file:  [['New Window', D, '⌘N'], ['Open…', () => openSysWin('win-appinstaller'), '⌘O'], '-', ['Close Window', id ? act(closeWin) : D, '⌘W']],
+            edit:  [['Undo', D, '⌘Z'], ['Redo', D, '⇧⌘Z'], '-', ['Cut', D, '⌘X'], ['Copy', D, '⌘C'], ['Paste', D, '⌘V'], ['Select All', D, '⌘A']],
+            view:  [['Show Launchpad', () => toggleStart()], ['Enter Full Screen', id ? act(maximizeWin) : D, '⌃⌘F']],
+            window:[['Minimize', id ? act(minimizeWin) : D, '⌘M'], ['Zoom', id ? act(maximizeWin) : D], '-', ['Task Manager', () => openSysWin('win-taskmanager')]],
+            help:  [['EZIER OS Help', () => openSettingsPage('about') || openSysWin('win-settings')]]
+        };
+    }
+    function closeMbMenu() {
+        const dd = $('mb-dropdown'); if (!dd) return;
+        dd.classList.remove('show'); dd.dataset.open = '';
+        document.querySelectorAll('#mb-left .open').forEach(e => e.classList.remove('open'));
+    }
+    function openMbMenu(key, el) {
+        const dd = $('mb-dropdown'), items = mbMenus()[key]; if (!items) return;
+        closeMbMenu();
+        dd.innerHTML = '';
+        items.forEach(it => {
+            if (it === '-') { const sp = document.createElement('div'); sp.className = 'mbd-sep'; dd.appendChild(sp); return; }
+            const row = document.createElement('div');
+            row.className = 'mbd-row' + (it[1] ? '' : ' disabled');
+            row.innerHTML = '<span></span><span class="mbd-key"></span>';
+            row.children[0].textContent = it[0]; row.children[1].textContent = it[2] || '';
+            if (it[1]) row.onclick = () => { closeMbMenu(); it[1](); };
+            dd.appendChild(row);
+        });
+        dd.style.left = Math.max(4, el.getBoundingClientRect().left - 2) + 'px';
+        dd.classList.add('show'); dd.dataset.open = key; el.classList.add('open');
+    }
+    (function () {
+        const left = document.getElementById('mb-left');
+        left.addEventListener('click', e => {
+            const el = e.target.closest('[data-menu]'); if (!el) return;
+            if ($('mb-dropdown').dataset.open === el.dataset.menu) closeMbMenu(); else openMbMenu(el.dataset.menu, el);
+        });
+        left.addEventListener('mouseover', e => {
+            const el = e.target.closest('[data-menu]');
+            if (el && $('mb-dropdown').dataset.open && $('mb-dropdown').dataset.open !== el.dataset.menu) openMbMenu(el.dataset.menu, el);
+        });
+        document.addEventListener('mousedown', e => { if (!e.target.closest('#mb-left') && !e.target.closest('#mb-dropdown')) closeMbMenu(); });
+    })();
+
+    function updateMenubarApp() {
+        const label = $('mb-app');
+        if (!label) return;
+        let top = null, topZ = -1;
+        document.querySelectorAll('.window').forEach(w => {
+            if (w.classList.contains('minimized') || w.classList.contains('closing')) return;
+            if (window.getComputedStyle(w).display === 'none') return;
+            const z = parseInt(w.style.zIndex || window.getComputedStyle(w).zIndex, 10) || 0;
+            if (z >= topZ) { topZ = z; top = w; }
+        });
+        const raw = top ? (top.querySelector('.title-bar span')?.textContent || '') : '';
+        const name = raw.replace(/^[^\p{L}\p{N}]+/u, '').trim() || 'EZIER OS';
+        if (label.textContent !== name) label.textContent = name;
+        if ($('mb-dropdown')?.classList.contains('show') === false) {/* idle */}
+    }
+
+    // Stock accent for each interface style (custom accents are never overwritten).
+    function stockAccents() {
+        return { fluent: '#4cc2ff', macos: '#0a84ff', xp: '#316ac5', plasma: '#8ec8c3' };
+    }
+    function defaultAccentFor(style) { return stockAccents()[style] || '#4cc2ff'; }
+
+    function applyShellStyle(style) {
+        const mac = style === 'macos';
+        document.body.classList.toggle('shell-macos', mac);
+        document.body.classList.toggle('shell-xp', style === 'xp');
+        document.body.classList.toggle('shell-plasma', style === 'plasma');
+        // The tray lives in the taskbar for Fluent and moves up to the menu bar for macOS.
+        const tray = $('tray-right'), mbRight = $('mb-right'), taskbar = $('taskbar');
+        if (tray && mbRight && taskbar) {
+            if (mac && tray.parentElement !== mbRight) mbRight.appendChild(tray);
+            else if (!mac && tray.parentElement !== taskbar) taskbar.appendChild(tray);
+        }
+        clearInterval(menubarTimer);
+        menubarTimer = null;
+        if (mac) {
+            updateMenubarApp();
+            menubarTimer = setInterval(updateMenubarApp, 400);
+        }
+        updateClock();
+    }
+
+    // Clicking empty space in the macOS Launchpad dismisses it.
+    document.getElementById('start-menu').addEventListener('click', e => {
+        if (document.body.classList.contains('shell-macos') && (e.target.id === 'start-menu' || e.target.id === 'app-list')) {
+            $('start-menu').classList.remove('open');
+        }
+    });
 
     function shadeAccent(hex, percent) {
         const h = hex.replace('#', '');
@@ -3006,6 +4185,16 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
     }
 
     function applyAppearanceSettings() {
+        const shellStyle = $('shell-style-input')?.value || 'fluent';
+        const prevStyle = storeGet('ezier_shell_style') || 'macos';
+        if (shellStyle !== prevStyle) {
+            // Swap the stock accent for the matching platform blue; custom accents are left alone.
+            const accentEl = $('accent-color-input');
+            if (accentEl) {
+                const cur = (accentEl.value || '').toLowerCase();
+                if (Object.values(stockAccents()).includes(cur)) accentEl.value = defaultAccentFor(shellStyle);
+            }
+        }
         const accent = $('accent-color-input')?.value || '#4cc2ff';
         const opacity = Math.min(1, Math.max(0.2, parseFloat($('taskbar-opacity-input')?.value || '0.85')));
         const blur = Math.min(60, Math.max(0, parseInt($('glass-blur-input')?.value || '40')));
@@ -3028,6 +4217,7 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
         document.documentElement.style.setProperty('--window-height', `${wh}px`);
 
         document.body.classList.toggle('reduce-motion', reduceMotion);
+        applyShellStyle(shellStyle);
         applyThemeMode(themeMode);
         applyTaskbarTint(opacity, themeMode);
 
@@ -3042,6 +4232,7 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
         storeSet('ezier_reduce_motion', reduceMotion ? '1' : '0');
         storeSet('ezier_clock_12h', use12h ? '1' : '0');
         storeSet('ezier_theme_mode', themeMode);
+        storeSet('ezier_shell_style', shellStyle);
         storeSet('ezier_taskbar_position', position);
         storeSet('ezier_floating_taskbar', isFloating ? '1' : '0');
         storeSet('ezier_compact_start', isCompact ? '1' : '0');
@@ -3072,7 +4263,7 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
             document.body.style.backgroundImage = `url('${savedWall}')`;
             document.body.style.backgroundSize = wallpaperFit;
         }
-        const accent = storeGet('ezier_accent_color') || '#4cc2ff';
+        const accent = storeGet('ezier_accent_color') || defaultAccentFor(storeGet('ezier_shell_style') || 'macos');
         const opacity = parseFloat(storeGet('ezier_taskbar_opacity') || '0.85');
         const blur = parseInt(storeGet('ezier_glass_blur') || '40');
         const themeMode = storeGet('ezier_theme_mode') || 'dark';
@@ -3086,6 +4277,7 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
         document.documentElement.style.setProperty('--window-width', `${ww}px`);
         document.documentElement.style.setProperty('--window-height', `${wh}px`);
         document.body.classList.toggle('reduce-motion', reduceMotion);
+        applyShellStyle(storeGet('ezier_shell_style') || 'macos');
         applyThemeMode(themeMode);
         applyTaskbarTint(opacity, themeMode);
 
@@ -3100,7 +4292,7 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
 
         const savedWall = storeGet('ezier_wallpaper');
         const wallpaperFit = storeGet('ezier_wallpaper_fit') || 'cover';
-        const accent = storeGet('ezier_accent_color') || '#4cc2ff';
+        const accent = storeGet('ezier_accent_color') || defaultAccentFor(storeGet('ezier_shell_style') || 'macos');
         const opacity = parseFloat(storeGet('ezier_taskbar_opacity') || '0.85');
         const blur = parseInt(storeGet('ezier_glass_blur') || '40');
         const themeMode = storeGet('ezier_theme_mode') || 'dark';
@@ -3121,10 +4313,12 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
         set('taskbar-opacity-input', String(opacity)); setTxt('taskbar-opacity-value', Number(opacity).toFixed(2));
         set('glass-blur-input', String(blur)); setTxt('glass-blur-value', `${blur}px`);
         set('theme-mode-input', themeMode);
+        set('shell-style-input', storeGet('ezier_shell_style') || 'macos');
         set('taskbar-position-input', taskbarPosition);
         set('update-pref-select', storeGet('update_pref') || 'always');
 
         check('reduce-motion-input', reduceMotion);
+        check('restrictions-input', restrictionsOn());
         check('floating-taskbar-input', isFloating);
         check('compact-start-input', isCompact);
         check('show-desktop-icons-input', storeGet('ezier_show_desktop_icons') !== '0');
@@ -3163,7 +4357,11 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
             timeStr = pad(now.getHours()) + ':' + pad(now.getMinutes());
         }
         const longDate = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-        const shortDate = now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+        const shortDate = document.body.classList.contains('shell-macos')
+            ? now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+            : document.body.classList.contains('shell-plasma')
+                ? now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })
+                : now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
 
         const mainClock = $('clock');
         const trayTime = $('tray-time');
@@ -3253,5 +4451,244 @@ EZiER OS: POSTAL — Built by developers, for developers.`;
     <script src="controller.js"></script>
     <script src="debugkey.js" defer></script>
 
+<script src="./animations.js"></script>
+<script src="./ez-animations-loader.js"></script>
+
+<style>
+#ez-night{position:fixed;inset:0;z-index:99980;pointer-events:none;background:rgba(255,140,0,.2);mix-blend-mode:multiply;display:none}
+#ez-dim{position:fixed;inset:0;z-index:99981;pointer-events:none;background:#000;opacity:0}
+#ez-expose{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none}
+.window.ex{transition:transform .28s cubic-bezier(.16,1,.3,1)!important;cursor:pointer;box-shadow:0 0 0 2px var(--accent),var(--shadow-window)}
+body.expose iframe{pointer-events:none}
+#live-wall,#live-vid{position:fixed;inset:0;width:100%;height:100%;z-index:-1;object-fit:cover}#live-wall{display:none}
+#action-center{position:fixed;right:12px;bottom:calc(var(--taskbar-height) + 14px);width:340px;max-height:70vh;overflow:auto;z-index:99970;padding:14px;border-radius:12px;background:var(--menu-bg);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);border:1px solid var(--stroke-strong);box-shadow:var(--shadow-flyout);color:var(--text);display:none;flex-direction:column;gap:10px}
+#taskbar.top ~ #action-center{bottom:auto;top:calc(var(--taskbar-height) + 14px)}#action-center.open{display:flex}
+#action-center button,#action-center select{font:inherit;color:inherit;background:var(--control);border:1px solid var(--stroke);border-radius:6px;padding:8px 10px;cursor:pointer}
+#action-center button:hover{background:var(--control-hover)}#action-center button.on{background:var(--accent);color:#001}
+#action-center label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-2)}
+.ac-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ac-head{display:flex;justify-content:space-between;align-items:center}
+.ac-n{padding:8px 10px;border-radius:6px;background:var(--card);margin-top:6px;font-size:13px}.ac-n small{display:block;color:var(--text-3)}
+.ez-toast{position:fixed;top:16px;right:16px;z-index:99990;max-width:300px;padding:12px 14px;border-radius:10px;background:var(--menu-bg);-webkit-backdrop-filter:var(--glass);backdrop-filter:var(--glass);border:1px solid var(--stroke-strong);box-shadow:var(--shadow-flyout);color:var(--text);animation:fluentRise .25s ease}.ez-toast b{display:block}.ez-toast span{color:var(--text-2);font-size:13px}
+</style>
+<div id="ez-night"></div><div id="ez-dim"></div><div id="ez-expose"></div>
+<div id="action-center">
+  <div class="ac-grid"><button id="ac-dnd">🌙 Do not disturb</button><button id="ac-night">🟠 Night light</button></div>
+  <label>🔊 Volume <input type="range" id="ac-vol" min="0" max="100"></label>
+  <label>☀ Brightness <input type="range" id="ac-br" min="30" max="100"></label>
+  <label>🎞 Live wallpaper <select id="ac-live"><option value="">Off</option><option value="aurora">Aurora</option><option value="matrix">Matrix rain</option><option value="stars">Starfield</option><option value="video">Video URL…</option></select></label>
+  <div class="ac-head"><b>Notifications</b><button id="ac-clear">Clear</button></div><div id="ac-list"></div>
+</div>
+<script>
+(() => {
+  const S = (k, d) => { try { const v = storeGet(k); return v == null ? d : v; } catch { return d; } };
+  const W = (k, v) => { try { storeSet(k, v); } catch {} };
+  const clean = t => String(t).replace(/[<>&"'`]/g, '').slice(0, 60);
+  const safeUrl = u => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ''; } catch { return ''; } };
+
+  // ── New apps ──
+  BUILT_IN_APPS.push(
+    { id: 'note', name: 'Notepad', icon: 'https://img.icons8.com/color/48/notepad.png', file: 'notepad.html' },
+    { id: 'media', name: 'Media Player', icon: 'https://img.icons8.com/color/48/play-button-circled.png', file: 'mediaplayer.html' },
+    { id: 'store', name: 'App Store', icon: 'https://img.icons8.com/color/48/shopping-bag.png', file: 'ezstore.html' });
+  try { renderOS(); } catch {}
+
+  // ── Sound effects (Web Audio) ──
+  let ac, vol = +S('ezier_vol', 60) / 100;
+  const tone = (f, t, d, type = 'sine', g = .25) => {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), a = ac.createGain(), s = ac.currentTime + t;
+    o.type = type; o.frequency.value = f;
+    a.gain.setValueAtTime(0, s); a.gain.linearRampToValueAtTime(g * vol, s + .01); a.gain.exponentialRampToValueAtTime(.0001, s + d);
+    o.connect(a).connect(ac.destination); o.start(s); o.stop(s + d + .05);
+  };
+  const SFX = {
+    click: () => tone(1400, 0, .04, 'triangle', .12),
+    notify: () => { tone(880, 0, .15); tone(1320, .12, .25); },
+    error: () => { tone(220, 0, .18, 'square', .15); tone(165, .16, .3, 'square', .15); },
+    startup: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .14, .9, 'sine', .18))
+  };
+  window.sfx = n => { try { SFX[n] && SFX[n](); } catch {} };
+  document.addEventListener('pointerdown', () => sfx('startup'), { once: true });   // chime on the first click (login)
+  document.addEventListener('click', e => { if (e.target.closest('.app-item,.desktop-icon,.taskbar-btn,.win-btn,.tray-glyph,button')) sfx('click'); }, true);
+
+  // ── Notifications / Action Center ──
+  const notes = []; let dnd = S('ezier_dnd', '0') === '1';
+  const panel = $('action-center');
+  function renderNotes() {
+    const L = $('ac-list'); L.textContent = '';
+    if (!notes.length) { L.innerHTML = '<div class="ac-n" style="opacity:.5">No new notifications</div>'; }
+    notes.slice(0, 20).forEach(n => { const d = document.createElement('div'); d.className = 'ac-n'; d.innerHTML = '<b></b><span></span><small></small>';
+      d.children[0].textContent = n.title; d.children[1].textContent = n.msg; d.children[2].textContent = n.t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); L.append(d); });
+    $('tray-bell').firstElementChild.textContent = notes.length ? '🔔•' : '🔔';
+  }
+  window.notify = (title, msg = '') => {
+    notes.unshift({ title, msg, t: new Date() }); renderNotes();
+    if (dnd) return; sfx('notify');
+    const el = document.createElement('div'); el.className = 'ez-toast'; el.innerHTML = '<b></b><span></span>';
+    el.children[0].textContent = title; el.children[1].textContent = msg; document.body.append(el); setTimeout(() => el.remove(), 4200);
+  };
+  window.toggleActionCenter = e => { e && e.stopPropagation(); panel.classList.toggle('open'); if (panel.classList.contains('open')) { notes.length = 0; renderNotes(); } };
+  document.addEventListener('click', e => { if (!e.target.closest('#action-center,#tray-bell')) panel.classList.remove('open'); });
+  const setDnd = v => { dnd = v; W('ezier_dnd', v ? '1' : '0'); $('ac-dnd').classList.toggle('on', v); };
+  const setNight = v => { W('ezier_night', v ? '1' : '0'); $('ez-night').style.display = v ? 'block' : 'none'; $('ac-night').classList.toggle('on', v); };
+  $('ac-dnd').onclick = () => setDnd(!dnd);
+  $('ac-night').onclick = () => setNight(S('ezier_night', '0') !== '1');
+  $('ac-vol').value = vol * 100; $('ac-vol').oninput = e => { vol = e.target.value / 100; W('ezier_vol', e.target.value); };
+  $('ac-vol').onchange = () => sfx('notify');
+  const setBr = v => { $('ez-dim').style.opacity = (1 - v / 100).toFixed(2); W('ezier_bright', v); };
+  $('ac-br').value = S('ezier_bright', 100); $('ac-br').oninput = e => setBr(+e.target.value);
+  $('ac-clear').onclick = () => { notes.length = 0; renderNotes(); };
+  setDnd(dnd); setNight(S('ezier_night', '0') === '1'); setBr(+S('ezier_bright', 100)); renderNotes();
+
+  // ── Network + battery tray indicators ──
+  const net = () => { $('tray-net').firstElementChild.textContent = navigator.onLine ? '📶' : '🚫'; $('tray-net').title = navigator.onLine ? 'Online' : 'Offline'; };
+  net(); addEventListener('online', () => { net(); notify('Network', 'Back online'); }); addEventListener('offline', () => { net(); notify('Network', 'You are offline'); });
+  navigator.getBattery?.().then(b => { const g = $('tray-bat'); g.style.display = ''; g.style.width = 'auto';
+    const u = () => { g.firstElementChild.textContent = (b.charging ? '⚡ ' : '🔋 ') + Math.round(b.level * 100) + '%'; g.title = b.charging ? 'Charging' : 'On battery'; };
+    u(); b.onlevelchange = b.onchargingchange = u; }).catch(() => {});
+
+  // ── Mission Control (F3, Esc, or top-left hot corner) ──
+  let exp = false, hot = 0;
+  function expose() {
+    if (exp) { exp = false; document.body.classList.remove('expose'); $('ez-expose').style.display = 'none';
+      document.querySelectorAll('.window.ex').forEach(w => { w.classList.remove('ex'); w.style.transform = ''; w.style.animation = ''; }); return; }
+    const ws = [...document.querySelectorAll('.window')].filter(w => !w.classList.contains('minimized') && getComputedStyle(w).display !== 'none');
+    if (!ws.length) return; exp = true; document.body.classList.add('expose'); $('ez-expose').style.display = 'block';
+    const wa = snapWorkArea(), c = Math.ceil(Math.sqrt(ws.length)), r = Math.ceil(ws.length / c), cw = (wa.width - 80) / c, ch = (wa.height - 80) / r;
+    ws.forEach((w, i) => { const b = w.getBoundingClientRect(), k = Math.min(cw / b.width, ch / b.height, 1) * .92;
+      const tx = 40 + (i % c + .5) * cw - (b.left + b.width / 2), ty = wa.top + 40 + (Math.floor(i / c) + .5) * ch - (b.top + b.height / 2);
+      w.classList.add('ex'); w.style.animation = 'none'; w.style.transform = `translate(${tx}px,${ty}px) scale(${k})`; });
+  }
+  window.toggleExpose = expose;
+  document.addEventListener('keydown', e => { if (e.key === 'F3') { e.preventDefault(); expose(); } else if (e.key === 'Escape' && exp) expose(); });
+  document.addEventListener('mousemove', e => { if (e.clientX < 3 && e.clientY < 3 && Date.now() - hot > 900) { hot = Date.now(); expose(); } }, { passive: true });
+  document.addEventListener('click', e => { if (!exp) return; e.preventDefault(); e.stopPropagation();
+    const w = e.target.closest('.window.ex'); expose(); if (w) { w.classList.remove('minimized'); focusWin(w); } }, true);
+
+  // ── Task Manager graphs ──
+  const cv = $('tm-graph');
+  if (cv) { const g = cv.getContext('2d'), cpu = Array(60).fill(8), ram = Array(60).fill(40);
+    setInterval(() => { const tm = $('win-taskmanager'); if (document.hidden || !tm || getComputedStyle(tm).display === 'none') return;
+      const n = document.querySelectorAll('.window').length, pm = performance.memory;
+      cpu.push(Math.max(2, Math.min(98, cpu[59] + (Math.random() - .5) * 16 + (n * 3 - cpu[59]) * .05))); cpu.shift();
+      ram.push(pm ? pm.usedJSHeapSize / pm.jsHeapSizeLimit * 100 : Math.min(95, 35 + n * 4 + Math.random() * 3)); ram.shift();
+      g.clearRect(0, 0, cv.width, cv.height);
+      [[cpu, '#4cc2ff', 'CPU'], [ram, '#c58bff', 'RAM']].forEach(([a, c, l], k) => { g.strokeStyle = c; g.lineWidth = 2; g.beginPath();
+        a.forEach((v, i) => { const x = i / 59 * cv.width, y = cv.height - v / 100 * cv.height; i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+        g.fillStyle = c; g.font = '12px sans-serif'; g.fillText(`${l} ${a[59].toFixed(0)}%`, 8, 16 + k * 15); });
+    }, 1000); }
+
+  // ── Live wallpapers ──
+  const lw = document.createElement('canvas'); lw.id = 'live-wall'; document.body.prepend(lw);
+  const x = lw.getContext('2d'); let raf = 0, vid = null, st = null;
+  const fit = () => { lw.width = innerWidth; lw.height = innerHeight; }; addEventListener('resize', fit); fit();
+  const DRAW = {
+    aurora: t => { x.fillStyle = '#070b1a'; x.fillRect(0, 0, lw.width, lw.height);
+      [[200, 3e-4, '76,194,255'], [300, 4e-4, '160,90,255'], [250, 2.5e-4, '60,255,170']].forEach(([r, s, c], i) => {
+        const px = lw.width * (.5 + .4 * Math.sin(t * s + i * 2)), py = lw.height * (.5 + .35 * Math.cos(t * s * 1.3 + i)), gr = x.createRadialGradient(px, py, 0, px, py, r * 2.2);
+        gr.addColorStop(0, `rgba(${c},.55)`); gr.addColorStop(1, `rgba(${c},0)`); x.fillStyle = gr; x.fillRect(0, 0, lw.width, lw.height); }); },
+    matrix: () => { if (!st || st.k !== 'm') st = { k: 'm', d: Array(Math.ceil(lw.width / 16)).fill(0) };
+      x.fillStyle = 'rgba(0,0,0,.08)'; x.fillRect(0, 0, lw.width, lw.height); x.fillStyle = '#3f6'; x.font = '14px monospace';
+      st.d.forEach((y, i) => { x.fillText(String.fromCharCode(0x30a0 + Math.random() * 96), i * 16, y * 16); st.d[i] = y * 16 > lw.height && Math.random() > .975 ? 0 : y + 1; }); },
+    stars: () => { if (!st || st.k !== 's') st = { k: 's', p: Array.from({ length: 220 }, () => ({ x: Math.random() * 2 - 1, y: Math.random() * 2 - 1, z: Math.random() })) };
+      x.fillStyle = '#02030a'; x.fillRect(0, 0, lw.width, lw.height); x.fillStyle = '#fff';
+      st.p.forEach(q => { q.z -= .004; if (q.z <= .01) q.z = 1; const r = (1 - q.z) * 2.2; x.fillRect(lw.width / 2 + q.x / q.z * lw.width / 2, lw.height / 2 + q.y / q.z * lw.height / 2, r, r); }); }
+  };
+  function setLive(k, url) {
+    cancelAnimationFrame(raf); vid && vid.remove(); vid = null; st = null; lw.style.display = 'none'; W('ezier_live', k || '');
+    if (k === 'video' && safeUrl(url)) { W('ezier_live_url', url); vid = document.createElement('video'); vid.id = 'live-vid';
+      Object.assign(vid, { src: safeUrl(url), loop: true, muted: true, autoplay: true }); document.body.prepend(vid); vid.play().catch(() => {}); }
+    else if (DRAW[k]) { lw.style.display = 'block'; let last = 0; const still = S('ezier_reduce_motion', '0') === '1';   // ≈30 fps cap; one still frame if Reduce Motion is on
+      const loop = t => { if (t - last > 33) { last = t; DRAW[k](t); if (still) return; } raf = requestAnimationFrame(loop); }; raf = requestAnimationFrame(loop); }
+  }
+  $('ac-live').value = S('ezier_live', ''); setLive($('ac-live').value, S('ezier_live_url', ''));
+  $('ac-live').onchange = e => { let u = ''; if (e.target.value === 'video') { u = prompt('Video URL (mp4/webm)', S('ezier_live_url', '')) || ''; if (!safeUrl(u)) { e.target.value = ''; } }
+    setLive(e.target.value, u); };
+
+  // ── Messages from apps (Explorer / Store / Terminal) ──
+  const APP = { txt: 'note', md: 'note', html: 'note', htm: 'note', js: 'note', css: 'note', json: 'note', xml: 'note',
+    mp3: 'media', wav: 'media', ogg: 'media', m4a: 'media', mp4: 'media', webm: 'media', mov: 'media', png: 'media', jpg: 'media', jpeg: 'media', gif: 'media', webp: 'media', svg: 'media' };
+  addEventListener('message', e => {
+    if (![...document.querySelectorAll('iframe')].some(f => f.contentWindow === e.source)) return;   // only our own app windows
+    const d = e.data || {};
+    if (typeof d.ezOpen === 'string' && /\.app$/i.test(d.ezOpen)) {      // Program Files entry → launch that app
+      try { const j = JSON.parse(EZRIVE.read(d.ezOpen)), a = [...BUILT_IN_APPS, ...getCustomApps()].find(v => v.id === j.id);
+        if (a) return a.isSys ? openSysWin(a.sysId) : launchApp(a); } catch {}
+      return notify('Cannot open', 'That app entry is missing or damaged');
+    }
+    if (typeof d.ezOpen === 'string') {
+      const id = APP[d.ezOpen.split('.').pop().toLowerCase()] || 'note', a = BUILT_IN_APPS.find(v => v.id === id);
+      launchApp({ id, name: clean(a.name + ' — ' + d.ezOpen.split('/').pop()), icon: a.icon, file: a.file + '?path=' + encodeURIComponent(d.ezOpen) });
+    } else if (d.ezInstall && safeUrl(d.ezInstall.url)) {
+      const apps = getCustomApps(), url = safeUrl(d.ezInstall.url), name = clean(d.ezInstall.name || url);
+      if (apps.some(v => v.file === url)) return notify('Already installed', name);
+      apps.push({ id: 'store-' + Date.now(), name, icon: safeUrl(d.ezInstall.icon), file: url, custom: true }); saveCustomApps(apps); renderOS(); notify('App installed', name);
+    } else if (d.ezTheme === 'light' || d.ezTheme === 'dark') {
+      document.body.classList.toggle('theme-light', d.ezTheme === 'light'); notify('Theme', 'Switched to ' + d.ezTheme);
+    }
+  });
+})();
+</script>
+<script src="ezrive.js"></script>
+<script>
+/* ezrive sync — mirrors OS state into the ezrive drive (all in localStorage):
+     C:/Program Files/<App>.app      one entry per app (built-in + installed)
+     C:/Users/<name>/profile.json    one folder per account (passwords/PINs/avatars are never copied)
+     C:/sys32/settings.json          small ezier_* settings
+     C:/sys32/logs/system.log        account / app events
+   Guest sessions are never written. Everything is batched into one storage write per change. */
+(() => {
+  const R = window.EZRIVE, idle = f => (window.requestIdleCallback || setTimeout)(f);
+  const nm = s => String(s).replace(/[\\/:*?"<>|]/g, '_').trim().slice(0, 40) || 'unnamed';
+  const secret = /pass|pin|hash|salt|secret|token|answer/i;
+  const slim = o => Object.fromEntries(Object.entries(o).filter(([k, v]) => !secret.test(k) && !(typeof v === 'string' && v.length > 400)));
+  const stamp = () => new Date().toISOString().replace('T', ' ').slice(0, 19);
+  const log = m => { if (guestSession) return; const p = 'C:/sys32/logs/system.log';
+    R.write(p, ((R.read(p) || '') + `\n[${stamp()}] ${m}`).split('\n').filter(Boolean).slice(-200).join('\n')); };
+  window.ezLog = log;
+  let prevApps = null, prevAccts = null;
+
+  function syncApps() { if (guestSession) return;
+    R.batch(() => {
+      const dir = 'C:/Program Files', tree = {}, used = new Set(), apps = [...BUILT_IN_APPS, ...getCustomApps()];
+      apps.forEach(a => { let k = nm(a.name) + '.app'; if (used.has(k)) k = nm(a.name) + ' (' + nm(a.id) + ').app'; used.add(k);
+        const emb = !a.file || /^(data|blob):/.test(a.file) || a.file.length > 500;
+        tree[k] = JSON.stringify({ id: a.id, name: a.name, kind: a.isSys ? 'system' : /^(user|store)-/.test(String(a.id)) ? 'installed' : 'built-in',
+          icon: a.icon && a.icon.length < 500 ? a.icon : '', target: a.isSys ? 'sys:' + a.sysId : emb ? '(embedded)' : a.file }, null, 1); });
+      (R.ls(dir) || []).forEach(e => { if (!e.dir && /\.app$/i.test(e.name) && !(e.name in tree)) R.rm(dir + '/' + e.name); });   // removed apps
+      for (const k in tree) if (R.read(dir + '/' + k) !== tree[k]) R.write(dir + '/' + k, tree[k]);
+      const names = new Set(getCustomApps().map(a => a.name));
+      if (prevApps) { names.forEach(n => prevApps.has(n) || log('App installed: ' + n)); prevApps.forEach(n => names.has(n) || log('App removed: ' + n)); }
+      prevApps = names;
+    });
+  }
+  function syncAccounts() { if (guestSession) return;
+    R.batch(() => {
+      const list = getAccounts(), keep = new Set(), names = new Set();
+      list.forEach(a => { const u = nm(a.username || a.name || a.id), base = 'C:/Users/' + u; keep.add(u); names.add(a.username || a.name || a.id);
+        ['Documents', 'Downloads', 'Pictures', 'Music'].forEach(d => R.exists(base + '/' + d) || R.mkdir(base + '/' + d));
+        const j = JSON.stringify(slim(a), null, 1); if (R.read(base + '/profile.json') !== j) R.write(base + '/profile.json', j); });
+      (R.ls('C:/Users') || []).forEach(e => { if (e.dir && !keep.has(e.name) && R.exists('C:/Users/' + e.name + '/profile.json')) R.rm('C:/Users/' + e.name + '/profile.json'); });
+      if (prevAccts) { names.forEach(n => prevAccts.has(n) || log('Account created: ' + n)); prevAccts.forEach(n => names.has(n) || log('Account removed: ' + n)); }
+      prevAccts = names;
+    });
+  }
+  const SET = /^(ezier_|ezieros_|update_pref)/, SKIP = /vfs|account|active|legacy|av_scan|tos/i;
+  function syncSettings() { if (guestSession) return; const o = {};
+    for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i), v = localStorage.getItem(k);
+      if (SET.test(k) && !SKIP.test(k) && v.length <= 400) o[k] = v; }
+    const j = JSON.stringify(o, null, 1); if (R.read('C:/sys32/settings.json') !== j) R.write('C:/sys32/settings.json', j); }
+
+  let t = 0; const later = () => { clearTimeout(t); t = setTimeout(() => idle(syncSettings), 500); };   // debounce chatty settings
+  const wrap = (name, after) => { const f = window[name]; if (typeof f !== 'function') return;
+    window[name] = function (...a) { const r = f.apply(this, a); try { after(...a); } catch {} return r; }; };
+  wrap('saveCustomApps', () => idle(syncApps));
+  wrap('saveAccounts', () => idle(syncAccounts));
+  wrap('storeSet', k => { if (SET.test(k)) later(); });
+  wrap('storeRemove', k => { if (SET.test(k)) later(); });
+
+  idle(() => { try { R.batch(() => { syncApps(); syncAccounts(); syncSettings(); }); log('System started'); } catch (e) { console.warn('ezrive sync failed', e); } });
+})();
+</script>
 </body>
 </html>

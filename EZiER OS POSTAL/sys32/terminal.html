@@ -772,6 +772,8 @@
         }
 
         const term = new TerminalEngine();
+        // ezrive / the OS write to the same drive: pick up their changes so the Terminal never overwrites them.
+        addEventListener('storage', e => { if (e.key === 'ezier_vfs' && term.editorOverlay.style.display !== 'flex') term.vfs = term.loadVFS(); });
     </script>
 </body>
 </html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>App Store</title><script src="ezrive.js"></script>
+<style>body{display:flex;flex-direction:column}#feed{flex:1;min-width:80px}#msg{padding:6px 12px;font-size:12px;opacity:.65}
+#list{flex:1;overflow:auto;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;align-content:start}
+.c{background:#ffffff0d;border:1px solid #ffffff14;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.c img{width:40px;height:40px;border-radius:8px;object-fit:cover}.c b{font-size:14px}.c small{opacity:.6}.c p{margin:0;opacity:.8;flex:1}.c button:disabled{opacity:.5}</style></head><body>
+<div id="bar"><span>Source:</span><input id="feed" placeholder="apps.js URL  ·  owner/repo  ·  feed.json"><button id="load" class="pri">Load</button><button id="re" title="Bypass the 10-minute cache">↻</button></div>
+<div id="msg"></div><div id="list"></div>
+<script>
+const $=id=>document.getElementById(id),DEF='https://raw.githubusercontent.com/ricksansez9-star/ezierosappstorejs/refs/heads/main/apps.js',TTL=10*60*1e3;
+{const f=localStorage.getItem('ezier_store_feed');$('feed').value=!f||f==='ezstore.json'?DEF:f}
+const http=u=>{try{return /^https?:$/.test(new URL(u).protocol)}catch{return false}};
+// The .js files are parsed as TEXT (never eval'd/imported) — fields: name, link (or url), icon, description, author.
+function parseApp(src,base){
+  const g=k=>{const m=src.match(new RegExp('(?:^|[\\s,{;])["\']?'+k+'["\']?\\s*[:=]\\s*(["\'`])((?:\\\\.|(?!\\1).)*)\\1','m'));return m?m[2].replace(/\\(.)/g,'$1'):''};
+  let icon=g('icon');if(icon&&base){try{icon=new URL(icon,base).href}catch{}}
+  return{name:g('name'),url:g('link')||g('url'),icon,desc:g('description')||g('desc'),author:g('author')};
+}
+// One .js file holding every app:  [{ name:"…", link:"https://…", icon:"https://…" }, …]  — read as text, never executed.
+function parseMany(text,base){
+  text=text.replace(/\/\*[\s\S]*?\*\//g,'').replace(/^\s*\/\/.*$/gm,'');
+  const out=[];for(const m of text.matchAll(/\{[^{}]*\}/g)){const a=parseApp(m[0],base);if(a.name&&a.url)out.push(a)}
+  return out;
+}
+// github.com/owner/repo (can't be framed) → its GitHub Pages site
+const fixLink=u=>{const m=(u||'').match(/^https?:\/\/(?:www\.)?github\.com\/([^/]+)\/([^/#?]+)\/?$/i);
+  return m?(m[2].toLowerCase()===m[1].toLowerCase()+'.github.io'?`https://${m[1]}.github.io/`:`https://${m[1]}.github.io/${m[2]}/`):u};
+function ghApi(u){
+  const m=u.trim().replace(/\.git$/,'').match(/^(?:(?:https?:\/\/)?(?:www\.)?github\.com\/)?([\w.-]+)\/([\w.-]+)(?:\/tree\/([^/]+)(?:\/(.*))?)?\/?$/);
+  if(!m)return null;const[,o,r,br,p]=m;
+  return`https://api.github.com/repos/${o}/${r}/contents/${(p||'').replace(/\/$/,'')}${br?'?ref='+encodeURIComponent(br):''}`;
+}
+async function fetchApps(src){
+  if(/\.js(\?|#|$)/i.test(src)){   // a single apps.js (raw URL, or a github.com …/blob/… link)
+    const raw=src.replace(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([^/]+)\/([^/]+)\/blob\//,'https://raw.githubusercontent.com/$1/$2/');
+    const r=await fetch(raw);if(!r.ok)throw new Error('Could not read the file ('+r.status+').');
+    return parseMany(await r.text(),raw);
+  }
+  if(/\.json(\?|#|$)/i.test(src)){const j=await(await fetch(src)).json();return(j.apps||[]).map(a=>({name:a.name,url:a.url||a.link,icon:a.icon,desc:a.desc||a.description,author:a.author}))}
+  const api=ghApi(src);if(!api)throw new Error('Not a GitHub repo, folder or .json feed.');
+  const r=await fetch(api,{headers:{Accept:'application/vnd.github+json'}});
+  if(r.status===403||r.status===429)throw new Error('GitHub rate limit reached (60 requests/hour without a login). Try again later.');
+  if(r.status===404)throw new Error('Repo or folder not found (it must be public).');
+  if(!r.ok)throw new Error('GitHub returned '+r.status);
+  const files=(await r.json());if(!Array.isArray(files))throw new Error('That path is a file, not a folder.');
+  const js=files.filter(f=>f.type==='file'&&/\.js$/i.test(f.name)&&f.size<=20000&&f.download_url).slice(0,60);
+  const got=await Promise.allSettled(js.map(async f=>parseApp(await(await fetch(f.download_url)).text(),f.download_url)));
+  return got.filter(x=>x.status==='fulfilled').map(x=>x.value);
+}
+const installed=()=>{try{return JSON.parse(localStorage.getItem('awkos_custom_apps')||'[]').map(a=>a.file)}catch{return[]}};
+async function load(force){
+  const src=$('feed').value.trim()||DEF,L=$('list'),M=$('msg'),key='ezstore_cache:'+src;localStorage.setItem('ezier_store_feed',src);
+  L.textContent='';M.textContent='Loading…';let apps=null;
+  if(!force){try{const c=JSON.parse(localStorage.getItem(key));if(c&&Date.now()-c.t<TTL)apps=c.apps}catch{}}
+  try{if(!apps){apps=await fetchApps(src);try{localStorage.setItem(key,JSON.stringify({t:Date.now(),apps}))}catch{}}}
+  catch(e){M.textContent='Could not load: '+(e.message||e);return}
+  apps=apps.map(a=>({...a,url:fixLink(a.url)})).filter(a=>a.name&&http(a.url));const have=installed();
+  M.textContent=apps.length?`${apps.length} app${apps.length==1?'':'s'} · installing adds a desktop shortcut that opens the app in a window`:'No apps found. apps.js needs entries like { name: "…", link: "https://…", icon: "https://…" }.';
+  apps.forEach(a=>{const c=document.createElement('div'),img=document.createElement('img'),b=document.createElement('b'),s=document.createElement('small'),p=document.createElement('p'),btn=document.createElement('button');
+    c.className='c';if(http(a.icon))img.src=a.icon;img.onerror=()=>img.style.visibility='hidden';
+    b.textContent=a.name;s.textContent='by '+(a.author||'unknown');p.textContent=a.desc||a.url;
+    const done=()=>{btn.textContent='Installed';btn.disabled=true;btn.className=''};
+    btn.textContent='Install';btn.className='pri';if(have.includes(a.url))done();
+    btn.onclick=()=>{parent.postMessage({ezInstall:{name:a.name,url:a.url,icon:a.icon}},'*');setTimeout(()=>{if(installed().includes(a.url))done()},500)};
+    c.append(img,b,s,p,btn);L.append(c)});
+}
+$('load').onclick=()=>load(false);$('re').onclick=()=>load(true);$('feed').onkeydown=e=>{if(e.key==='Enter')load(false)};load(false);
+</script></body></html>

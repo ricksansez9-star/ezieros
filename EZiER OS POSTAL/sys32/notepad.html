@@ -1,0 +1,18 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Notepad</title><script src="ezrive.js"></script>
+<style>body{display:flex;flex-direction:column}#t,#pv{flex:1;border:0;background:#1b1b1b;color:#eee;padding:12px;font:14px Consolas,'Cascadia Code',monospace;resize:none;border-radius:0;tab-size:4}#pv{background:#fff;display:none;padding:0}#nm{opacity:.7;margin-left:6px}#st{padding:4px 12px;font-size:12px;opacity:.65;border-top:1px solid #ffffff17}</style></head><body>
+<div id="bar"><button id="new">New</button><button id="open">Open…</button><button id="save" class="pri">Save</button><button id="dl">Download</button><button id="prev">Preview</button><span id="nm"></span></div>
+<textarea id="t" spellcheck="false"></textarea><iframe id="pv" sandbox=""></iframe><div id="st"></div>
+<script>
+const $=id=>document.getElementById(id);let path=new URLSearchParams(location.search).get('path')||'',dirty=false;
+const upd=()=>{$('nm').textContent=(path||'Untitled')+(dirty?' •':'');const v=$('t').value.slice(0,$('t').selectionStart).split('\n');$('st').textContent=`Ln ${v.length}, Col ${v[v.length-1].length+1} · ${$('t').value.length} chars`};
+function openP(p){const c=EZRIVE.read(p);if(c===null)return alert('Cannot read '+p);path=p;$('t').value=c.startsWith('data:')?'[binary file]':c;dirty=false;upd()}
+function save(){if(!path){path=prompt('Save as (.txt, .md or .html)','D:/documents/untitled.txt')||'';if(!path)return}
+  try{EZRIVE.write(path,$('t').value);dirty=false;upd()}catch{alert('Drive is full — could not save')}}
+$('new').onclick=()=>{if(!dirty||confirm('Discard unsaved changes?')){path='';$('t').value='';dirty=false;upd()}};
+$('open').onclick=()=>{const p=prompt('Open path','D:/documents/readme.txt');if(p)openP(p)};$('save').onclick=save;
+$('dl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([$('t').value]));a.download=(path.split('/').pop()||'untitled.txt');a.click()};
+$('prev').onclick=()=>{const on=$('pv').style.display!=='block';$('pv').style.display=on?'block':'none';$('t').style.display=on?'none':'';if(on)$('pv').srcdoc=$('t').value};
+$('t').oninput=()=>{dirty=true;upd()};$('t').onkeyup=$('t').onclick=upd;
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();save()}});
+if(path)openP(path);else upd();
+</script></body></html>
